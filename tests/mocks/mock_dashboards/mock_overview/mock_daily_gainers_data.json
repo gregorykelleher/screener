@@ -1,0 +1,142 @@
+[
+    {
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "price": 150.0,
+        "changesPercentage": 2.5,
+        "change": 3.65
+    },
+    {
+        "symbol": "MSFT",
+        "name": "Microsoft Corp.",
+        "price": 280.0,
+        "changesPercentage": 1.2,
+        "change": 2.34
+    },
+    {
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc. (Google)",
+        "price": 2750.0,
+        "changesPercentage": 3.1,
+        "change": 83.12
+    },
+    {
+        "symbol": "AMZN",
+        "name": "Amazon.com Inc.",
+        "price": 3400.0,
+        "changesPercentage": 1.9,
+        "change": 63.56
+    },
+    {
+        "symbol": "TSLA",
+        "name": "Tesla Inc.",
+        "price": 750.0,
+        "changesPercentage": 4.5,
+        "change": 32.12
+    },
+    {
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "price": 220.0,
+        "changesPercentage": 2.8,
+        "change": 6.00
+    },
+    {
+        "symbol": "NFLX",
+        "name": "Netflix Inc.",
+        "price": 600.0,
+        "changesPercentage": 2.2,
+        "change": 13.12
+    },
+    {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "price": 120.0,
+        "changesPercentage": 5.0,
+        "change": 5.62
+    },
+    {
+        "symbol": "BABA",
+        "name": "Alibaba Group",
+        "price": 180.0,
+        "changesPercentage": 1.5,
+        "change": 2.67
+    },
+    {
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "price": 350.0,
+        "changesPercentage": 3.3,
+        "change": 11.42
+    },
+    {
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "price": 58.0,
+        "changesPercentage": 2.4,
+        "change": 1.36
+    },
+    {
+        "symbol": "PYPL",
+        "name": "PayPal Holdings, Inc.",
+        "price": 290.0,
+        "changesPercentage": 1.8,
+        "change": 5.12
+    },
+    {
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "price": 100.0,
+        "changesPercentage": 3.0,
+        "change": 2.92
+    },
+    {
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "price": 58.0,
+        "changesPercentage": 4.0,
+        "change": 2.32
+    },
+    {
+        "symbol": "IBM",
+        "name": "International Business Machines Corporation",
+        "price": 135.0,
+        "changesPercentage": 2.1,
+        "change": 2.78
+    },
+    {
+        "symbol": "WMT",
+        "name": "Walmart Inc.",
+        "price": 145.0,
+        "changesPercentage": 0.9,
+        "change": 1.24
+    },
+    {
+        "symbol": "DIS",
+        "name": "The Walt Disney Company",
+        "price": 180.0,
+        "changesPercentage": 2.2,
+        "change": 3.95
+    },
+    {
+        "symbol": "V",
+        "name": "Visa Inc.",
+        "price": 240.0,
+        "changesPercentage": 2.0,
+        "change": 4.80
+    },
+    {
+        "symbol": "MA",
+        "name": "Mastercard Incorporated",
+        "price": 350.0,
+        "changesPercentage": 1.6,
+        "change": 5.62
+    },
+    {
+        "symbol": "GS",
+        "name": "Goldman Sachs Group, Inc.",
+        "price": 400.0,
+        "changesPercentage": 2.3,
+        "change": 9.12
+    }
+]

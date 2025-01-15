@@ -1,0 +1,92 @@
+[
+    {
+        "commodity": "Corn Futures",
+        "price": 68.45,
+        "symbol": "ZCUSX",
+        "changesPercentage": -0.65
+    },
+    {
+        "commodity": "Aluminum Futures",
+        "price": 1600.75,
+        "symbol": "ALIUSD",
+        "changesPercentage": 1.45
+    },
+    {
+        "commodity": "Oat Futures",
+        "price": 55.30,
+        "symbol": "ZOUSX",
+        "changesPercentage": 0.95
+    },
+    {
+        "commodity": "Gold Futures",
+        "price": 1785.00,
+        "symbol": "GCUSD",
+        "changesPercentage": 0.75
+    },
+    {
+        "commodity": "Wheat Futures",
+        "price": 825.75,
+        "symbol": "KEUSX",
+        "changesPercentage": 1.15
+    },
+    {
+        "commodity": "Copper",
+        "price": 4300.00,
+        "symbol": "HGUSD",
+        "changesPercentage": 1.20
+    },
+    {
+        "commodity": "Silver Futures",
+        "price": 29.95,
+        "symbol": "SIUSD",
+        "changesPercentage": 0.35
+    },
+    {
+        "commodity": "Lumber Futures",
+        "price": 320.75,
+        "symbol": "LBUSD",
+        "changesPercentage": 1.75
+    },
+    {
+        "commodity": "Natural Gas",
+        "price": 3.85,
+        "symbol": "NGUSD",
+        "changesPercentage": 1.25
+    },
+    {
+        "commodity": "Crude Oil",
+        "price": 75.50,
+        "symbol": "CLUSD",
+        "changesPercentage": -0.40
+    },
+    {
+        "commodity": "Coffee",
+        "price": 135.00,
+        "symbol": "KCUSX",
+        "changesPercentage": 1.10
+    },
+    {
+        "commodity": "2-Year T-Note Futures",
+        "price": 100.45,
+        "symbol": "ZTUSD",
+        "changesPercentage": 0.40
+    },
+    {
+        "commodity": "10-Year T-Note Futures",
+        "price": 102.15,
+        "symbol": "ZNUSD",
+        "changesPercentage": 0.50
+    },
+    {
+        "commodity": "Brent Crude Oil",
+        "price": 82.50,
+        "symbol": "BZUSD",
+        "changesPercentage": 1.10
+    },
+    {
+        "commodity": "Gasoline RBOB",
+        "price": 2.50,
+        "symbol": "RBUSD",
+        "changesPercentage": -0.50
+    }
+]

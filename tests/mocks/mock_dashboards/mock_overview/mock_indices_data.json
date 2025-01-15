@@ -1,0 +1,122 @@
+[
+    {
+        "symbol": "^PSE",
+        "price": 4317.4824,
+        "name": "NYSE Arca Tech 100 Index",
+        "changesPercentage": 0.0499
+    },
+    {
+        "symbol": "DJI",
+        "price": 35000.55,
+        "name": "Dow Jones Industrial Average",
+        "changesPercentage": 0.1254
+    },
+    {
+        "symbol": "NDX",
+        "price": 14500.32,
+        "name": "NASDAQ 100 Index",
+        "changesPercentage": -0.0732
+    },
+    {
+        "symbol": "SPX",
+        "price": 4450.78,
+        "name": "S&P 500 Index",
+        "changesPercentage": 0.0876
+    },
+    {
+        "symbol": "FTSE",
+        "price": 7150.22,
+        "name": "FTSE 100 Index",
+        "changesPercentage": -0.0453
+    },
+    {
+        "symbol": "DAX",
+        "price": 15875.91,
+        "name": "DAX Performance Index",
+        "changesPercentage": 0.0621
+    },
+    {
+        "symbol": "CAC",
+        "price": 6685.10,
+        "name": "CAC 40 Index",
+        "changesPercentage": -0.0322
+    },
+    {
+        "symbol": "NIK",
+        "price": 29500.65,
+        "name": "Nikkei 225 Index",
+        "changesPercentage": 0.1508
+    },
+    {
+        "symbol": "HSI",
+        "price": 24900.30,
+        "name": "Hang Seng Index",
+        "changesPercentage": -0.1054
+    },
+    {
+        "symbol": "SSEC",
+        "price": 3500.75,
+        "name": "Shanghai Composite Index",
+        "changesPercentage": 0.0952
+    },
+    {
+        "symbol": "BSE",
+        "price": 42000.99,
+        "name": "BSE Sensex",
+        "changesPercentage": -0.0673
+    },
+    {
+        "symbol": "CSI300",
+        "price": 4500.88,
+        "name": "CSI 300 Index",
+        "changesPercentage": 0.0845
+    },
+    {
+        "symbol": "ASX",
+        "price": 7100.44,
+        "name": "S&P/ASX 200 Index",
+        "changesPercentage": -0.0333
+    },
+    {
+        "symbol": "TSX",
+        "price": 20000.22,
+        "name": "S&P/TSX Composite Index",
+        "changesPercentage": 0.0547
+    },
+    {
+        "symbol": "IBEX",
+        "price": 9400.66,
+        "name": "IBEX 35 Index",
+        "changesPercentage": -0.0211
+    },
+    {
+        "symbol": "MXX",
+        "price": 51000.10,
+        "name": "IPC Mexico Index",
+        "changesPercentage": 0.1115
+    },
+    {
+        "symbol": "FTMIB",
+        "price": 22000.77,
+        "name": "FTSE MIB Index",
+        "changesPercentage": -0.0589
+    },
+    {
+        "symbol": "STOXX",
+        "price": 3700.34,
+        "name": "EURO STOXX 50 Index",
+        "changesPercentage": 0.0625
+    },
+    {
+        "symbol": "KOSPI",
+        "price": 2950.89,
+        "name": "KOSPI Composite Index",
+        "changesPercentage": 0.0902
+    },
+    {
+        "symbol": "RTS",
+        "price": 1800.56,
+        "name": "RTS Index",
+        "changesPercentage": -0.0440
+    }
+]

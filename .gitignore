@@ -1,0 +1,18 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+requirements-dev.lock
+requirements.lock
+
+# streamlit
+.streamlit
+
+# venv
+.venv
+
+# Mac OS
+.DS_Store

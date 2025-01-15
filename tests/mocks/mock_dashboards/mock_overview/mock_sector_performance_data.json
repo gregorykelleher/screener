@@ -1,0 +1,116 @@
+[
+    {
+        "sector": "Technology",
+        "price": 145.5,
+        "symbol": "XLK",
+        "changesPercentage": 1.4
+    },
+    {
+        "sector": "Energy",
+        "price": 80.25,
+        "symbol": "XLE",
+        "changesPercentage": -0.8
+    },
+    {
+        "sector": "Financials",
+        "price": 36.75,
+        "symbol": "XLF",
+        "changesPercentage": 2.1
+    },
+    {
+        "sector": "Industrials",
+        "price": 92.3,
+        "symbol": "XLI",
+        "changesPercentage": 0.9
+    },
+    {
+        "sector": "Materials",
+        "price": 85.5,
+        "symbol": "XLB",
+        "changesPercentage": 1.2
+    },
+    {
+        "sector": "Consumer Discretionary",
+        "price": 160,
+        "symbol": "XLY",
+        "changesPercentage": 2.4
+    },
+    {
+        "sector": "Consumer Staples",
+        "price": 70.5,
+        "symbol": "XLP",
+        "changesPercentage": 1.1
+    },
+    {
+        "sector": "Health Care",
+        "price": 130,
+        "symbol": "XLV",
+        "changesPercentage": -0.5
+    },
+    {
+        "sector": "Communication Services",
+        "price": 58.25,
+        "symbol": "XLC",
+        "changesPercentage": -1.2
+    },
+    {
+        "sector": "Real Estate",
+        "price": 42.5,
+        "symbol": "XLRE",
+        "changesPercentage": 0.8
+    },
+    {
+        "sector": "Materials",
+        "price": 80,
+        "symbol": "XLB",
+        "changesPercentage": 1.6
+    },
+    {
+        "sector": "Industrials",
+        "price": 105,
+        "symbol": "XLI",
+        "changesPercentage": 0.5
+    },
+    {
+        "sector": "Energy",
+        "price": 75.1,
+        "symbol": "XLE",
+        "changesPercentage": -1.5
+    },
+    {
+        "sector": "Financials",
+        "price": 40.25,
+        "symbol": "XLF",
+        "changesPercentage": 2.9
+    },
+    {
+        "sector": "Consumer Discretionary",
+        "price": 155.25,
+        "symbol": "XLY",
+        "changesPercentage": 3.2
+    },
+    {
+        "sector": "Communication Services",
+        "price": 60.1,
+        "symbol": "XLC",
+        "changesPercentage": -1.0
+    },
+    {
+        "sector": "Health Care",
+        "price": 125.75,
+        "symbol": "XLV",
+        "changesPercentage": 1.3
+    },
+    {
+        "sector": "Technology",
+        "price": 150,
+        "symbol": "XLK",
+        "changesPercentage": 2.5
+    },
+    {
+        "sector": "Consumer Staples",
+        "price": 72,
+        "symbol": "XLP",
+        "changesPercentage": 0.7
+    }
+]

@@ -1,0 +1,20 @@
+[project]
+name = "screener"
+version = "0.1.0"
+requires-python = ">=3.12.5"
+dependencies = [
+  "streamlit-app",
+  "equity-aggregator",
+  "database"
+]
+
+[tool.uv.sources]
+streamlit-app   = { workspace = true }
+equity-aggregator = { workspace = true }
+database        = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv]
+package = false

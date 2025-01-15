@@ -1,0 +1,26 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+build/
+*.egg-info
+requirements-dev.lock
+requirements.lock
+
+# streamlit
+.streamlit
+
+# ruff
+.ruff_cache
+
+# venv
+.venv
+
+# Mac OS
+.DS_Store
+
+# equity-aggregator
+.env
+data/

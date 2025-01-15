@@ -1,0 +1,86 @@
+[project]
+name = "equity-aggregator"
+version = "0.1.0"
+description = "equity aggregator"
+readme = "README.md"
+requires-python = ">=3.12.5"
+authors = [
+    { name = "Gregory Kelleher", email = "gregory@gregorykelleher.com" }
+]
+dependencies = [
+    "database>=0.1.0",
+    "logging>=0.4.9.6",
+    "typing>=3.10.0.0",
+    "pydantic>=2.11.3",
+    "rapidfuzz>=3.13.0",
+    "httpx>=0.28.1",
+    "respx>=0.22.0",
+    "openfigipy>=0.1.6",
+    "yfinance>=0.2.61",
+    "pytest>=8.3.5",
+    "pytest-env>=1.1.5",
+    "pytest-asyncio>=1.0.0",
+    "pytest-timeout>=2.4.0",
+]
+
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+equity-aggregator = "equity_aggregator.__main__:main"
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 30
+markers = [
+  "live: tests that hit live endpoints",
+  "unit: tests that validate individual components in isolation",
+]
+env = [
+  "CACHE_DIR=./data/cache/.pytest_cache",
+  "CACHE_TTL_MINUTES=0",
+]
+
+[tool.ruff]
+cache-dir = "data/cache/ruff"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "I",        # isort
+    "E",        # pycodestyle
+    "W",        # PyCodeStyle warnings
+    "C4",       # flake8-comprehensions
+    "FA",       # flake8-future-annotations
+    "RET",      # flake8-return
+    "COM",      # flake8-commas
+    "FBT",      # flake8-boolean-trap
+    "PYI",      # flake8-pyi
+    "F",        # Pyflakes
+    "UP",       # pyupgrade
+    "B",        # flake8-bugbear
+    "SIM",      # flake8-simplify
+    "C90",      # mccabe
+    "PL",       # pylint
+    "N",        # naming conventions
+    "ANN",      # missing annotations
+    "ASYNC"     # async best-practices
+]
+ignore = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 5
+
+[tool.ruff.lint.pylint]
+max-statements      = 15
+max-branches        = 5
+max-args            = 5
+max-returns         = 3
+
+

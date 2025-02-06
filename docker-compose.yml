@@ -1,0 +1,19 @@
+services:
+  data-aggregator:
+    build:
+      dockerfile: packages/data-aggregator/Dockerfile
+    container_name: data-aggregator
+    volumes:
+      - ./data:/app/data
+
+  streamlit-app:
+    build:
+      dockerfile: packages/streamlit-app/Dockerfile
+    container_name: streamlit-app
+    depends_on:
+      data-aggregator:
+        condition: service_completed_successfully
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data

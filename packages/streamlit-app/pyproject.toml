@@ -1,0 +1,22 @@
+[project]
+name = "streamlit-app"
+version = "0.1.0"
+description = "streamlit application"
+readme = "README.md"
+requires-python = ">=3.12.5"
+authors = [
+    { name = "Gregory Kelleher", email = "gregory@gregorykelleher.com" }
+]
+dependencies = [
+    "streamlit>=1.41.1",
+    "pandas>=2.2.3",
+    "streamlit-aggrid>=1.0.5",
+    "pydantic>=2.10.5",
+    "sqlalchemy>=2.0.37",
+    "ruff>=0.9.3",
+]
+
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+

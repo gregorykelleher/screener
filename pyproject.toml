@@ -1,35 +1,28 @@
 [project]
 name = "screener"
 version = "0.1.0"
-requires-python = ">=3.9"
+requires-python = ">=3.12.5"
 dependencies = [
-    "streamlit>=1.41.1",
-    "fmp-lib",
-    "pandas>=2.2.3",
-    "streamlit-aggrid>=1.0.5",
-    "pytest>=8.3.4",
-    "pydantic>=2.10.5",
-    "sqlalchemy>=2.0.37",
-    "ruff>=0.9.3",
+  "streamlit-app",
+  "data-aggregator",
+  "database"
 ]
-
-[tool.uv.workspace]
-members = [ "packages/*" ]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/*"]
 
 [tool.uv.sources]
-fmp-lib = { workspace = true }
+streamlit-app   = { workspace = true }
+data-aggregator = { workspace = true }
+database        = { workspace = true }
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv.workspace]
+members = ["packages/*"]
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "--strict-markers --verbose"
-testpaths = [
-    "tests",
-    "src"
+addopts = "-ra -q"
+markers = [
+  "live: queries the live data vendor endpoints; run with -m live",
 ]
+timeout = 20
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.uv]
+package = false

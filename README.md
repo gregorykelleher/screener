@@ -1,60 +1,212 @@
 # Screener
 
-## Create Virtual Environment
+## Description
 
-`uv venv screener-venv --python 3.12`
+Screener is a container-based application designed to provided financial data analysis and visualisation. It leverages various data sources to display information about stocks, sectors, commodities and more.
 
-### Activate Virtual Environment
+## Project Structure
 
-`source screener-venv/bin/activate`
+The project is organized into several directories. At the root level:
 
-### Dectivate Virtual Environment
+- `data/`: Contains the SQLite database and relevant data
+- `docs/`: Contains relevant project documentation
+- `packages/`: Contains project packages
+- `docker-compose.yml`: Contains the project `Docker` service composition
+- `pyproject.toml`: Contains the project metadata, workspace configuration and build system setup
 
-`source deactivate`
+## Setup
+
+The project is managed using the `uv` package manager, and uses `Docker` for containerisation.
+
+### Create Virtual Environment
+
+To create a virtual environment for the project, run:
+
+```sh
+uv venv --python 3.12
+```
+
+The virtual environment can be activated using:
+
+```sh
+source .venv/bin/activate
+```
+
+Equally, it's possible to deactivate the virtual environment using:
+
+```sh
+source deactivate
+```
 
 ### Install Packages
 
-`uv tool install ruff`
-`uv pip install -r pyproject.toml`
+Sync the project's dependencies with the environment:
 
-### Setup Streamlit Secrets
+```sh
+uv sync
+```
 
-`mkdir .streamlit`
-`touch secrets.toml`
-`echo fmp_api_key="12345678" > secrets.toml`
+> It's possible to install every workspace member as editable using `uv sync --all-packages`
 
-### Run main Screener application
+A `uv.lock` lockfile is generated that contains exact information about the project's dependencies.
 
-`streamlit run main.py`
+> Note, that unlike the `pyproject.toml` which is used to specify the broad requirements of the project, the `uv.lock` contains the exact resolved versions that are installed in the project environment.
 
-### Run Screener application with mock data
+To install the current project as an editable package:
 
-`streamlit run main.py test`
+```sh
+uv pip install -e .
+```
 
-### Run individual package
+This command will install all project packages under the `packages` directory (i.e. `data-aggregator`, `streamlit-app` and `database`).
 
-`uv run --package example-package main`
+The project's installed packages can be listed using:
 
-### Run dependency to individual package
+```sh
+uv pip list
+```
 
-`uv add --package example-package dependency`
+Details on a specific package can be queried:
 
-### Run the formatter
+```sh
+uv pip show data-aggregator
+```
 
-`uv run ruff format`
+And the specific package application can also be executed:
 
-### Run the linter
+```sh
+uv run data-aggregator
+```
 
-`uv run ruff check`
+## Launch the Screener Application
 
-### Initialise database
+The `packages` directory contains the project's packages, managed by `uv`. Each package has a corresponding `pyproject.toml` and is distributable as a Python module.
 
-`python db/database.py`
+Those packages that are used as `Docker` services have a `Dockerfile`.
 
-### query database
+```sh
+packages
+├── data-aggregator
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── build
+│   ├── pyproject.toml
+│   └── src
+├── database
+│   ├── README.md
+│   ├── build
+│   ├── pyproject.toml
+│   └── src
+└── streamlit-app
+    ├── Dockerfile
+    ├── README.md
+    ├── build
+    ├── pyproject.toml
+    └── src
+```
 
-```bash
-sqlite3 data/stocks_universe.db
+### Shortcut
+
+```sh
+# once - setup
+uv venv --python 3.12     # makes .venv
+uv sync --all-packages    # Builds each packages/* project once, drops a single editable link
+
+# dev loop
+uv run data-aggregator    # run first checks lock -> pyproject -> env, then executes. No need to activate the venv
+```
+
+### Docker
+
+The project depends on `Docker v27.4.0`.
+
+Build and launch the containers with:
+
+```sh
+docker compose up --build
+```
+
+>>> The `--build` flag ensures that `Docker` will rebuild the images for the services prior to starting the containers. Without the flag, `Docker` may use cached versions of the images, potentially missing any recent updates.
+
+Likewise to stop and remove containers:
+
+```sh
+docker-compose down
+```
+
+To list all active running containers:
+
+```sh
+docker ps -a
+```
+
+To view the logs from a container:
+
+```sh
+docker logs example-container
+```
+
+To open a shell to a running container:
+
+```sh
+docker-compose exec example-container bash
+```
+
+To list available volumes:
+
+```sh
+docker volume ls
+```
+
+To remove unused data (stopped containers, dangling images and build cache .etc):
+
+```sh
+docker system prune
+```
+
+To remove all `Docker` containers, active and inactive:
+
+```sh
+docker rm -f $(docker ps -aq)
+```
+#### docker-compose.yml
+
+The `docker-compose.yml` file contains the `Docker` definitions for the project's services (i.e. `streamlit-app` and `data-aggregator`).
+
+The `streamlit-app` service depends on the `data-aggregator` service. Both services mount and share the `data` volume (containing the `stocks_universe.db` SQlite database).
+
+To run an individual service:
+
+```sh
+docker-compose up streamlit-app
+```
+
+To run the `data-aggregator` service in the background:
+
+```sh
+docker-compose up -d data-aggregator
+```
+
+## Miscellaneous
+
+### Run the Ruff Formatter and Linter
+
+Run the `ruff` formatter:
+
+```sh
+uv run ruff format
+```
+
+Run the `ruff` linter:
+
+```sh
+uv run ruff check
+```
+
+### Query SQLite Database
+
+```sh
+sqlite3 data/equities.db
 .tables
-SELECT * FROM Student;
+SELECT * FROM canonical_equities;
 ```

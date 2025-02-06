@@ -4,12 +4,16 @@ __pycache__/
 build/
 dist/
 wheels/
+build/
 *.egg-info
 requirements-dev.lock
 requirements.lock
 
 # streamlit
 .streamlit
+
+# ruff
+.ruff_cache
 
 # venv
 .venv

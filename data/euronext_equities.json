@@ -1,0 +1,8661 @@
+[
+    {
+        "name": "AIB GROUP PLC",
+        "symbol": "A5G",
+        "isin": "IE00BF0L3536",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "5.68"
+    },
+    {
+        "name": "BANK OF IRELAND GP",
+        "symbol": "BIRG",
+        "isin": "IE00BD1RP616",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "10.37"
+    },
+    {
+        "name": "CAIRN HOMES PLC",
+        "symbol": "C5H",
+        "isin": "IE00BWY4ZF18",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "1.872"
+    },
+    {
+        "name": "DALATA HOTEL GP.",
+        "symbol": "DHG",
+        "isin": "IE00BJMZDW83",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "5.22"
+    },
+    {
+        "name": "FBD HOLDINGS PLC",
+        "symbol": "EG7",
+        "isin": "IE0003290289",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "13.432"
+    },
+    {
+        "name": "GLANBIA PLC",
+        "symbol": "GL9",
+        "isin": "IE0000669501",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "9.99"
+    },
+    {
+        "name": "GLENVEAGH PROP.PLC",
+        "symbol": "GVR",
+        "isin": "IE00BD6JX574",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "1.64"
+    },
+    {
+        "name": "HAMMERSON PLC",
+        "symbol": "HMSO",
+        "isin": "GB00BRJQ8J25",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "GBP",
+        "last_price": "3.30"
+    },
+    {
+        "name": "HOSTELWORLD GROUP",
+        "symbol": "HSW",
+        "isin": "GB00BYYN4225",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "1.75"
+    },
+    {
+        "name": "IRISH CONT. GP.",
+        "symbol": "IR5B",
+        "isin": "IE00BLP58571",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "5.041"
+    },
+    {
+        "name": "IRISH RES. PROP.",
+        "symbol": "IRES",
+        "isin": "IE00BJ34P519",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "1.026"
+    },
+    {
+        "name": "KENMARE RESOURCES",
+        "symbol": "KMR",
+        "isin": "IE00BDC5DG00",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "4.80"
+    },
+    {
+        "name": "KERRY GROUP PLC",
+        "symbol": "KRZ",
+        "isin": "IE0004906560",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "91.20"
+    },
+    {
+        "name": "KINGSPAN GROUP PLC",
+        "symbol": "KRX",
+        "isin": "IE0004927939",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "72.85"
+    },
+    {
+        "name": "MOLTEN VENTURES",
+        "symbol": "GRW",
+        "isin": "GB00BY7QYJ50",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "2.90"
+    },
+    {
+        "name": "PERM. TSB GP. HOLD",
+        "symbol": "PTSB",
+        "isin": "IE00BWB8X525",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "1.595"
+    },
+    {
+        "name": "RYANAIR HOLD. PLC",
+        "symbol": "RYA",
+        "isin": "IE00BYTBXV33",
+        "mics": [
+            "XMSM"
+        ],
+        "currency": "EUR",
+        "last_price": "20.05"
+    },
+    {
+        "name": "ALTRI SGPS",
+        "symbol": "ALTR",
+        "isin": "PTALT0AE0002",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.144"
+    },
+    {
+        "name": "B.COM.PORTUGUES",
+        "symbol": "BCP",
+        "isin": "PTBCP0AM0015",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.567"
+    },
+    {
+        "name": "BENFICA",
+        "symbol": "SLBEN",
+        "isin": "PTSLB0AM0010",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.94"
+    },
+    {
+        "name": "CORTICEIRA AMORIM",
+        "symbol": "COR",
+        "isin": "PTCOR0AE0006",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.50"
+    },
+    {
+        "name": "CTT CORREIOS PORT",
+        "symbol": "CTT",
+        "isin": "PTCTT0AM0001",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.53"
+    },
+    {
+        "name": "EDP",
+        "symbol": "EDP",
+        "isin": "PTEDP0AM0009",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.366"
+    },
+    {
+        "name": "EDP RENOVAVEIS",
+        "symbol": "EDPR",
+        "isin": "ES0127797019",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "8.175"
+    },
+    {
+        "name": "EDPRDI25(90P1)",
+        "symbol": "DIEDT",
+        "isin": "ES0627797923",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0906"
+    },
+    {
+        "name": "ESTORIL SOL N",
+        "symbol": "ESON",
+        "isin": "PTESO0AM0000",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.60"
+    },
+    {
+        "name": "EURONEXT",
+        "symbol": "ENXP",
+        "isin": "NL0006294274",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "FLEXDEAL",
+        "symbol": "FLEXD",
+        "isin": "PTFXD0AM0018",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.00"
+    },
+    {
+        "name": "FUT.CLUBE PORTO",
+        "symbol": "FCP",
+        "isin": "PTFCP0AM0008",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.02"
+    },
+    {
+        "name": "GALP ENERGIA-NOM",
+        "symbol": "GALP",
+        "isin": "PTGAL0AM0009",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "13.985"
+    },
+    {
+        "name": "GLINTT",
+        "symbol": "GLINT",
+        "isin": "PTPAD0AM0007",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.5499"
+    },
+    {
+        "name": "IBERSOL,SGPS",
+        "symbol": "IBS",
+        "isin": "PTIBS0AM0008",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.48"
+    },
+    {
+        "name": "IMOB.C GRAO PARA",
+        "symbol": "GPA",
+        "isin": "PTGPA0AP0007",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.18"
+    },
+    {
+        "name": "IMPRESA,SGPS",
+        "symbol": "IPR",
+        "isin": "PTIPR0AM0000",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.1035"
+    },
+    {
+        "name": "J.MARTINS,SGPS",
+        "symbol": "JMT",
+        "isin": "PTJMT0AE0001",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "21.28"
+    },
+    {
+        "name": "MARTIFER",
+        "symbol": "MAR",
+        "isin": "PTMFR0AM0003",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.825"
+    },
+    {
+        "name": "MEDIA CAPITAL",
+        "symbol": "MCP",
+        "isin": "PTGMC0AM0003",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.62"
+    },
+    {
+        "name": "MERLIN PROPERTIES",
+        "symbol": "MRL",
+        "isin": "ES0105025003",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.23"
+    },
+    {
+        "name": "MOTA ENGIL",
+        "symbol": "EGL",
+        "isin": "PTMEN0AE0005",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.512"
+    },
+    {
+        "name": "NOS, SGPS",
+        "symbol": "NOS",
+        "isin": "PTZON0AM0006",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.71"
+    },
+    {
+        "name": "NOVABASE,SGPS",
+        "symbol": "NBA",
+        "isin": "PTNBA0AM0006",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.75"
+    },
+    {
+        "name": "PHAROL",
+        "symbol": "PHR",
+        "isin": "PTPTC0AM0009",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0478"
+    },
+    {
+        "name": "RAMADA",
+        "symbol": "RAM",
+        "isin": "PTFRV0AE0004",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.40"
+    },
+    {
+        "name": "REN",
+        "symbol": "RENE",
+        "isin": "PTREL0AM0008",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "2.86"
+    },
+    {
+        "name": "SEMAPA",
+        "symbol": "SEM",
+        "isin": "PTSEM0AM0004",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "16.168"
+    },
+    {
+        "name": "SONAE",
+        "symbol": "SON",
+        "isin": "PTSON0AM0001",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.09"
+    },
+    {
+        "name": "SONAECOM,SGPS",
+        "symbol": "SNC",
+        "isin": "PTSNC0AM0006",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "2.49"
+    },
+    {
+        "name": "SPORTING",
+        "symbol": "SCP",
+        "isin": "PTSCP0AM0001",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.00"
+    },
+    {
+        "name": "TEIXEIRA DUARTE",
+        "symbol": "TDSA",
+        "isin": "PTTD10AM0000",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.1655"
+    },
+    {
+        "name": "THE NAVIGATOR COMP",
+        "symbol": "NVG",
+        "isin": "PTPTI0AM0006",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.312"
+    },
+    {
+        "name": "TOYOTA CAETANO",
+        "symbol": "SCT",
+        "isin": "PTSCT0AP0018",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.15"
+    },
+    {
+        "name": "VAA VISTA ALEGRE",
+        "symbol": "VAF",
+        "isin": "PTVAA0AM0019",
+        "mics": [
+            "XLIS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.00"
+    },
+    {
+        "name": "AB INBEV",
+        "symbol": "ABI",
+        "isin": "BE0974293251",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "57.22"
+    },
+    {
+        "name": "ABO GROUP",
+        "symbol": "ABO",
+        "isin": "BE0974278104",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.051"
+    },
+    {
+        "name": "ACCENTIS",
+        "symbol": "ACCB",
+        "isin": "BE0003696102",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0301"
+    },
+    {
+        "name": "ACKERMANS V.HAAREN",
+        "symbol": "ACKB",
+        "isin": "BE0003764785",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "210.80"
+    },
+    {
+        "name": "AEDIFICA",
+        "symbol": "AED",
+        "isin": "BE0003851681",
+        "mics": [
+            "XBRU",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "67.60"
+    },
+    {
+        "name": "AGEAS",
+        "symbol": "AGS",
+        "isin": "BE0974264930",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "53.80"
+    },
+    {
+        "name": "AGFA-GEVAERT",
+        "symbol": "AGFB",
+        "isin": "BE0003755692",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.917"
+    },
+    {
+        "name": "AHOLD DEL",
+        "symbol": "AD",
+        "isin": "NL0011794037",
+        "mics": [
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "35.76"
+    },
+    {
+        "name": "APERAM",
+        "symbol": "APAM",
+        "isin": "LU0569974404",
+        "mics": [
+            "XAMS",
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "27.18"
+    },
+    {
+        "name": "ARGENX SE",
+        "symbol": "ARGX",
+        "isin": "NL0010832176",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "533.40"
+    },
+    {
+        "name": "ASCENCIO",
+        "symbol": "ASCE",
+        "isin": "BE0003856730",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "46.45"
+    },
+    {
+        "name": "ATENOR",
+        "symbol": "ATEB",
+        "isin": "BE0003837540",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "2.90"
+    },
+    {
+        "name": "AVANTIUM",
+        "symbol": "AVTX",
+        "isin": "NL0012047823",
+        "mics": [
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.76"
+    },
+    {
+        "name": "AZELIS GROUP",
+        "symbol": "AZE",
+        "isin": "BE0974400328",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "13.43"
+    },
+    {
+        "name": "BANIMMO A",
+        "symbol": "BANI",
+        "isin": "BE0003870871",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "2.92"
+    },
+    {
+        "name": "BARCO",
+        "symbol": "BAR",
+        "isin": "BE0974362940",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "12.02"
+    },
+    {
+        "name": "BEKAERT",
+        "symbol": "BEKB",
+        "isin": "BE0974258874",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "33.55"
+    },
+    {
+        "name": "BELYSSE GROUP",
+        "symbol": "BELYS",
+        "isin": "BE0974314461",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.785"
+    },
+    {
+        "name": "BIOCARTIS",
+        "symbol": "BCART",
+        "isin": "BE0974281132",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.29"
+    },
+    {
+        "name": "BIOSENIC",
+        "symbol": "BIOS",
+        "isin": "BE0974280126",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0014"
+    },
+    {
+        "name": "BIOTALYS",
+        "symbol": "BTLS",
+        "isin": "BE0974386188",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "3.14"
+    },
+    {
+        "name": "BPOST",
+        "symbol": "BPOST",
+        "isin": "BE0974268972",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "1.426"
+    },
+    {
+        "name": "BQUE NAT. BELGIQUE",
+        "symbol": "BNB",
+        "isin": "BE0003008019",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "345.00"
+    },
+    {
+        "name": "BREDERODE",
+        "symbol": "BREB",
+        "isin": "LU1068091351",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "111.08"
+    },
+    {
+        "name": "CAMPINE",
+        "symbol": "CAMB",
+        "isin": "BE0003825420",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "158.50"
+    },
+    {
+        "name": "CARE PROPERTY INV.",
+        "symbol": "CPINV",
+        "isin": "BE0974273055",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "12.80"
+    },
+    {
+        "name": "CELYAD ONCOLOGY",
+        "symbol": "CYAD",
+        "isin": "BE0974260896",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.481"
+    },
+    {
+        "name": "CENERGY",
+        "symbol": "CENER",
+        "isin": "BE0974303357",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "8.91"
+    },
+    {
+        "name": "CFE",
+        "symbol": "CFEB",
+        "isin": "BE0003883031",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "7.54"
+    },
+    {
+        "name": "CIE BOIS SAUVAGE",
+        "symbol": "COMB",
+        "isin": "BE0003592038",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "246.00"
+    },
+    {
+        "name": "CMB.TECH",
+        "symbol": "CMBT",
+        "isin": "BE0003816338",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "8.01"
+    },
+    {
+        "name": "COFINIMMO",
+        "symbol": "COFB",
+        "isin": "BE0003593044",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "65.50"
+    },
+    {
+        "name": "COLRUYT",
+        "symbol": "COLR",
+        "isin": "BE0974256852",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "41.66"
+    },
+    {
+        "name": "CRESCENT",
+        "symbol": "OPTI",
+        "isin": "BE0003836534",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0062"
+    },
+    {
+        "name": "CUMULEX",
+        "symbol": "CLEX",
+        "isin": "BE0003463685",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.94"
+    },
+    {
+        "name": "D'IETEREN GROUP",
+        "symbol": "DIE",
+        "isin": "BE0974259880",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "168.70"
+    },
+    {
+        "name": "DECEUNINCK",
+        "symbol": "DECB",
+        "isin": "BE0003789063",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "2.18"
+    },
+    {
+        "name": "DEME GROUP",
+        "symbol": "DEME",
+        "isin": "BE0974413453",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "130.20"
+    },
+    {
+        "name": "DIEGEM KENNEDYCERT",
+        "symbol": "DIEG",
+        "isin": "BE0003698124",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "109.00"
+    },
+    {
+        "name": "DISTRI-LAND CERT",
+        "symbol": "DISL",
+        "isin": "BE0003605160",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "190.00"
+    },
+    {
+        "name": "ECONOCOM GROUP",
+        "symbol": "ECONB",
+        "isin": "BE0974313455",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "1.768"
+    },
+    {
+        "name": "EKOPAK",
+        "symbol": "EKOP",
+        "isin": "BE0974380124",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "7.34"
+    },
+    {
+        "name": "ELIA GROUP",
+        "symbol": "ELI",
+        "isin": "BE0003822393",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "90.70"
+    },
+    {
+        "name": "ENGIE",
+        "symbol": "ENGI",
+        "isin": "FR0010208488",
+        "mics": [
+            "XPAR",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "17.41"
+    },
+    {
+        "name": "EUROCOMMERCIAL",
+        "symbol": "ECMPA",
+        "isin": "NL0015000K93",
+        "mics": [
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "24.70"
+    },
+    {
+        "name": "EVS BROADC.EQUIPM.",
+        "symbol": "EVS",
+        "isin": "BE0003820371",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "35.95"
+    },
+    {
+        "name": "EXMAR",
+        "symbol": "EXM",
+        "isin": "BE0003808251",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "11.48"
+    },
+    {
+        "name": "FAGRON",
+        "symbol": "FAGR",
+        "isin": "BE0003874915",
+        "mics": [
+            "XBRU",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "19.24"
+    },
+    {
+        "name": "FLORIDIENNE",
+        "symbol": "FLOB",
+        "isin": "BE0003215143",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "615.00"
+    },
+    {
+        "name": "FLUXYS BELGIUM D",
+        "symbol": "FLUX",
+        "isin": "BE0974265945",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "20.70"
+    },
+    {
+        "name": "FOUNTAIN",
+        "symbol": "FOU",
+        "isin": "BE0003752665",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "1.35"
+    },
+    {
+        "name": "GALAPAGOS",
+        "symbol": "GLPG",
+        "isin": "BE0003818359",
+        "mics": [
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "23.44"
+    },
+    {
+        "name": "GBL",
+        "symbol": "GBLB",
+        "isin": "BE0003797140",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "71.35"
+    },
+    {
+        "name": "GIMV",
+        "symbol": "GIMB",
+        "isin": "BE0003699130",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "38.80"
+    },
+    {
+        "name": "GREENYARD",
+        "symbol": "GREEN",
+        "isin": "BE0003765790",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "7.06"
+    },
+    {
+        "name": "HOME INVEST BE.",
+        "symbol": "HOMI",
+        "isin": "BE0974409410",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "20.00"
+    },
+    {
+        "name": "HYBRID SOFTWARE GR",
+        "symbol": "HYSG",
+        "isin": "GB00BYN5BY03",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "3.60"
+    },
+    {
+        "name": "HYLORIS",
+        "symbol": "HYL",
+        "isin": "BE0974363955",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "6.39"
+    },
+    {
+        "name": "IBA",
+        "symbol": "IBAB",
+        "isin": "BE0003766806",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "10.62"
+    },
+    {
+        "name": "IEP INVEST",
+        "symbol": "IEP",
+        "isin": "BE0003748622",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "5.101"
+    },
+    {
+        "name": "IMMO MCC",
+        "symbol": "MCC",
+        "isin": "BE0974287196",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "478.00"
+    },
+    {
+        "name": "IMMO MOURY",
+        "symbol": "IMMOU",
+        "isin": "BE0003893139",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "30.60"
+    },
+    {
+        "name": "IMMOBEL",
+        "symbol": "IMMO",
+        "isin": "BE0003599108",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "16.04"
+    },
+    {
+        "name": "INCLUSIO SA/NV",
+        "symbol": "INCLU",
+        "isin": "BE0974374069",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "14.15"
+    },
+    {
+        "name": "ING GROEP N.V.",
+        "symbol": "INGA",
+        "isin": "NL0011821202",
+        "mics": [
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "16.85"
+    },
+    {
+        "name": "JENSEN-GROUP",
+        "symbol": "JEN",
+        "isin": "BE0003858751",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "42.80"
+    },
+    {
+        "name": "KBC",
+        "symbol": "KBC",
+        "isin": "BE0003565737",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "81.64"
+    },
+    {
+        "name": "KBC ANCORA",
+        "symbol": "KBCA",
+        "isin": "BE0003867844",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "57.50"
+    },
+    {
+        "name": "KEYWARE TECH.",
+        "symbol": "KEYW",
+        "isin": "BE0003880979",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.765"
+    },
+    {
+        "name": "KINEPOLIS GROUP",
+        "symbol": "KIN",
+        "isin": "BE0974274061",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "31.80"
+    },
+    {
+        "name": "LOTUS BAKERIES",
+        "symbol": "LOTB",
+        "isin": "BE0003604155",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "8,210.00"
+    },
+    {
+        "name": "MELEXIS",
+        "symbol": "MELE",
+        "isin": "BE0165385973",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "54.35"
+    },
+    {
+        "name": "MIKO",
+        "symbol": "MIKO",
+        "isin": "BE0003731453",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "52.00"
+    },
+    {
+        "name": "MONTEA",
+        "symbol": "MONT",
+        "isin": "BE0003853703",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "62.40"
+    },
+    {
+        "name": "MOPOLI",
+        "symbol": "MOP",
+        "isin": "NL0000488153",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "256.00"
+    },
+    {
+        "name": "MOPOLI FOND",
+        "symbol": "MOPF",
+        "isin": "NL0000488161",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "7,750.00"
+    },
+    {
+        "name": "MOURY CONSTRUCT",
+        "symbol": "MOUR",
+        "isin": "BE0003602134",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "498.00"
+    },
+    {
+        "name": "NEXTENSA",
+        "symbol": "NEXTA",
+        "isin": "BE0003770840",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "40.00"
+    },
+    {
+        "name": "NYRSTAR",
+        "symbol": "NYR",
+        "isin": "BE0974294267",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.056"
+    },
+    {
+        "name": "NYXOAH",
+        "symbol": "NYXH",
+        "isin": "BE0974358906",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "5.34"
+    },
+    {
+        "name": "ONTEX GROUP",
+        "symbol": "ONTEX",
+        "isin": "BE0974276082",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "8.09"
+    },
+    {
+        "name": "ONWARD MEDICAL",
+        "symbol": "ONWD",
+        "isin": "NL0015000HT4",
+        "mics": [
+            "XBRU",
+            "XAMS",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.00"
+    },
+    {
+        "name": "ORANGE BELGIUM",
+        "symbol": "OBEL",
+        "isin": "BE0003735496",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "15.10"
+    },
+    {
+        "name": "OXURION",
+        "symbol": "OXUR",
+        "isin": "BE0974487192",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0799"
+    },
+    {
+        "name": "PAYTON PLANAR",
+        "symbol": "PAY",
+        "isin": "IL0010830391",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "6.90"
+    },
+    {
+        "name": "PROXIMUS",
+        "symbol": "PROX",
+        "isin": "BE0003810273",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "6.455"
+    },
+    {
+        "name": "QRF",
+        "symbol": "QRF",
+        "isin": "BE0974272040",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "10.382"
+    },
+    {
+        "name": "QUESTFOR GR-PRICAF",
+        "symbol": "QFG",
+        "isin": "BE0003730448",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "3.93"
+    },
+    {
+        "name": "RECTICEL",
+        "symbol": "RECT",
+        "isin": "BE0003656676",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "10.04"
+    },
+    {
+        "name": "RETAIL ESTATES",
+        "symbol": "RET",
+        "isin": "BE0003720340",
+        "mics": [
+            "XBRU",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "62.50"
+    },
+    {
+        "name": "ROULARTA",
+        "symbol": "ROU",
+        "isin": "BE0003741551",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "15.30"
+    },
+    {
+        "name": "SAINT GOBAIN",
+        "symbol": "SGO",
+        "isin": "FR0000125007",
+        "mics": [
+            "XPAR",
+            "XAMS",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "94.22"
+    },
+    {
+        "name": "SEQUANA MEDICAL",
+        "symbol": "SEQUA",
+        "isin": "BE0974340722",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "1.044"
+    },
+    {
+        "name": "SHURGARD",
+        "symbol": "SHUR",
+        "isin": "GG00BQZCBZ44",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "35.50"
+    },
+    {
+        "name": "SIPEF",
+        "symbol": "SIP",
+        "isin": "BE0003898187",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "64.60"
+    },
+    {
+        "name": "SMARTPHOTO GROUP",
+        "symbol": "SMAR",
+        "isin": "BE0974323553",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "27.90"
+    },
+    {
+        "name": "SOFINA",
+        "symbol": "SOF",
+        "isin": "BE0003717312",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "243.60"
+    },
+    {
+        "name": "SOLVAC NOM(RETAIL)",
+        "symbol": "SOLV",
+        "isin": "BE0003545531",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "89.40"
+    },
+    {
+        "name": "SOLVAY",
+        "symbol": "SOLB",
+        "isin": "BE0003470755",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "32.96"
+    },
+    {
+        "name": "SPADEL",
+        "symbol": "SPA",
+        "isin": "BE0003798155",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "200.00"
+    },
+    {
+        "name": "SYENSQO",
+        "symbol": "SYENS",
+        "isin": "BE0974464977",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "60.38"
+    },
+    {
+        "name": "TESSENDERLO",
+        "symbol": "TESB",
+        "isin": "BE0003555639",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "25.50"
+    },
+    {
+        "name": "TEXAF",
+        "symbol": "TEXF",
+        "isin": "BE0974263924",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "33.00"
+    },
+    {
+        "name": "TINC",
+        "symbol": "TINC",
+        "isin": "BE0974282148",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "10.78"
+    },
+    {
+        "name": "TITAN CEMENT",
+        "symbol": "TITC",
+        "isin": "BE0974338700",
+        "mics": [
+            "XBRU",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "40.90"
+    },
+    {
+        "name": "TOTALENERGIES",
+        "symbol": "TTE",
+        "isin": "FR0000120271",
+        "mics": [
+            "XPAR",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "52.80"
+    },
+    {
+        "name": "TUBIZE-FIN",
+        "symbol": "TUB",
+        "isin": "BE0003823409",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "119.00"
+    },
+    {
+        "name": "UCB",
+        "symbol": "UCB",
+        "isin": "BE0003739530",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "149.05"
+    },
+    {
+        "name": "UMICORE",
+        "symbol": "UMI",
+        "isin": "BE0974320526",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "8.415"
+    },
+    {
+        "name": "UNIFIEDPOST GROUP",
+        "symbol": "UPG",
+        "isin": "BE0974371032",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "3.40"
+    },
+    {
+        "name": "VAN DE VELDE",
+        "symbol": "VAN",
+        "isin": "BE0003839561",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "32.55"
+    },
+    {
+        "name": "VASTNED",
+        "symbol": "VASTB",
+        "isin": "BE0003754687",
+        "mics": [
+            "XBRU",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "28.20"
+    },
+    {
+        "name": "VGP",
+        "symbol": "VGP",
+        "isin": "BE0003878957",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "78.20"
+    },
+    {
+        "name": "VIOHALCO",
+        "symbol": "VIO",
+        "isin": "BE0974271034",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "5.56"
+    },
+    {
+        "name": "VRANKEN-POMMERY",
+        "symbol": "VRAP",
+        "isin": "FR0000062796",
+        "mics": [
+            "XPAR",
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "11.60"
+    },
+    {
+        "name": "WAREHOUSES ESTATES",
+        "symbol": "WEB",
+        "isin": "BE0003734481",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "39.40"
+    },
+    {
+        "name": "WDP",
+        "symbol": "WDP",
+        "isin": "BE0974349814",
+        "mics": [
+            "XBRU",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "21.90"
+    },
+    {
+        "name": "WERELDHAVE BELGIUM",
+        "symbol": "WEHB",
+        "isin": "BE0003724383",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "50.20"
+    },
+    {
+        "name": "WHAT''S COOKING GP",
+        "symbol": "WHATS",
+        "isin": "BE0003573814",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "107.00"
+    },
+    {
+        "name": "XIOR",
+        "symbol": "XIOR",
+        "isin": "BE0974288202",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "27.65"
+    },
+    {
+        "name": "ZENOBE GRAMME CERT",
+        "symbol": "ZEN",
+        "isin": "BE0003809267",
+        "mics": [
+            "XBRU"
+        ],
+        "currency": "EUR",
+        "last_price": "198.00"
+    },
+    {
+        "name": "AALBERTS NV",
+        "symbol": "AALB",
+        "isin": "NL0000852564",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "28.22"
+    },
+    {
+        "name": "ABN AMRO BANK N.V.",
+        "symbol": "ABN",
+        "isin": "NL0011540547",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "17.905"
+    },
+    {
+        "name": "ACCSYS",
+        "symbol": "AXS",
+        "isin": "GB00BQQFX454",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.5402"
+    },
+    {
+        "name": "ACOMO",
+        "symbol": "ACOMO",
+        "isin": "NL0000313286",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "22.20"
+    },
+    {
+        "name": "ADYEN",
+        "symbol": "ADYEN",
+        "isin": "NL0012969182",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1,468.00"
+    },
+    {
+        "name": "AEGON",
+        "symbol": "AGN",
+        "isin": "BMG0112X1056",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.662"
+    },
+    {
+        "name": "Agility Capital H",
+        "symbol": "AGIL",
+        "isin": "VGG885761301",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "USD",
+        "last_price": "2.94"
+    },
+    {
+        "name": "AIR FRANCE -KLM",
+        "symbol": "AF",
+        "isin": "FR001400J770",
+        "mics": [
+            "XPAR",
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.614"
+    },
+    {
+        "name": "AJAX",
+        "symbol": "AJAX",
+        "isin": "NL0000018034",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.92"
+    },
+    {
+        "name": "AKZO NOBEL",
+        "symbol": "AKZA",
+        "isin": "NL0013267909",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "56.06"
+    },
+    {
+        "name": "ALFEN",
+        "symbol": "ALFEN",
+        "isin": "NL0012817175",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "14.375"
+    },
+    {
+        "name": "ALLFUNDS GROUP",
+        "symbol": "ALLFG",
+        "isin": "GB00BNTJ3546",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.92"
+    },
+    {
+        "name": "ALMUNDA PRO NV",
+        "symbol": "AMUND",
+        "isin": "NL0010696704",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.14"
+    },
+    {
+        "name": "ALUMEXX N.V.",
+        "symbol": "ALX",
+        "isin": "NL0012194724",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.37"
+    },
+    {
+        "name": "AMG",
+        "symbol": "AMG",
+        "isin": "NL0000888691",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "15.93"
+    },
+    {
+        "name": "ARCADIS",
+        "symbol": "ARCAD",
+        "isin": "NL0006237562",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "41.18"
+    },
+    {
+        "name": "ARCELORMITTAL SA",
+        "symbol": "MT",
+        "isin": "LU1598757687",
+        "mics": [
+            "XAMS",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "25.91"
+    },
+    {
+        "name": "ASM INTERNATIONAL",
+        "symbol": "ASM",
+        "isin": "NL0000334118",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "425.40"
+    },
+    {
+        "name": "ASML HOLDING",
+        "symbol": "ASML",
+        "isin": "NL0010273215",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "588.20"
+    },
+    {
+        "name": "ASR NEDERLAND",
+        "symbol": "ASRNL",
+        "isin": "NL0011872643",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "54.06"
+    },
+    {
+        "name": "AZERION",
+        "symbol": "AZRN",
+        "isin": "NL00150006Z9",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.38"
+    },
+    {
+        "name": "AZERION WARRANTS",
+        "symbol": "AZRNW",
+        "isin": "NL00150007A0",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0005"
+    },
+    {
+        "name": "B&S Group",
+        "symbol": "BSGR",
+        "isin": "LU1789205884",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.97"
+    },
+    {
+        "name": "BAM GROEP KON",
+        "symbol": "BAMNB",
+        "isin": "NL0000337319",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.45"
+    },
+    {
+        "name": "BANIJAY GROUP",
+        "symbol": "BNJ",
+        "isin": "NL0015000X07",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "8.451"
+    },
+    {
+        "name": "BANIJAY GROUP WARR",
+        "symbol": "BNJW",
+        "isin": "NL0015000H56",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.25"
+    },
+    {
+        "name": "BASIC-FIT",
+        "symbol": "BFIT",
+        "isin": "NL0011872650",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "19.49"
+    },
+    {
+        "name": "BE SEMICONDUCTOR",
+        "symbol": "BESI",
+        "isin": "NL0012866412",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "96.12"
+    },
+    {
+        "name": "BEVER HOLDING",
+        "symbol": "BEVER",
+        "isin": "NL0000285278",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "2.70"
+    },
+    {
+        "name": "BM3EAC",
+        "symbol": "BACE",
+        "isin": "KYG137071075",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "USD",
+        "last_price": "10.00"
+    },
+    {
+        "name": "BRUNEL INTERNAT",
+        "symbol": "BRNL",
+        "isin": "NL0010776944",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.19"
+    },
+    {
+        "name": "CABKA",
+        "symbol": "CABKA",
+        "isin": "NL00150000S7",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "2.00"
+    },
+    {
+        "name": "CABKA DSC2 TS",
+        "symbol": "DSC2S",
+        "isin": "NL00150002R5",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "CABKA EUR 12W",
+        "symbol": "DSCW2",
+        "isin": "NL00150000U3",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0015"
+    },
+    {
+        "name": "CABKA EUR 13W",
+        "symbol": "DSCW3",
+        "isin": "NL00150000V1",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0015"
+    },
+    {
+        "name": "CM.COM",
+        "symbol": "CMCOM",
+        "isin": "NL0012747059",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.53"
+    },
+    {
+        "name": "Coca-ColaEuropacif",
+        "symbol": "CCEP",
+        "isin": "GB00BDCPN049",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "76.80"
+    },
+    {
+        "name": "CORBION",
+        "symbol": "CRBN",
+        "isin": "NL0010583399",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "18.26"
+    },
+    {
+        "name": "CTAC",
+        "symbol": "CTAC",
+        "isin": "NL0000345577",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.39"
+    },
+    {
+        "name": "CTP",
+        "symbol": "CTPNV",
+        "isin": "NL00150006R6",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "16.28"
+    },
+    {
+        "name": "CVC CAPITAL",
+        "symbol": "CVC",
+        "isin": "JE00BRX98089",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "15.95"
+    },
+    {
+        "name": "DGB GROUP N.V.",
+        "symbol": "DGB",
+        "isin": "NL0009169515",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.486"
+    },
+    {
+        "name": "DSM FIRMENICH AG",
+        "symbol": "DSFIR",
+        "isin": "CH1216478797",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "92.90"
+    },
+    {
+        "name": "EASE2PAY NV",
+        "symbol": "EAS2P",
+        "isin": "NL0000345627",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.4049"
+    },
+    {
+        "name": "EBUSCO HOLDING",
+        "symbol": "EBUS",
+        "isin": "NL0015002AG2",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.632"
+    },
+    {
+        "name": "ENVIPCO",
+        "symbol": "ENVI",
+        "isin": "NL0015000GX8",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "5.26"
+    },
+    {
+        "name": "EUROCASTLE INVEST.",
+        "symbol": "ECT",
+        "isin": "GB00B94QM994",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "8.80"
+    },
+    {
+        "name": "EXOR NV",
+        "symbol": "EXO",
+        "isin": "NL0012059018",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "82.70"
+    },
+    {
+        "name": "FASTNED",
+        "symbol": "FAST",
+        "isin": "NL0013654809",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "19.22"
+    },
+    {
+        "name": "FERRARI GROUP",
+        "symbol": "FERGR",
+        "isin": "GB00BN0VZ646",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.96"
+    },
+    {
+        "name": "FERROVIAL",
+        "symbol": "FER",
+        "isin": "NL0015001FS8",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "42.38"
+    },
+    {
+        "name": "FLOW TRADERS",
+        "symbol": "FLOW",
+        "isin": "BMG3602E1084",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "24.30"
+    },
+    {
+        "name": "FORFARMERS",
+        "symbol": "FFARM",
+        "isin": "NL0011832811",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.005"
+    },
+    {
+        "name": "FUGRO",
+        "symbol": "FUR",
+        "isin": "NL00150003E1",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "11.32"
+    },
+    {
+        "name": "GIG",
+        "symbol": "CABLE",
+        "isin": "GG00BMB5XZ39",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "GBP",
+        "last_price": "4.10"
+    },
+    {
+        "name": "HAL TRUST",
+        "symbol": "HAL",
+        "isin": "BMG455841020",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "115.40"
+    },
+    {
+        "name": "HAVAS",
+        "symbol": "HAVAS",
+        "isin": "NL0015002AH0",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.4502"
+    },
+    {
+        "name": "HAWICK DATA NV",
+        "symbol": "HWK",
+        "isin": "NL0010556726",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.88"
+    },
+    {
+        "name": "HEIJMANS KON",
+        "symbol": "HEIJM",
+        "isin": "NL0009269109",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "44.22"
+    },
+    {
+        "name": "HEINEKEN",
+        "symbol": "HEIA",
+        "isin": "NL0000009165",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "77.04"
+    },
+    {
+        "name": "HEINEKEN HOLDING",
+        "symbol": "HEIO",
+        "isin": "NL0000008977",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "67.10"
+    },
+    {
+        "name": "HOLLAND COLOURS",
+        "symbol": "HOLCO",
+        "isin": "NL0000440311",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "89.00"
+    },
+    {
+        "name": "HYDRATEC",
+        "symbol": "HYDRA",
+        "isin": "NL0009391242",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "166.00"
+    },
+    {
+        "name": "IMCD",
+        "symbol": "IMCD",
+        "isin": "NL0010801007",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "119.90"
+    },
+    {
+        "name": "INPOST",
+        "symbol": "INPST",
+        "isin": "LU2290522684",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "14.46"
+    },
+    {
+        "name": "JDE PEET'S",
+        "symbol": "JDEP",
+        "isin": "NL0014332678",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "20.84"
+    },
+    {
+        "name": "JUST EAT TAKEAWAY",
+        "symbol": "TKWY",
+        "isin": "NL0012015705",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "19.19"
+    },
+    {
+        "name": "KENDRION",
+        "symbol": "KENDR",
+        "isin": "NL0000852531",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "10.08"
+    },
+    {
+        "name": "KPN KON",
+        "symbol": "KPN",
+        "isin": "NL0000009082",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.948"
+    },
+    {
+        "name": "LAVIDE HOLDING",
+        "symbol": "LVIDE",
+        "isin": "NL0010545679",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.432"
+    },
+    {
+        "name": "MKB Nedsense",
+        "symbol": "NEDSE",
+        "isin": "NL0009312842",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0597"
+    },
+    {
+        "name": "MOREFIELD GROUP",
+        "symbol": "MORE",
+        "isin": "CWN814651014",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.51"
+    },
+    {
+        "name": "MOTORK",
+        "symbol": "MTRK",
+        "isin": "GB00BMXH3352",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.50"
+    },
+    {
+        "name": "NAI ORD SHARES",
+        "symbol": "NAI",
+        "isin": "NL0015000CG2",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.05"
+    },
+    {
+        "name": "NAI TREAS SHARES",
+        "symbol": "NAITR",
+        "isin": "NL0015000CF4",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "NAI WARRANTS",
+        "symbol": "NAIW",
+        "isin": "NL0015000CH0",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.06"
+    },
+    {
+        "name": "NEDAP",
+        "symbol": "NEDAP",
+        "isin": "NL0000371243",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "59.50"
+    },
+    {
+        "name": "NEPI ROCKCASTLE",
+        "symbol": "NRP",
+        "isin": "NL0015000RT3",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.52"
+    },
+    {
+        "name": "NEW SOURCES ENERGY",
+        "symbol": "NSE",
+        "isin": "NL0009822014",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.018"
+    },
+    {
+        "name": "NN GROUP",
+        "symbol": "NN",
+        "isin": "NL0010773842",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "52.80"
+    },
+    {
+        "name": "NSI N.V.",
+        "symbol": "NSI",
+        "isin": "NL0012365084",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "20.85"
+    },
+    {
+        "name": "NX FILTRATION",
+        "symbol": "NXFIL",
+        "isin": "NL0015000D50",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "3.495"
+    },
+    {
+        "name": "OCI",
+        "symbol": "OCI",
+        "isin": "NL0010558797",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.05"
+    },
+    {
+        "name": "PB HOLDING",
+        "symbol": "PBH",
+        "isin": "NL0000336303",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "2.90"
+    },
+    {
+        "name": "PHARMING GROUP",
+        "symbol": "PHARM",
+        "isin": "NL0010391025",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.7455"
+    },
+    {
+        "name": "PHILIPS BUY BACK",
+        "symbol": "INPHI",
+        "isin": "NL0000009322",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "PHILIPS KON",
+        "symbol": "PHIA",
+        "isin": "NL0000009538",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "22.04"
+    },
+    {
+        "name": "PORCELEYNE FLES",
+        "symbol": "PORF",
+        "isin": "NL0000378669",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "11.50"
+    },
+    {
+        "name": "POSTNL",
+        "symbol": "PNL",
+        "isin": "NL0009739416",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.9565"
+    },
+    {
+        "name": "PPLA CLASS A",
+        "symbol": "PPLAA",
+        "isin": "BMG7209L1000",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "PPLA CLASS B",
+        "symbol": "PPLAB",
+        "isin": "BMG7209L1182",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "PPLA European Unit",
+        "symbol": "PPLA",
+        "isin": "US69355L1098",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "PROSUS",
+        "symbol": "PRX",
+        "isin": "NL0013654783",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "40.61"
+    },
+    {
+        "name": "QEV",
+        "symbol": "QEV",
+        "isin": "NL0015000NM7",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "7.50"
+    },
+    {
+        "name": "QEV TREAS SHARES",
+        "symbol": "QEVT",
+        "isin": "NL0015000NL9",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "QEV WARRANTS",
+        "symbol": "QEVW",
+        "isin": "NL0015000NK1",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "0.22"
+    },
+    {
+        "name": "RANDSTAD NV",
+        "symbol": "RAND",
+        "isin": "NL0000379121",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "34.83"
+    },
+    {
+        "name": "REINET INVESTMENTS",
+        "symbol": "REINA",
+        "isin": "LU0383812293",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "23.00"
+    },
+    {
+        "name": "RELX",
+        "symbol": "REN",
+        "isin": "GB00B2B0DG97",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "46.78"
+    },
+    {
+        "name": "RENEWI",
+        "symbol": "RWI",
+        "isin": "GB00BNR4T868",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "10.05"
+    },
+    {
+        "name": "SBM OFFSHORE",
+        "symbol": "SBMO",
+        "isin": "NL0000360618",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "17.90"
+    },
+    {
+        "name": "SHELL PLC",
+        "symbol": "SHELL",
+        "isin": "GB00BP6MXD84",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "28.93"
+    },
+    {
+        "name": "SIF HOLDING",
+        "symbol": "SIFG",
+        "isin": "NL0011660485",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "9.14"
+    },
+    {
+        "name": "SIGNIFY NV",
+        "symbol": "LIGHT",
+        "isin": "NL0011821392",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "19.43"
+    },
+    {
+        "name": "SLIGRO FOOD GROUP",
+        "symbol": "SLIGR",
+        "isin": "NL0000817179",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "11.90"
+    },
+    {
+        "name": "TETRAGON FIN GRP",
+        "symbol": "TFG",
+        "isin": "GG00B1RMC548",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "USD",
+        "last_price": "14.40"
+    },
+    {
+        "name": "THE LONDON TUNNELS",
+        "symbol": "TLT",
+        "isin": "GB00BS28ZN53",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "GBP",
+        "last_price": "2.16"
+    },
+    {
+        "name": "THEON INTERNAT",
+        "symbol": "THEON",
+        "isin": "CY0200751713",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "25.05"
+    },
+    {
+        "name": "TITAN",
+        "symbol": "TITAN",
+        "isin": "NL0010389508",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.0496"
+    },
+    {
+        "name": "TKH GROUP",
+        "symbol": "TWEKA",
+        "isin": "NL0000852523",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "35.10"
+    },
+    {
+        "name": "TOMTOM",
+        "symbol": "TOM2",
+        "isin": "NL0013332471",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.70"
+    },
+    {
+        "name": "UMG",
+        "symbol": "UMG",
+        "isin": "NL0015000IY2",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "24.93"
+    },
+    {
+        "name": "UNILEVER",
+        "symbol": "UNA",
+        "isin": "GB00B10RZP78",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "54.90"
+    },
+    {
+        "name": "V LANSCHOT KEMPEN",
+        "symbol": "VLK",
+        "isin": "NL0000302636",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "49.11"
+    },
+    {
+        "name": "VALUE8",
+        "symbol": "VALUE",
+        "isin": "NL0010661864",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.151"
+    },
+    {
+        "name": "VALUE8 CUM PREF",
+        "symbol": "PREVA",
+        "isin": "NL0015118803",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "4.75"
+    },
+    {
+        "name": "VIVORYON",
+        "symbol": "VVY",
+        "isin": "NL00150002Q7",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "1.798"
+    },
+    {
+        "name": "VOLTA FINANCE",
+        "symbol": "VTA",
+        "isin": "GG00B1GHHH78",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "6.09"
+    },
+    {
+        "name": "VOPAK",
+        "symbol": "VPK",
+        "isin": "NL0009432491",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "35.56"
+    },
+    {
+        "name": "WERELDHAVE",
+        "symbol": "WHA",
+        "isin": "NL0000289213",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "16.26"
+    },
+    {
+        "name": "WOLTERS KLUWER",
+        "symbol": "WKL",
+        "isin": "NL0000395903",
+        "mics": [
+            "XAMS"
+        ],
+        "currency": "EUR",
+        "last_price": "152.45"
+    },
+    {
+        "name": "YOUNITED FIN. WARR",
+        "symbol": "YOUNW",
+        "isin": "LU2999660207",
+        "mics": [
+            "XAMS",
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "YOUNITED FINANCIAL",
+        "symbol": "YOUNI",
+        "isin": "LU2999653251",
+        "mics": [
+            "XAMS",
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.25"
+    },
+    {
+        "name": "2020 BULKERS",
+        "symbol": "2020",
+        "isin": "BMG9156K1018",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "112.10"
+    },
+    {
+        "name": "ABG SUNDAL COLLIER",
+        "symbol": "ABG",
+        "isin": "NO0003021909",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "6.65"
+    },
+    {
+        "name": "ABL GROUP",
+        "symbol": "ABL",
+        "isin": "NO0010715394",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.68"
+    },
+    {
+        "name": "AF GRUPPEN",
+        "symbol": "AFG",
+        "isin": "NO0003078107",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "141.00"
+    },
+    {
+        "name": "AGILYX",
+        "symbol": "AGLX",
+        "isin": "NO0010872468",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "25.80"
+    },
+    {
+        "name": "AIRTHINGS",
+        "symbol": "AIRX",
+        "isin": "NO0010895568",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.25"
+    },
+    {
+        "name": "AKASTOR",
+        "symbol": "AKAST",
+        "isin": "NO0010215684",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.38"
+    },
+    {
+        "name": "AKER",
+        "symbol": "AKER",
+        "isin": "NO0010234552",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "598.00"
+    },
+    {
+        "name": "AKER BIOMARINE",
+        "symbol": "AKBM",
+        "isin": "NO0010886625",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "52.00"
+    },
+    {
+        "name": "AKER BP",
+        "symbol": "AKRBP",
+        "isin": "NO0010345853",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "221.80"
+    },
+    {
+        "name": "AKER CARBON CAPTUR",
+        "symbol": "ACC",
+        "isin": "NO0010890304",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "3.692"
+    },
+    {
+        "name": "AKER HORIZONS",
+        "symbol": "AKH",
+        "isin": "NO0010921232",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.296"
+    },
+    {
+        "name": "AKER SOLUTIONS",
+        "symbol": "AKSO",
+        "isin": "NO0010716582",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "31.20"
+    },
+    {
+        "name": "AKVA GROUP",
+        "symbol": "AKVA",
+        "isin": "NO0003097503",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "62.00"
+    },
+    {
+        "name": "AMSC",
+        "symbol": "AMSC",
+        "isin": "NO0010272065",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "26.05"
+    },
+    {
+        "name": "ARCHER",
+        "symbol": "ARCH",
+        "isin": "BMG0451H2087",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "21.45"
+    },
+    {
+        "name": "ARCTICZYMES TECHNO",
+        "symbol": "AZT",
+        "isin": "NO0010014632",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "17.25"
+    },
+    {
+        "name": "ARENDALS FOSSEKOMP",
+        "symbol": "AFK",
+        "isin": "NO0003572802",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "124.50"
+    },
+    {
+        "name": "ARGEO",
+        "symbol": "ARGEO",
+        "isin": "NO0013257410",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "3.90"
+    },
+    {
+        "name": "ARRIBATEC GROUP",
+        "symbol": "ARR",
+        "isin": "NO0012861667",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "0.371"
+    },
+    {
+        "name": "ATEA",
+        "symbol": "ATEA",
+        "isin": "NO0004822503",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "140.40"
+    },
+    {
+        "name": "ATLANTIC SAPPHI TR",
+        "symbol": "ASAS",
+        "isin": "NO0013340802",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "0.60"
+    },
+    {
+        "name": "ATLANTIC SAPPHIRE",
+        "symbol": "ASA",
+        "isin": "NO0013464750",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "7.399"
+    },
+    {
+        "name": "AURSKOG SPAREBANK",
+        "symbol": "AURG",
+        "isin": "NO0006001601",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "233.00"
+    },
+    {
+        "name": "AUSTEVOLL SEAFOOD",
+        "symbol": "AUSS",
+        "isin": "NO0010073489",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "94.70"
+    },
+    {
+        "name": "AUTOSTORE HOLDINGS",
+        "symbol": "AUTO",
+        "isin": "BMG0670A1099",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.06"
+    },
+    {
+        "name": "AVANCE GAS HOLDING",
+        "symbol": "AGAS",
+        "isin": "BMG067231032",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "3.318"
+    },
+    {
+        "name": "AXACTOR",
+        "symbol": "ACR",
+        "isin": "NO0010840515",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "4.39"
+    },
+    {
+        "name": "B2 Impact",
+        "symbol": "B2I",
+        "isin": "NO0010633951",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.04"
+    },
+    {
+        "name": "BAKKAFROST",
+        "symbol": "BAKKA",
+        "isin": "FO0000000179",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "500.50"
+    },
+    {
+        "name": "BERGENBIO",
+        "symbol": "BGBIO",
+        "isin": "NO0013251173",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.81"
+    },
+    {
+        "name": "BEWI",
+        "symbol": "BEWI",
+        "isin": "NO0010890965",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "21.55"
+    },
+    {
+        "name": "BIEN SPAREBANK",
+        "symbol": "BIEN",
+        "isin": "NO0012706763",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "147.00"
+    },
+    {
+        "name": "BLUENORD",
+        "symbol": "BNOR",
+        "isin": "NO0010379266",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "593.00"
+    },
+    {
+        "name": "BONHEUR",
+        "symbol": "BONHR",
+        "isin": "NO0003110603",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "232.00"
+    },
+    {
+        "name": "BORGESTAD",
+        "symbol": "BOR",
+        "isin": "NO0013256180",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "17.10"
+    },
+    {
+        "name": "BORREGAARD",
+        "symbol": "BRG",
+        "isin": "NO0010657505",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "168.60"
+    },
+    {
+        "name": "BOUVET",
+        "symbol": "BOUV",
+        "isin": "NO0010360266",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "76.30"
+    },
+    {
+        "name": "BW ENERGY LIMITED",
+        "symbol": "BWE",
+        "isin": "BMG0702P1086",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "27.30"
+    },
+    {
+        "name": "BW LPG",
+        "symbol": "BWLPG",
+        "isin": "SGXZ69436764",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "109.30"
+    },
+    {
+        "name": "BW OFFSHORE LTD",
+        "symbol": "BWO",
+        "isin": "BMG1738J1247",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "28.25"
+    },
+    {
+        "name": "BYGGMA",
+        "symbol": "BMA",
+        "isin": "NO0003087603",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "16.50"
+    },
+    {
+        "name": "CADELER",
+        "symbol": "CADLR",
+        "isin": "DK0061412772",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "52.85"
+    },
+    {
+        "name": "CAPSOL TECHNOLOGI",
+        "symbol": "CAPSL",
+        "isin": "NO0010923121",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "10.60"
+    },
+    {
+        "name": "CAVENDISH HYDROGEN",
+        "symbol": "CAVEN",
+        "isin": "NO0013219535",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.90"
+    },
+    {
+        "name": "CIRCIO HOLDING",
+        "symbol": "CRNA",
+        "isin": "NO0013033795",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "0.82"
+    },
+    {
+        "name": "CLOUDBERRY CLEAN",
+        "symbol": "CLOUD",
+        "isin": "NO0010876642",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "12.38"
+    },
+    {
+        "name": "CONTEXTVISION",
+        "symbol": "CONTX",
+        "isin": "SE0014731154",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.901"
+    },
+    {
+        "name": "CRAYON GROUP HOLD",
+        "symbol": "CRAYN",
+        "isin": "NO0010808892",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "118.30"
+    },
+    {
+        "name": "DNB BANK",
+        "symbol": "DNB",
+        "isin": "NO0010161896",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "263.80"
+    },
+    {
+        "name": "DNO",
+        "symbol": "DNO",
+        "isin": "NO0003921009",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.872"
+    },
+    {
+        "name": "DOF GROUP",
+        "symbol": "DOFG",
+        "isin": "NO0012851874",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "81.20"
+    },
+    {
+        "name": "EDDA WIND",
+        "symbol": "EWIND",
+        "isin": "NO0010998529",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "16.50"
+    },
+    {
+        "name": "EIDESVIK OFFSHORE",
+        "symbol": "EIOF",
+        "isin": "NO0010263023",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.50"
+    },
+    {
+        "name": "ELECTROMAGNET GEO",
+        "symbol": "EMGS",
+        "isin": "NO0010358484",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "2.01"
+    },
+    {
+        "name": "ELKEM",
+        "symbol": "ELK",
+        "isin": "NO0010816093",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "19.22"
+    },
+    {
+        "name": "ELLIPTIC LABORATOR",
+        "symbol": "ELABS",
+        "isin": "NO0010722283",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.37"
+    },
+    {
+        "name": "ELMERA GROUP",
+        "symbol": "ELMRA",
+        "isin": "NO0010815673",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "35.75"
+    },
+    {
+        "name": "ELOPAK",
+        "symbol": "ELO",
+        "isin": "NO0011002586",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "41.20"
+    },
+    {
+        "name": "END\u00daR",
+        "symbol": "ENDUR",
+        "isin": "NO0012555459",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "79.30"
+    },
+    {
+        "name": "ENSURGE MICROPOWER",
+        "symbol": "ENSU",
+        "isin": "NO0013186460",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.252"
+    },
+    {
+        "name": "ENTRA",
+        "symbol": "ENTRA",
+        "isin": "NO0010716418",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "118.00"
+    },
+    {
+        "name": "EQUINOR",
+        "symbol": "EQNR",
+        "isin": "NO0010096985",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "236.80"
+    },
+    {
+        "name": "EQVA",
+        "symbol": "EQVA",
+        "isin": "NO0010708605",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "4.88"
+    },
+    {
+        "name": "EUROPRIS",
+        "symbol": "EPR",
+        "isin": "NO0010735343",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "73.00"
+    },
+    {
+        "name": "FLEX LNG",
+        "symbol": "FLNG",
+        "isin": "BMG359472021",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "248.50"
+    },
+    {
+        "name": "FRONTLINE",
+        "symbol": "FRO",
+        "isin": "CY0200352116",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "170.70"
+    },
+    {
+        "name": "GENTIAN DIAGNOSTIC",
+        "symbol": "GENT",
+        "isin": "NO0010748866",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "48.90"
+    },
+    {
+        "name": "GENTOO MEDIA",
+        "symbol": "G2MNO",
+        "isin": "US36467X2062",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "18.36"
+    },
+    {
+        "name": "GJENSIDIGE FORSIKR",
+        "symbol": "GJF",
+        "isin": "NO0010582521",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "243.60"
+    },
+    {
+        "name": "GOLDEN OCEAN GROUP",
+        "symbol": "GOGL",
+        "isin": "BMG396372051",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "80.75"
+    },
+    {
+        "name": "GOODTECH",
+        "symbol": "GOD",
+        "isin": "NO0004913609",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "8.40"
+    },
+    {
+        "name": "GRIEG SEAFOOD",
+        "symbol": "GSF",
+        "isin": "NO0010365521",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "61.10"
+    },
+    {
+        "name": "GYLDENDAL",
+        "symbol": "GYL",
+        "isin": "NO0004288200",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "428.00"
+    },
+    {
+        "name": "HAFNIA LIMITED",
+        "symbol": "HAFNI",
+        "isin": "SGXZ53070850",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "46.53"
+    },
+    {
+        "name": "HAUGESUND SPB",
+        "symbol": "HGSB",
+        "isin": "NO0010764053",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "162.48"
+    },
+    {
+        "name": "HAVILA SHIPPING",
+        "symbol": "HAVI",
+        "isin": "NO0010257728",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.255"
+    },
+    {
+        "name": "HERMANA HOLDING",
+        "symbol": "HERMA",
+        "isin": "NO0013401380",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "10.95"
+    },
+    {
+        "name": "HEXAGON COMPOSITES",
+        "symbol": "HEX",
+        "isin": "NO0003067902",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "19.76"
+    },
+    {
+        "name": "HEXAGON PURUS",
+        "symbol": "HPUR",
+        "isin": "NO0010904923",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.9552"
+    },
+    {
+        "name": "HOFSETH BIOCARE",
+        "symbol": "HBC",
+        "isin": "NO0010598683",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.77"
+    },
+    {
+        "name": "HYDROGENPRO",
+        "symbol": "HYPRO",
+        "isin": "NO0010892359",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "4.25"
+    },
+    {
+        "name": "H\u00d6EGH AUTOLINERS",
+        "symbol": "HAUTO",
+        "isin": "NO0011082075",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "79.90"
+    },
+    {
+        "name": "H\u00d8LAND OG SETSKOG",
+        "symbol": "HSPG",
+        "isin": "NO0010012636",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "162.98"
+    },
+    {
+        "name": "IDEX BIOMETRICS",
+        "symbol": "IDEX",
+        "isin": "NO0013107490",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "0.0401"
+    },
+    {
+        "name": "INTEGRATED WIND SO",
+        "symbol": "IWS",
+        "isin": "NO0013461350",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "41.59"
+    },
+    {
+        "name": "INTEROIL EXPL PROD",
+        "symbol": "IOX",
+        "isin": "NO0013119255",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.598"
+    },
+    {
+        "name": "ITERA",
+        "symbol": "ITERA",
+        "isin": "NO0010001118",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.38"
+    },
+    {
+        "name": "JINHUI SHIPP TRANS",
+        "symbol": "JIN",
+        "isin": "BMG5137R1088",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.62"
+    },
+    {
+        "name": "J\u00c6REN SPAREBANK",
+        "symbol": "JAREN",
+        "isin": "NO0010359433",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "344.50"
+    },
+    {
+        "name": "KID",
+        "symbol": "KID",
+        "isin": "NO0010743545",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "142.40"
+    },
+    {
+        "name": "KITRON",
+        "symbol": "KIT",
+        "isin": "NO0003079709",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "49.00"
+    },
+    {
+        "name": "KLAVENESS COMBINAT",
+        "symbol": "KCC",
+        "isin": "NO0010833262",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "61.00"
+    },
+    {
+        "name": "KMC PROPERTIES",
+        "symbol": "KMCP",
+        "isin": "NO0010360175",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "0.06"
+    },
+    {
+        "name": "KOMPLETT",
+        "symbol": "KOMPL",
+        "isin": "NO0011016040",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.10"
+    },
+    {
+        "name": "KONGSBERG AUTOMOT",
+        "symbol": "KOA",
+        "isin": "NO0003033102",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.35"
+    },
+    {
+        "name": "KONGSBERG GRUPPEN",
+        "symbol": "KOG",
+        "isin": "NO0003043309",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1,552.00"
+    },
+    {
+        "name": "LER\u00d8Y SEAFOOD GP",
+        "symbol": "LSG",
+        "isin": "NO0003096208",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "44.10"
+    },
+    {
+        "name": "LIFECARE",
+        "symbol": "LIFE",
+        "isin": "NO0013355859",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "8.98"
+    },
+    {
+        "name": "WEBSTEP",
+        "symbol": "WSTEP",
+        "isin": "NO0010609662",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "25.00"
+    },
+    {
+        "name": "WILH. WILHELMSEN A",
+        "symbol": "WWI",
+        "isin": "NO0010571698",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "372.50"
+    },
+    {
+        "name": "WILH. WILHELMSEN B",
+        "symbol": "WWIB",
+        "isin": "NO0010576010",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "357.50"
+    },
+    {
+        "name": "XXL",
+        "symbol": "XXL",
+        "isin": "NO0013293142",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "10.50"
+    },
+    {
+        "name": "YARA INTERNATIONAL",
+        "symbol": "YAR",
+        "isin": "NO0010208051",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "337.40"
+    },
+    {
+        "name": "ZALARIS",
+        "symbol": "ZAL",
+        "isin": "NO0010708910",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "81.80"
+    },
+    {
+        "name": "ZAPTEC",
+        "symbol": "ZAP",
+        "isin": "NO0010713936",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "16.98"
+    },
+    {
+        "name": "ZELLUNA",
+        "symbol": "ZLNA",
+        "isin": "NO0013524942",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "16.30"
+    },
+    {
+        "name": "LINK MOBILITY GRP",
+        "symbol": "LINK",
+        "isin": "NO0010894231",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "23.30"
+    },
+    {
+        "name": "MAGNORA",
+        "symbol": "MGN",
+        "isin": "NO0010187032",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "22.50"
+    },
+    {
+        "name": "MEDISTIM",
+        "symbol": "MEDI",
+        "isin": "NO0010159684",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "159.50"
+    },
+    {
+        "name": "MELHUS SPAREBANK",
+        "symbol": "MELG",
+        "isin": "NO0006001908",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "168.20"
+    },
+    {
+        "name": "MORROW BANK",
+        "symbol": "MOBA",
+        "isin": "NO0010694029",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "10.35"
+    },
+    {
+        "name": "MOWI",
+        "symbol": "MOWI",
+        "isin": "NO0003054108",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "184.30"
+    },
+    {
+        "name": "MPC CONTAINER SHIP",
+        "symbol": "MPCC",
+        "isin": "NO0010791353",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "15.455"
+    },
+    {
+        "name": "MULTICONSULT",
+        "symbol": "MULTI",
+        "isin": "NO0010734338",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "183.00"
+    },
+    {
+        "name": "NAPATECH",
+        "symbol": "NAPA",
+        "isin": "DK0060520450",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "19.34"
+    },
+    {
+        "name": "NAVAMEDIC",
+        "symbol": "NAVA",
+        "isin": "NO0010205966",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "21.30"
+    },
+    {
+        "name": "NEKKAR",
+        "symbol": "NKR",
+        "isin": "NO0003049405",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.20"
+    },
+    {
+        "name": "NEL",
+        "symbol": "NEL",
+        "isin": "NO0010081235",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "2.36"
+    },
+    {
+        "name": "NEXT BIOMETRICS GP",
+        "symbol": "NEXT",
+        "isin": "NO0010629108",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "4.70"
+    },
+    {
+        "name": "NORBIT",
+        "symbol": "NORBT",
+        "isin": "NO0010856511",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "134.80"
+    },
+    {
+        "name": "NORCONSULT",
+        "symbol": "NORCO",
+        "isin": "NO0013052209",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "45.75"
+    },
+    {
+        "name": "NORDIC MINING",
+        "symbol": "NOM",
+        "isin": "NO0013162693",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "21.15"
+    },
+    {
+        "name": "NORDIC SEMICONDUC",
+        "symbol": "NOD",
+        "isin": "NO0003055501",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "121.30"
+    },
+    {
+        "name": "NORSK HYDRO",
+        "symbol": "NHY",
+        "isin": "NO0005052605",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "56.42"
+    },
+    {
+        "name": "NORSKE SKOG",
+        "symbol": "NSKOG",
+        "isin": "NO0010861115",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "18.42"
+    },
+    {
+        "name": "NORTHERN OCEAN LTD",
+        "symbol": "NOL",
+        "isin": "BMG6682J1036",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.68"
+    },
+    {
+        "name": "NORWEGIAN AIR SHUT",
+        "symbol": "NAS",
+        "isin": "NO0010196140",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "13.305"
+    },
+    {
+        "name": "NRC GROUP",
+        "symbol": "NRC",
+        "isin": "NO0003679102",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.10"
+    },
+    {
+        "name": "NYKODE THERAPEUTIC",
+        "symbol": "NYKD",
+        "isin": "NO0010714785",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "2.308"
+    },
+    {
+        "name": "ODFJELL DRILLING",
+        "symbol": "ODL",
+        "isin": "BMG671801022",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "53.80"
+    },
+    {
+        "name": "ODFJELL SER. A",
+        "symbol": "ODF",
+        "isin": "NO0003399909",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "95.90"
+    },
+    {
+        "name": "ODFJELL SER. B",
+        "symbol": "ODFB",
+        "isin": "NO0003399917",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "94.50"
+    },
+    {
+        "name": "ODFJELL TECHNOLOGY",
+        "symbol": "OTL",
+        "isin": "BMG6716L1081",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "43.60"
+    },
+    {
+        "name": "OKEA",
+        "symbol": "OKEA",
+        "isin": "NO0010816895",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "17.02"
+    },
+    {
+        "name": "OKEANIS ECO TANKER",
+        "symbol": "OET",
+        "isin": "MHY641771016",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "237.50"
+    },
+    {
+        "name": "OLAV THON EIENDOMS",
+        "symbol": "OLT",
+        "isin": "NO0005638858",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "254.00"
+    },
+    {
+        "name": "ORKLA",
+        "symbol": "ORK",
+        "isin": "NO0003733800",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "110.50"
+    },
+    {
+        "name": "OTELLO CORPORATION",
+        "symbol": "OTEC",
+        "isin": "NO0010040611",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.10"
+    },
+    {
+        "name": "OTOVO",
+        "symbol": "OTOVO",
+        "isin": "NO0010809783",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.634"
+    },
+    {
+        "name": "PANORO ENERGY",
+        "symbol": "PEN",
+        "isin": "NO0010564701",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "23.00"
+    },
+    {
+        "name": "PARATUS ENERGY SER",
+        "symbol": "PLSV",
+        "isin": "BMG6904D1083",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "37.88"
+    },
+    {
+        "name": "PARETO BANK",
+        "symbol": "PARB",
+        "isin": "NO0010397581",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "72.30"
+    },
+    {
+        "name": "PCI BIOTECH HOLD",
+        "symbol": "PCIB",
+        "isin": "NO0010405640",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.50"
+    },
+    {
+        "name": "PETROLIA",
+        "symbol": "PSE",
+        "isin": "CY0102630916",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "3.93"
+    },
+    {
+        "name": "PETRONOR E&P",
+        "symbol": "PNOR",
+        "isin": "NO0012942525",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "10.82"
+    },
+    {
+        "name": "PEXIP HOLDING",
+        "symbol": "PEXIP",
+        "isin": "NO0010840507",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "41.65"
+    },
+    {
+        "name": "PHOTOCURE",
+        "symbol": "PHO",
+        "isin": "NO0010000045",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "56.30"
+    },
+    {
+        "name": "POLARIS MEDIA",
+        "symbol": "POL",
+        "isin": "NO0010466022",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "85.50"
+    },
+    {
+        "name": "POLIGHT",
+        "symbol": "PLT",
+        "isin": "NO0012535832",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "3.92"
+    },
+    {
+        "name": "PROSAFE",
+        "symbol": "PRS",
+        "isin": "NO0010861990",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "6.51"
+    },
+    {
+        "name": "PROTECTOR FORSIKRG",
+        "symbol": "PROT",
+        "isin": "NO0010209331",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "365.00"
+    },
+    {
+        "name": "PUBLIC PROPERTY IN",
+        "symbol": "PUBLI",
+        "isin": "NO0013178616",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "18.90"
+    },
+    {
+        "name": "QUESTERRE ENERGY",
+        "symbol": "QEC",
+        "isin": "CA74836K1003",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.984"
+    },
+    {
+        "name": "RANA GRUBER",
+        "symbol": "RANA",
+        "isin": "NO0010907389",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "72.40"
+    },
+    {
+        "name": "REACH SUBSEA",
+        "symbol": "REACH",
+        "isin": "NO0003117202",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "6.80"
+    },
+    {
+        "name": "REC SILICON",
+        "symbol": "RECSI",
+        "isin": "NO0010112675",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "2.112"
+    },
+    {
+        "name": "ROGALAND SPAREBANK",
+        "symbol": "ROGS",
+        "isin": "NO0006001007",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "128.56"
+    },
+    {
+        "name": "S.D. STANDARD ETC",
+        "symbol": "SDSD",
+        "isin": "CY0101550917",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.885"
+    },
+    {
+        "name": "SAGA PURE",
+        "symbol": "SAGA",
+        "isin": "NO0010572589",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.32"
+    },
+    {
+        "name": "SALMAR",
+        "symbol": "SALM",
+        "isin": "NO0010310956",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "499.40"
+    },
+    {
+        "name": "SALMON EVOLUTION",
+        "symbol": "SALME",
+        "isin": "NO0010892094",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "6.05"
+    },
+    {
+        "name": "SATS",
+        "symbol": "SATS",
+        "isin": "NO0010863285",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "36.25"
+    },
+    {
+        "name": "SCANA",
+        "symbol": "SCANA",
+        "isin": "NO0003053308",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.9144"
+    },
+    {
+        "name": "SCATEC",
+        "symbol": "SCATC",
+        "isin": "NO0010715139",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "78.90"
+    },
+    {
+        "name": "SCHIBSTED SER. A",
+        "symbol": "SCHA",
+        "isin": "NO0003028904",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "313.00"
+    },
+    {
+        "name": "SCHIBSTED SER. B",
+        "symbol": "SCHB",
+        "isin": "NO0010736879",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "297.40"
+    },
+    {
+        "name": "Sea1 Offshore",
+        "symbol": "SEA1",
+        "isin": "KYG812291253",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "18.68"
+    },
+    {
+        "name": "SEABIRD EXPLORAT",
+        "symbol": "SBX",
+        "isin": "CY0101162119",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.92"
+    },
+    {
+        "name": "SELVAAG BOLIG",
+        "symbol": "SBO",
+        "isin": "NO0010612450",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "35.00"
+    },
+    {
+        "name": "SHELF DRILLING",
+        "symbol": "SHLF",
+        "isin": "KYG236271055",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.50"
+    },
+    {
+        "name": "SKUE SPAREBANK",
+        "symbol": "SKUE",
+        "isin": "NO0006001809",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "321.05"
+    },
+    {
+        "name": "SMARTCRAFT",
+        "symbol": "SMCRT",
+        "isin": "NO0011008971",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "25.80"
+    },
+    {
+        "name": "SOGN SPAREBANK",
+        "symbol": "SOGN",
+        "isin": "NO0006000603",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "244.95"
+    },
+    {
+        "name": "SOLSTAD OFFSHORE",
+        "symbol": "SOFF",
+        "isin": "NO0003080608",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "38.00"
+    },
+    {
+        "name": "SPAREBANK 1 SMN",
+        "symbol": "MING",
+        "isin": "NO0006390301",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "180.34"
+    },
+    {
+        "name": "SPAREBANK 1 S\u00d8R-N",
+        "symbol": "SB1NO",
+        "isin": "NO0010631567",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "156.40"
+    },
+    {
+        "name": "SPAREBANKEN M\u00d8RE",
+        "symbol": "MORG",
+        "isin": "NO0012483207",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "98.72"
+    },
+    {
+        "name": "SPAREBANKEN S\u00d8R",
+        "symbol": "SOR",
+        "isin": "NO0006001502",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "194.50"
+    },
+    {
+        "name": "SPAREBANKEN VEST",
+        "symbol": "SVEG",
+        "isin": "NO0006000900",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "135.80"
+    },
+    {
+        "name": "SPAREBANKEN \u00d8ST",
+        "symbol": "SPOG",
+        "isin": "NO0006222009",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "72.91"
+    },
+    {
+        "name": "SPBK 1 NORDM\u00d8RE",
+        "symbol": "SNOR",
+        "isin": "NO0010691660",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "154.98"
+    },
+    {
+        "name": "SPBK 1 \u00d8STLANDET",
+        "symbol": "SPOL",
+        "isin": "NO0010751910",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "165.70"
+    },
+    {
+        "name": "SPBK1 HELGELAND",
+        "symbol": "HELG",
+        "isin": "NO0010029804",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "157.96"
+    },
+    {
+        "name": "SPBK1 NORD-NORGE",
+        "symbol": "NONG",
+        "isin": "NO0006000801",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "133.16"
+    },
+    {
+        "name": "SPBK1 RINGERIKE",
+        "symbol": "RING",
+        "isin": "NO0006390400",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "369.00"
+    },
+    {
+        "name": "SPBK1 \u00d8STFOLD AKE",
+        "symbol": "SOAG",
+        "isin": "NO0010285562",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "414.95"
+    },
+    {
+        "name": "SPIR GROUP",
+        "symbol": "SPIR",
+        "isin": "NO0012548819",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.04"
+    },
+    {
+        "name": "STOLT-NIELSEN",
+        "symbol": "SNI",
+        "isin": "BMG850801025",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "232.00"
+    },
+    {
+        "name": "STOREBRAND",
+        "symbol": "STB",
+        "isin": "NO0003053605",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "122.30"
+    },
+    {
+        "name": "STRONGPOINT",
+        "symbol": "STRO",
+        "isin": "NO0010098247",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "9.14"
+    },
+    {
+        "name": "SUBSEA 7",
+        "symbol": "SUBC",
+        "isin": "LU0075646355",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "154.70"
+    },
+    {
+        "name": "TECHSTEP",
+        "symbol": "TECH",
+        "isin": "NO0012916131",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "11.10"
+    },
+    {
+        "name": "TEKNA HOLDING",
+        "symbol": "TEKNA",
+        "isin": "NO0010951577",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "5.40"
+    },
+    {
+        "name": "TELENOR",
+        "symbol": "TEL",
+        "isin": "NO0010063308",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "149.30"
+    },
+    {
+        "name": "TGS",
+        "symbol": "TGS",
+        "isin": "NO0003078800",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "76.65"
+    },
+    {
+        "name": "THOR MEDICAL",
+        "symbol": "TRMED",
+        "isin": "NO0010597883",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "2.40"
+    },
+    {
+        "name": "TIETOEVRY",
+        "symbol": "TIETO",
+        "isin": "FI0009000277",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "189.00"
+    },
+    {
+        "name": "TOMRA SYSTEMS",
+        "symbol": "TOM",
+        "isin": "NO0012470089",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "155.50"
+    },
+    {
+        "name": "TREASURE",
+        "symbol": "TRE",
+        "isin": "NO0010763550",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "29.40"
+    },
+    {
+        "name": "TR\u00d8NDELAG SPBK",
+        "symbol": "TRSB",
+        "isin": "NO0010788268",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "109.50"
+    },
+    {
+        "name": "VEIDEKKE",
+        "symbol": "VEI",
+        "isin": "NO0005806802",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "151.00"
+    },
+    {
+        "name": "VISTIN PHARMA",
+        "symbol": "VISTN",
+        "isin": "NO0010734122",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "24.00"
+    },
+    {
+        "name": "VOSS VEKSEL OGLAND",
+        "symbol": "VVL",
+        "isin": "NO0003025009",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "360.00"
+    },
+    {
+        "name": "VOW",
+        "symbol": "VOW",
+        "isin": "NO0010708068",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "1.362"
+    },
+    {
+        "name": "V\u00c5R ENERGI",
+        "symbol": "VAR",
+        "isin": "NO0011202772",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "30.18"
+    },
+    {
+        "name": "WALLENIUS WILHELMS",
+        "symbol": "WAWI",
+        "isin": "NO0010571680",
+        "mics": [
+            "XOSL"
+        ],
+        "currency": "NOK",
+        "last_price": "72.70"
+    },
+    {
+        "name": "74SOFTWARE",
+        "symbol": "74SW",
+        "isin": "FR0011040500",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "30.90"
+    },
+    {
+        "name": "AB SCIENCE",
+        "symbol": "AB",
+        "isin": "FR0010557264",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.43"
+    },
+    {
+        "name": "ABC ARBITRAGE",
+        "symbol": "ABCA",
+        "isin": "FR0004040608",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.98"
+    },
+    {
+        "name": "ABEO",
+        "symbol": "ABEO",
+        "isin": "FR0013185857",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.36"
+    },
+    {
+        "name": "ABIONYX PHARMA",
+        "symbol": "ABNX",
+        "isin": "FR0012616852",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.22"
+    },
+    {
+        "name": "ABIVAX",
+        "symbol": "ABVX",
+        "isin": "FR0012333284",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.16"
+    },
+    {
+        "name": "ABL Diagnostics",
+        "symbol": "ABLD",
+        "isin": "FR001400AHX6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.50"
+    },
+    {
+        "name": "ACANTHE DEV.",
+        "symbol": "ACAN",
+        "isin": "FR0000064602",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.3236"
+    },
+    {
+        "name": "ACCOR",
+        "symbol": "AC",
+        "isin": "FR0000120404",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "43.07"
+    },
+    {
+        "name": "ACTEOS",
+        "symbol": "EOS",
+        "isin": "FR0000076861",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.05"
+    },
+    {
+        "name": "ADC SIIC",
+        "symbol": "ALDV",
+        "isin": "BE0974269012",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.057"
+    },
+    {
+        "name": "ADOCIA",
+        "symbol": "ADOC",
+        "isin": "FR0011184241",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.84"
+    },
+    {
+        "name": "ADP",
+        "symbol": "ADP",
+        "isin": "FR0010340141",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "109.80"
+    },
+    {
+        "name": "AELIS FARMA",
+        "symbol": "AELIS",
+        "isin": "FR0014007ZB4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.18"
+    },
+    {
+        "name": "AERKOMM INC",
+        "symbol": "AKOM",
+        "isin": "US00774B2088",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.80"
+    },
+    {
+        "name": "AFFLUENT MED BSAR",
+        "symbol": "AFMBS",
+        "isin": "FR001400FL38",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0005"
+    },
+    {
+        "name": "AFFLUENT MEDICAL",
+        "symbol": "AFME",
+        "isin": "FR0013333077",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.345"
+    },
+    {
+        "name": "AIR LIQUIDE",
+        "symbol": "AI",
+        "isin": "FR0000120073",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "178.32"
+    },
+    {
+        "name": "AIRBUS",
+        "symbol": "AIR",
+        "isin": "NL0000235190",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "140.82"
+    },
+    {
+        "name": "AKWEL",
+        "symbol": "AKW",
+        "isin": "FR0000053027",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.44"
+    },
+    {
+        "name": "ALAN ALLMAN",
+        "symbol": "AAA",
+        "isin": "FR0000062465",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.50"
+    },
+    {
+        "name": "ALPES (COMPAGNIE)",
+        "symbol": "CDA",
+        "isin": "FR0000053324",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "15.70"
+    },
+    {
+        "name": "ALSTOM",
+        "symbol": "ALO",
+        "isin": "FR0010220475",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "20.66"
+    },
+    {
+        "name": "ALTAMIR",
+        "symbol": "LTA",
+        "isin": "FR0000053837",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "23.26"
+    },
+    {
+        "name": "ALTAREA",
+        "symbol": "ALTA",
+        "isin": "FR0000033219",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "102.22"
+    },
+    {
+        "name": "ALTAREIT",
+        "symbol": "AREIT",
+        "isin": "FR0000039216",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "487.30"
+    },
+    {
+        "name": "ALTEN",
+        "symbol": "ATE",
+        "isin": "FR0000071946",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "70.30"
+    },
+    {
+        "name": "AMPLITUDE SURGICAL",
+        "symbol": "AMPLI",
+        "isin": "FR0012789667",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.05"
+    },
+    {
+        "name": "AMUNDI",
+        "symbol": "AMUN",
+        "isin": "FR0004125920",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "68.70"
+    },
+    {
+        "name": "ANTIN INFRA PARTN",
+        "symbol": "ANTIN",
+        "isin": "FR0014005AL0",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.97"
+    },
+    {
+        "name": "ARAMIS GROUP",
+        "symbol": "ARAMI",
+        "isin": "FR0014003U94",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.75"
+    },
+    {
+        "name": "ARGAN",
+        "symbol": "ARG",
+        "isin": "FR0010481960",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "60.30"
+    },
+    {
+        "name": "ARKEMA",
+        "symbol": "AKE",
+        "isin": "FR0010313833",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "65.80"
+    },
+    {
+        "name": "ARTEA",
+        "symbol": "ARTE",
+        "isin": "FR0012185536",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.80"
+    },
+    {
+        "name": "ARTMARKET COM",
+        "symbol": "PRC",
+        "isin": "FR0000074783",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.229"
+    },
+    {
+        "name": "ARTOIS NOM.",
+        "symbol": "ARTO",
+        "isin": "FR0000076952",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10,900.00"
+    },
+    {
+        "name": "ARVERNE GROUP",
+        "symbol": "ARVEN",
+        "isin": "FR001400JWR8",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.82"
+    },
+    {
+        "name": "ARVERNE WARRANT",
+        "symbol": "ARVBS",
+        "isin": "FR0014003AC4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.05"
+    },
+    {
+        "name": "ASSYSTEM",
+        "symbol": "ASY",
+        "isin": "FR0000074148",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "35.15"
+    },
+    {
+        "name": "ATEME",
+        "symbol": "ATEME",
+        "isin": "FR0011992700",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.30"
+    },
+    {
+        "name": "ATLAND",
+        "symbol": "ATLD",
+        "isin": "FR0013455482",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "44.10"
+    },
+    {
+        "name": "ATOS",
+        "symbol": "ATO",
+        "isin": "FR001400X2S4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "34.41"
+    },
+    {
+        "name": "AUBAY",
+        "symbol": "AUB",
+        "isin": "FR0000063737",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "44.05"
+    },
+    {
+        "name": "AUGROS COSMETIC",
+        "symbol": "AUGR",
+        "isin": "FR0000061780",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.20"
+    },
+    {
+        "name": "AUREA",
+        "symbol": "AURE",
+        "isin": "FR0000039232",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.12"
+    },
+    {
+        "name": "AVENIR TELECOM",
+        "symbol": "AVT",
+        "isin": "FR001400CFI7",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.044"
+    },
+    {
+        "name": "AXA",
+        "symbol": "CS",
+        "isin": "FR0000120628",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "40.56"
+    },
+    {
+        "name": "AXA NV25",
+        "symbol": "CSNV",
+        "isin": "FR001400UEZ6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "35.60"
+    },
+    {
+        "name": "AYVENS",
+        "symbol": "AYV",
+        "isin": "FR0013258662",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.715"
+    },
+    {
+        "name": "BAINS MER MONACO",
+        "symbol": "BAIN",
+        "isin": "MC0000031187",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "101.96"
+    },
+    {
+        "name": "BALYO",
+        "symbol": "BALYO",
+        "isin": "FR0013258399",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.384"
+    },
+    {
+        "name": "BARBARA BUI",
+        "symbol": "BUI",
+        "isin": "FR0000062788",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.80"
+    },
+    {
+        "name": "BASSAC",
+        "symbol": "BASS",
+        "isin": "FR0004023208",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "62.00"
+    },
+    {
+        "name": "BASTIDE LE CONFORT",
+        "symbol": "BLC",
+        "isin": "FR0000035370",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "26.65"
+    },
+    {
+        "name": "BELIEVE",
+        "symbol": "BLV",
+        "isin": "FR0014003FE9",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "15.20"
+    },
+    {
+        "name": "BENETEAU",
+        "symbol": "BEN",
+        "isin": "FR0000035164",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.895"
+    },
+    {
+        "name": "BIC",
+        "symbol": "BB",
+        "isin": "FR0000120966",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "55.30"
+    },
+    {
+        "name": "BIGBEN INTERACTIVE",
+        "symbol": "BIG",
+        "isin": "FR0000074072",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.891"
+    },
+    {
+        "name": "BIOMERIEUX",
+        "symbol": "BIM",
+        "isin": "FR0013280286",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "115.30"
+    },
+    {
+        "name": "BLEECKER",
+        "symbol": "BLEE",
+        "isin": "FR0000062150",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "125.00"
+    },
+    {
+        "name": "BNP PARIBAS ACT.A",
+        "symbol": "BNP",
+        "isin": "FR0000131104",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "72.70"
+    },
+    {
+        "name": "BOIRON",
+        "symbol": "BOI",
+        "isin": "FR0000061129",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "24.10"
+    },
+    {
+        "name": "BOLLORE",
+        "symbol": "BOL",
+        "isin": "FR0000039299",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.32"
+    },
+    {
+        "name": "BOLLORE SE NV 25",
+        "symbol": "BOLNV",
+        "isin": "FR001400XP40",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "BONDUELLE",
+        "symbol": "BON",
+        "isin": "FR0000063935",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.82"
+    },
+    {
+        "name": "BOURSE DIRECT",
+        "symbol": "BSD",
+        "isin": "FR0000074254",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.30"
+    },
+    {
+        "name": "BOUYGUES",
+        "symbol": "EN",
+        "isin": "FR0000120503",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "37.76"
+    },
+    {
+        "name": "BOUYGUES NV25",
+        "symbol": "ENNV",
+        "isin": "FR001400UJU6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "28.54"
+    },
+    {
+        "name": "BUREAU VERITAS",
+        "symbol": "BVI",
+        "isin": "FR0006174348",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "27.98"
+    },
+    {
+        "name": "BURELLE",
+        "symbol": "BUR",
+        "isin": "FR0000061137",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "320.00"
+    },
+    {
+        "name": "CA TOULOUSE 31 CCI",
+        "symbol": "CAT31",
+        "isin": "FR0000045544",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "81.60"
+    },
+    {
+        "name": "CAFOM",
+        "symbol": "CAFO",
+        "isin": "FR0010151589",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.76"
+    },
+    {
+        "name": "CAMBODGE NOM.",
+        "symbol": "CBDG",
+        "isin": "FR001400SUB7",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "96.00"
+    },
+    {
+        "name": "CAPGEMINI",
+        "symbol": "CAP",
+        "isin": "FR0000125338",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "128.95"
+    },
+    {
+        "name": "CARMILA",
+        "symbol": "CARM",
+        "isin": "FR0010828137",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.472"
+    },
+    {
+        "name": "CARPINIENNE PART.",
+        "symbol": "CARP",
+        "isin": "FR0000064156",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.30"
+    },
+    {
+        "name": "CARREFOUR",
+        "symbol": "CA",
+        "isin": "FR0000120172",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "13.835"
+    },
+    {
+        "name": "CASINO BSA1",
+        "symbol": "COBS1",
+        "isin": "FR001400OJ72",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "CASINO BSA3",
+        "symbol": "COBS3",
+        "isin": "FR001400OJ98",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0005"
+    },
+    {
+        "name": "CASINO GUICHARD",
+        "symbol": "CO",
+        "isin": "FR001400OKR3",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.5295"
+    },
+    {
+        "name": "CATANA GROUP",
+        "symbol": "CATG",
+        "isin": "FR0010193052",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.345"
+    },
+    {
+        "name": "CBO TERRITORIA",
+        "symbol": "CBOT",
+        "isin": "FR0010193979",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.73"
+    },
+    {
+        "name": "CEGEDIM",
+        "symbol": "CGM",
+        "isin": "FR0000053506",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "11.95"
+    },
+    {
+        "name": "CFI",
+        "symbol": "CFI",
+        "isin": "FR0000037475",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.98"
+    },
+    {
+        "name": "CHAUSSERIA",
+        "symbol": "CHSR",
+        "isin": "FR0000060907",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.00"
+    },
+    {
+        "name": "CHRISTIAN DIOR",
+        "symbol": "CDI",
+        "isin": "FR0000130403",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "459.60"
+    },
+    {
+        "name": "CIECHARGEURSINVEST",
+        "symbol": "CRI",
+        "isin": "FR0000130692",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "11.22"
+    },
+    {
+        "name": "CLARANOVA",
+        "symbol": "CLA",
+        "isin": "FR0013426004",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.35"
+    },
+    {
+        "name": "CLARIANE",
+        "symbol": "CLARI",
+        "isin": "FR0010386334",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.51"
+    },
+    {
+        "name": "CNOVA",
+        "symbol": "CNV",
+        "isin": "NL0010949392",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0932"
+    },
+    {
+        "name": "COFACE",
+        "symbol": "COFA",
+        "isin": "FR0010667147",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "17.42"
+    },
+    {
+        "name": "COHERIS",
+        "symbol": "COH",
+        "isin": "FR0004031763",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.94"
+    },
+    {
+        "name": "COMPAGNIE ODET",
+        "symbol": "ODET",
+        "isin": "FR0000062234",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1,340.00"
+    },
+    {
+        "name": "COTY",
+        "symbol": "COTY",
+        "isin": "US2220702037",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.421"
+    },
+    {
+        "name": "SCOR SE",
+        "symbol": "SCR",
+        "isin": "FR0010411983",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "26.88"
+    },
+    {
+        "name": "SECHE ENVIRONNEM.",
+        "symbol": "SCHP",
+        "isin": "FR0000039109",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "86.30"
+    },
+    {
+        "name": "SEGRO PLC",
+        "symbol": "SGRO",
+        "isin": "GB00B5ZN1N88",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.30"
+    },
+    {
+        "name": "SELCODIS",
+        "symbol": "SLCO",
+        "isin": "FR0000065492",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.29"
+    },
+    {
+        "name": "SELECTIRENTE",
+        "symbol": "SELER",
+        "isin": "FR0004175842",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "81.00"
+    },
+    {
+        "name": "SERGEFERRARI GROUP",
+        "symbol": "SEFER",
+        "isin": "FR0011950682",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.38"
+    },
+    {
+        "name": "SES",
+        "symbol": "SESG",
+        "isin": "LU0088087324",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.618"
+    },
+    {
+        "name": "SHOWROOMPRIVE",
+        "symbol": "SRP",
+        "isin": "FR0013006558",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.634"
+    },
+    {
+        "name": "SMCP",
+        "symbol": "SMCP",
+        "isin": "FR0013214145",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.03"
+    },
+    {
+        "name": "SOC FRANC CASINOS",
+        "symbol": "SFCA",
+        "isin": "FR0010209809",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.70"
+    },
+    {
+        "name": "SOCIETE GENERALE",
+        "symbol": "GLE",
+        "isin": "FR0000130809",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "42.62"
+    },
+    {
+        "name": "SODEXO",
+        "symbol": "SW",
+        "isin": "FR0000121220",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "55.20"
+    },
+    {
+        "name": "SODITECH",
+        "symbol": "SEC",
+        "isin": "FR0000078321",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.50"
+    },
+    {
+        "name": "SOITEC",
+        "symbol": "SOI",
+        "isin": "FR0013227113",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "49.44"
+    },
+    {
+        "name": "SOLOCAL GROUP",
+        "symbol": "LOCAL",
+        "isin": "FR001400SA10",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.80"
+    },
+    {
+        "name": "SOLUTIONS 30 SE",
+        "symbol": "S30",
+        "isin": "FR0013379484",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.642"
+    },
+    {
+        "name": "SOPRA STERIA GROUP",
+        "symbol": "SOP",
+        "isin": "FR0000050809",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "169.70"
+    },
+    {
+        "name": "SPIE",
+        "symbol": "SPIE",
+        "isin": "FR0012757854",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "40.46"
+    },
+    {
+        "name": "ST DUPONT",
+        "symbol": "DPT",
+        "isin": "FR0000054199",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.1021"
+    },
+    {
+        "name": "ST GOBAIN NV25",
+        "symbol": "SGONV",
+        "isin": "FR001400UEX1",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "STEF",
+        "symbol": "STF",
+        "isin": "FR0000064271",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "119.60"
+    },
+    {
+        "name": "STELLANTIS NV",
+        "symbol": "STLAP",
+        "isin": "NL00150001Q9",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.146"
+    },
+    {
+        "name": "STMICROELECTRONICS",
+        "symbol": "STMPA",
+        "isin": "NL0000226223",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "20.455"
+    },
+    {
+        "name": "SWORD GROUP",
+        "symbol": "SWP",
+        "isin": "FR0004180578",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "33.35"
+    },
+    {
+        "name": "SYNERGIE",
+        "symbol": "SDG",
+        "isin": "FR0000032658",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "30.50"
+    },
+    {
+        "name": "TARKETT",
+        "symbol": "TKTT",
+        "isin": "FR0004188670",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "16.90"
+    },
+    {
+        "name": "TAYNINH",
+        "symbol": "TAYN",
+        "isin": "FR0000063307",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.21"
+    },
+    {
+        "name": "TECHNIP ENERGIES",
+        "symbol": "TE",
+        "isin": "NL0014559478",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "29.92"
+    },
+    {
+        "name": "TELEPERFORMANCE",
+        "symbol": "TEP",
+        "isin": "FR0000051807",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "91.54"
+    },
+    {
+        "name": "TELEVERBIER",
+        "symbol": "TVRB",
+        "isin": "CH0008175645",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "60.00"
+    },
+    {
+        "name": "TERACT",
+        "symbol": "TRACT",
+        "isin": "FR001400BMH7",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.82"
+    },
+    {
+        "name": "TERACT BS",
+        "symbol": "TERBS",
+        "isin": "FR0014000TB2",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0005"
+    },
+    {
+        "name": "TF1",
+        "symbol": "TFI",
+        "isin": "FR0000054900",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.255"
+    },
+    {
+        "name": "TFF GROUP",
+        "symbol": "TFF",
+        "isin": "FR0013295789",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "22.00"
+    },
+    {
+        "name": "THALES",
+        "symbol": "HO",
+        "isin": "FR0000121329",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "233.60"
+    },
+    {
+        "name": "THERMADOR GROUPE",
+        "symbol": "THEP",
+        "isin": "FR0013333432",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "65.30"
+    },
+    {
+        "name": "TIKEHAU CAPITAL",
+        "symbol": "TKO",
+        "isin": "FR0013230612",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.56"
+    },
+    {
+        "name": "TotalEnergiesGabon",
+        "symbol": "EC",
+        "isin": "GA0000121459",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "189.00"
+    },
+    {
+        "name": "TOUAX",
+        "symbol": "TOUP",
+        "isin": "FR0000033003",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.06"
+    },
+    {
+        "name": "TOUR EIFFEL",
+        "symbol": "EIFF",
+        "isin": "FR0000036816",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.84"
+    },
+    {
+        "name": "TRANSGENE",
+        "symbol": "TNG",
+        "isin": "FR0005175080",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.606"
+    },
+    {
+        "name": "TRIGANO",
+        "symbol": "TRI",
+        "isin": "FR0005691656",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "103.30"
+    },
+    {
+        "name": "UBISOFT ENTERTAIN",
+        "symbol": "UBI",
+        "isin": "FR0000054470",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.36"
+    },
+    {
+        "name": "UNIBAIL-RODAMCO-WE",
+        "symbol": "URW",
+        "isin": "FR0013326246",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "72.62"
+    },
+    {
+        "name": "UNIBEL",
+        "symbol": "UNBL",
+        "isin": "FR0000054215",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1,170.00"
+    },
+    {
+        "name": "UNION TECH.INFOR.",
+        "symbol": "FPG",
+        "isin": "FR0000074197",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.119"
+    },
+    {
+        "name": "VALEO",
+        "symbol": "FR",
+        "isin": "FR0013176526",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.82"
+    },
+    {
+        "name": "VALLOUREC",
+        "symbol": "VK",
+        "isin": "FR0013506730",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "16.37"
+    },
+    {
+        "name": "VALLOUREC BSA 21",
+        "symbol": "VKBS",
+        "isin": "FR00140030K7",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "VALNEVA",
+        "symbol": "VLA",
+        "isin": "FR0004056851",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.168"
+    },
+    {
+        "name": "VANTIVA",
+        "symbol": "VANTI",
+        "isin": "FR0013505062",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.1502"
+    },
+    {
+        "name": "VEOLIA ENVIRON.",
+        "symbol": "VIE",
+        "isin": "FR0000124141",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "31.61"
+    },
+    {
+        "name": "VERALLIA",
+        "symbol": "VRLA",
+        "isin": "FR0013447729",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "29.22"
+    },
+    {
+        "name": "VERIMATRIX",
+        "symbol": "VMX",
+        "isin": "FR0010291245",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.262"
+    },
+    {
+        "name": "VETOQUINOL",
+        "symbol": "VETO",
+        "isin": "FR0004186856",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "73.10"
+    },
+    {
+        "name": "VICAT",
+        "symbol": "VCT",
+        "isin": "FR0000031775",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "52.30"
+    },
+    {
+        "name": "VIEL ET COMPAGNIE",
+        "symbol": "VIL",
+        "isin": "FR0000050049",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "13.20"
+    },
+    {
+        "name": "VINCI",
+        "symbol": "DG",
+        "isin": "FR0000125486",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "120.90"
+    },
+    {
+        "name": "VIRBAC",
+        "symbol": "VIRP",
+        "isin": "FR0000031577",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "301.90"
+    },
+    {
+        "name": "VIRIDIEN",
+        "symbol": "VIRI",
+        "isin": "FR001400PVN6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "49.41"
+    },
+    {
+        "name": "VITURA",
+        "symbol": "VTR",
+        "isin": "FR0010309096",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.15"
+    },
+    {
+        "name": "VIVENDI SE",
+        "symbol": "VIV",
+        "isin": "FR0000127771",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.592"
+    },
+    {
+        "name": "VOLTALIA",
+        "symbol": "VLTSA",
+        "isin": "FR0011995588",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "7.287"
+    },
+    {
+        "name": "VusionGroup",
+        "symbol": "VU",
+        "isin": "FR0010282822",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "194.80"
+    },
+    {
+        "name": "WAGA ENERGY",
+        "symbol": "WAGA",
+        "isin": "FR0012532810",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "13.74"
+    },
+    {
+        "name": "WAVESTONE",
+        "symbol": "WAVE",
+        "isin": "FR0013357621",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "43.75"
+    },
+    {
+        "name": "WENDEL",
+        "symbol": "MF",
+        "isin": "FR0000121204",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "86.25"
+    },
+    {
+        "name": "WORLDLINE",
+        "symbol": "WLN",
+        "isin": "FR0011981968",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.903"
+    },
+    {
+        "name": "X-FAB",
+        "symbol": "XFAB",
+        "isin": "BE0974310428",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.708"
+    },
+    {
+        "name": "XILAM ANIMATION",
+        "symbol": "XIL",
+        "isin": "FR0004034072",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.90"
+    },
+    {
+        "name": "ZCI LIMITED",
+        "symbol": "CV",
+        "isin": "BMG9887P1068",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.20"
+    },
+    {
+        "name": "INFOTEL",
+        "symbol": "INF",
+        "isin": "FR0000071797",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "43.00"
+    },
+    {
+        "name": "INNATE PHARMA",
+        "symbol": "IPH",
+        "isin": "FR0010331421",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.756"
+    },
+    {
+        "name": "INTERPARFUMS",
+        "symbol": "ITP",
+        "isin": "FR0004024222",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "36.44"
+    },
+    {
+        "name": "INTEXA",
+        "symbol": "ITXT",
+        "isin": "FR0000064958",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.60"
+    },
+    {
+        "name": "INVENTIVA",
+        "symbol": "IVA",
+        "isin": "FR0013233012",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.18"
+    },
+    {
+        "name": "IPSEN",
+        "symbol": "IPN",
+        "isin": "FR0010259150",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "98.10"
+    },
+    {
+        "name": "IPSOS",
+        "symbol": "IPS",
+        "isin": "FR0000073298",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "39.66"
+    },
+    {
+        "name": "JACQUES BOGART",
+        "symbol": "JBOG",
+        "isin": "FR0012872141",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.05"
+    },
+    {
+        "name": "JACQUET METALS",
+        "symbol": "JCQ",
+        "isin": "FR0000033904",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "20.35"
+    },
+    {
+        "name": "JCDECAUX",
+        "symbol": "DEC",
+        "isin": "FR0000077919",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "15.10"
+    },
+    {
+        "name": "KAUFMAN ET BROAD",
+        "symbol": "KOF",
+        "isin": "FR0004007813",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "33.80"
+    },
+    {
+        "name": "KERING",
+        "symbol": "KER",
+        "isin": "FR0000121485",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "174.24"
+    },
+    {
+        "name": "KLEPIERRE",
+        "symbol": "LI",
+        "isin": "FR0000121964",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "31.22"
+    },
+    {
+        "name": "L'OREAL",
+        "symbol": "OR",
+        "isin": "FR0000120321",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "376.10"
+    },
+    {
+        "name": "LACROIX GROUP",
+        "symbol": "LACR",
+        "isin": "FR0000066607",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.40"
+    },
+    {
+        "name": "LAGARDERE SA",
+        "symbol": "MMB",
+        "isin": "FR0000130213",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "19.10"
+    },
+    {
+        "name": "LATECOERE",
+        "symbol": "LAT",
+        "isin": "FR001400JY13",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.014"
+    },
+    {
+        "name": "LAURENT-PERRIER",
+        "symbol": "LPE",
+        "isin": "FR0006864484",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "96.00"
+    },
+    {
+        "name": "LDC",
+        "symbol": "LOUP",
+        "isin": "FR001400SF56",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "75.70"
+    },
+    {
+        "name": "LECTRA",
+        "symbol": "LSS",
+        "isin": "FR0000065484",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "22.25"
+    },
+    {
+        "name": "LECTRA NV25",
+        "symbol": "LSSNV",
+        "isin": "FR001400UJX0",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "",
+        "last_price": ""
+    },
+    {
+        "name": "LEGRAND",
+        "symbol": "LR",
+        "isin": "FR0010307819",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "96.70"
+    },
+    {
+        "name": "LHYFE",
+        "symbol": "LHYFE",
+        "isin": "FR0014009YQ1",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.50"
+    },
+    {
+        "name": "LINEDATA SERVICES",
+        "symbol": "LIN",
+        "isin": "FR0004156297",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "73.40"
+    },
+    {
+        "name": "LISI",
+        "symbol": "FII",
+        "isin": "FR0000050353",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "26.35"
+    },
+    {
+        "name": "LNA SANTE",
+        "symbol": "LNA",
+        "isin": "FR0004170017",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "23.10"
+    },
+    {
+        "name": "LUMIBIRD",
+        "symbol": "LBIRD",
+        "isin": "FR0000038242",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.68"
+    },
+    {
+        "name": "LVMH",
+        "symbol": "MC",
+        "isin": "FR0000121014",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "497.75"
+    },
+    {
+        "name": "MAAT PHARMA",
+        "symbol": "MAAT",
+        "isin": "FR0012634822",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.02"
+    },
+    {
+        "name": "MAISONS DU MONDE",
+        "symbol": "MDM",
+        "isin": "FR0013153541",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.89"
+    },
+    {
+        "name": "MALTERIES FCO-BEL.",
+        "symbol": "MALT",
+        "isin": "FR0000030074",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "850.00"
+    },
+    {
+        "name": "MANITOU BF",
+        "symbol": "MTU",
+        "isin": "FR0000038606",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.98"
+    },
+    {
+        "name": "MAROC TELECOM",
+        "symbol": "IAM",
+        "isin": "MA0000011488",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.05"
+    },
+    {
+        "name": "MAUREL ET PROM",
+        "symbol": "MAU",
+        "isin": "FR0000051070",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.544"
+    },
+    {
+        "name": "MBWS",
+        "symbol": "MBWS",
+        "isin": "FR0000060873",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.19"
+    },
+    {
+        "name": "MEDIA 6",
+        "symbol": "EDI",
+        "isin": "FR0000064404",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.70"
+    },
+    {
+        "name": "MEDINCELL",
+        "symbol": "MEDCL",
+        "isin": "FR0004065605",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "14.95"
+    },
+    {
+        "name": "MEMSCAP REGPT",
+        "symbol": "MEMS",
+        "isin": "FR0010298620",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.93"
+    },
+    {
+        "name": "MERCIALYS",
+        "symbol": "MERY",
+        "isin": "FR0010241638",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "11.52"
+    },
+    {
+        "name": "MERSEN",
+        "symbol": "MRN",
+        "isin": "FR0000039620",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.40"
+    },
+    {
+        "name": "METROPOLE TV",
+        "symbol": "MMT",
+        "isin": "FR0000053225",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "13.98"
+    },
+    {
+        "name": "MICHELIN",
+        "symbol": "ML",
+        "isin": "FR001400AJ45",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "31.43"
+    },
+    {
+        "name": "MONCEY (FIN.) NOM.",
+        "symbol": "FMONC",
+        "isin": "FR001400SU99",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "107.14"
+    },
+    {
+        "name": "MYHOTELMATCH",
+        "symbol": "MHM",
+        "isin": "FR001400IE67",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.474"
+    },
+    {
+        "name": "NACON",
+        "symbol": "NACON",
+        "isin": "FR0013482791",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.4705"
+    },
+    {
+        "name": "NANOBIOTIX",
+        "symbol": "NANO",
+        "isin": "FR0011341205",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.885"
+    },
+    {
+        "name": "NEURONES",
+        "symbol": "NRO",
+        "isin": "FR0004050250",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "46.50"
+    },
+    {
+        "name": "NEXANS",
+        "symbol": "NEX",
+        "isin": "FR0000044448",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "90.45"
+    },
+    {
+        "name": "NEXITY",
+        "symbol": "NXI",
+        "isin": "FR0010112524",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.84"
+    },
+    {
+        "name": "NOKIA",
+        "symbol": "NOKIA",
+        "isin": "FI0009000681",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.384"
+    },
+    {
+        "name": "NR21",
+        "symbol": "NR21",
+        "isin": "FR0014001PV6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "34.00"
+    },
+    {
+        "name": "NRJ GROUP",
+        "symbol": "NRG",
+        "isin": "FR0000121691",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.60"
+    },
+    {
+        "name": "OENEO",
+        "symbol": "SBT",
+        "isin": "FR0000052680",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.98"
+    },
+    {
+        "name": "OPMOBILITY",
+        "symbol": "OPM",
+        "isin": "FR0000124570",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.54"
+    },
+    {
+        "name": "ORANGE",
+        "symbol": "ORA",
+        "isin": "FR0000133308",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "12.425"
+    },
+    {
+        "name": "OREGE",
+        "symbol": "OREGE",
+        "isin": "FR0010609206",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.321"
+    },
+    {
+        "name": "OSE IMMUNO",
+        "symbol": "OSE",
+        "isin": "FR0012127173",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.815"
+    },
+    {
+        "name": "OVH",
+        "symbol": "OVH",
+        "isin": "FR0014005HJ9",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "12.14"
+    },
+    {
+        "name": "PAREF",
+        "symbol": "PAR",
+        "isin": "FR0010263202",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "38.30"
+    },
+    {
+        "name": "PARROT",
+        "symbol": "PARRO",
+        "isin": "FR0004038263",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.58"
+    },
+    {
+        "name": "PASSAT",
+        "symbol": "PSAT",
+        "isin": "FR0000038465",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.779"
+    },
+    {
+        "name": "PATRIMOINE ET COMM",
+        "symbol": "PAT",
+        "isin": "FR0011027135",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "23.445"
+    },
+    {
+        "name": "PERNOD RICARD",
+        "symbol": "RI",
+        "isin": "FR0000120693",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "96.04"
+    },
+    {
+        "name": "PERRIER (GERARD)",
+        "symbol": "PERR",
+        "isin": "FR0000061459",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "78.80"
+    },
+    {
+        "name": "PEUGEOT INVEST",
+        "symbol": "PEUG",
+        "isin": "FR0000064784",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "70.20"
+    },
+    {
+        "name": "PHAXIAM Tx",
+        "symbol": "PHXM",
+        "isin": "FR001400K4B1",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.58"
+    },
+    {
+        "name": "PIERRE VAC BSA ACT",
+        "symbol": "VACBS",
+        "isin": "FR001400B4H9",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.045"
+    },
+    {
+        "name": "PIERRE VAC BSA CRE",
+        "symbol": "VACBT",
+        "isin": "FR001400B4G1",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.12"
+    },
+    {
+        "name": "PIERRE VACANCES",
+        "symbol": "VAC",
+        "isin": "FR0000073041",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.41"
+    },
+    {
+        "name": "PLANISWARE",
+        "symbol": "PLNW",
+        "isin": "FR001400PFU4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "22.30"
+    },
+    {
+        "name": "PLAST.VAL LOIRE",
+        "symbol": "PVL",
+        "isin": "FR0013252186",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.09"
+    },
+    {
+        "name": "PLUXEE",
+        "symbol": "PLX",
+        "isin": "NL0015001W49",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "19.12"
+    },
+    {
+        "name": "POXEL",
+        "symbol": "POXEL",
+        "isin": "FR0012432516",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.436"
+    },
+    {
+        "name": "PROACTIS SA",
+        "symbol": "PROAC",
+        "isin": "FR0004052561",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.065"
+    },
+    {
+        "name": "PRODWAYS",
+        "symbol": "PWG",
+        "isin": "FR0012613610",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.568"
+    },
+    {
+        "name": "PUBLICIS GROUPE SA",
+        "symbol": "PUB",
+        "isin": "FR0000130577",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "89.22"
+    },
+    {
+        "name": "QUADIENT",
+        "symbol": "QDT",
+        "isin": "FR0000120560",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "15.94"
+    },
+    {
+        "name": "RALLYE",
+        "symbol": "RAL",
+        "isin": "FR0000060618",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0441"
+    },
+    {
+        "name": "RAMSAY GEN SANTE",
+        "symbol": "GDS",
+        "isin": "FR0000044471",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.58"
+    },
+    {
+        "name": "REMY COINTREAU",
+        "symbol": "RCO",
+        "isin": "FR0000130395",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "46.16"
+    },
+    {
+        "name": "RENAULT",
+        "symbol": "RNO",
+        "isin": "FR0000131906",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "46.77"
+    },
+    {
+        "name": "REXEL",
+        "symbol": "RXL",
+        "isin": "FR0010451203",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "23.27"
+    },
+    {
+        "name": "ROBERTET",
+        "symbol": "RBT",
+        "isin": "FR0000039091",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "811.00"
+    },
+    {
+        "name": "ROBERTET CDV 87",
+        "symbol": "CBR",
+        "isin": "FR0000045619",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "120.00"
+    },
+    {
+        "name": "ROBERTET CI",
+        "symbol": "CBE",
+        "isin": "FR0000045601",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "710.00"
+    },
+    {
+        "name": "ROCHE BOBOIS",
+        "symbol": "RBO",
+        "isin": "FR0013344173",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "37.40"
+    },
+    {
+        "name": "RUBIS",
+        "symbol": "RUI",
+        "isin": "FR0013269123",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "28.28"
+    },
+    {
+        "name": "S.E.B.",
+        "symbol": "SK",
+        "isin": "FR0000121709",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "81.80"
+    },
+    {
+        "name": "SAFRAN",
+        "symbol": "SAF",
+        "isin": "FR0000073272",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "229.85"
+    },
+    {
+        "name": "SAINT JEAN GROUPE",
+        "symbol": "SABE",
+        "isin": "FR0000060121",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "20.20"
+    },
+    {
+        "name": "SAMSE",
+        "symbol": "SAMS",
+        "isin": "FR0000060071",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "140.50"
+    },
+    {
+        "name": "SANOFI",
+        "symbol": "SAN",
+        "isin": "FR0000120578",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "92.31"
+    },
+    {
+        "name": "SANOFI NV25",
+        "symbol": "SANNV",
+        "isin": "FR001400UEY9",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "85.50"
+    },
+    {
+        "name": "SARTORIUS STED BIO",
+        "symbol": "DIM",
+        "isin": "FR0013154002",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "201.90"
+    },
+    {
+        "name": "SAVENCIA",
+        "symbol": "SAVE",
+        "isin": "FR0000120107",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "65.00"
+    },
+    {
+        "name": "SCBSM",
+        "symbol": "CBSM",
+        "isin": "FR0006239109",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.80"
+    },
+    {
+        "name": "SCHNEIDER ELECTRIC",
+        "symbol": "SU",
+        "isin": "FR0000121972",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "218.25"
+    },
+    {
+        "name": "COURTOIS",
+        "symbol": "COUR",
+        "isin": "FR0000065393",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "121.00"
+    },
+    {
+        "name": "COVIVIO",
+        "symbol": "COV",
+        "isin": "FR0000064578",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "50.75"
+    },
+    {
+        "name": "COVIVIO HOTELS",
+        "symbol": "COVH",
+        "isin": "FR0000060303",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "22.20"
+    },
+    {
+        "name": "CRCAM ALP.PROV.CCI",
+        "symbol": "CRAP",
+        "isin": "FR0000044323",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "82.49"
+    },
+    {
+        "name": "CRCAM ATL.VEND.CCI",
+        "symbol": "CRAV",
+        "isin": "FR0000185506",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "92.92"
+    },
+    {
+        "name": "CRCAM BRIE PIC2CCI",
+        "symbol": "CRBP2",
+        "isin": "FR0010483768",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "20.66"
+    },
+    {
+        "name": "CRCAM ILLE-VIL.CCI",
+        "symbol": "CIV",
+        "isin": "FR0000045213",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "73.63"
+    },
+    {
+        "name": "CRCAM LANGUED CCI",
+        "symbol": "CRLA",
+        "isin": "FR0010461053",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "53.71"
+    },
+    {
+        "name": "CRCAM LOIRE HTE L.",
+        "symbol": "CRLO",
+        "isin": "FR0000045239",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "64.60"
+    },
+    {
+        "name": "CRCAM MORBIHAN CCI",
+        "symbol": "CMO",
+        "isin": "FR0000045551",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "74.01"
+    },
+    {
+        "name": "CRCAM NORD CCI",
+        "symbol": "CNDF",
+        "isin": "FR0000185514",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "16.562"
+    },
+    {
+        "name": "CRCAM NORM.SEINE",
+        "symbol": "CCN",
+        "isin": "FR0000044364",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "96.01"
+    },
+    {
+        "name": "CRCAM PARIS ET IDF",
+        "symbol": "CAF",
+        "isin": "FR0000045528",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "63.60"
+    },
+    {
+        "name": "CRCAM SUD R.A.CCI",
+        "symbol": "CRSU",
+        "isin": "FR0000045346",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "135.00"
+    },
+    {
+        "name": "CRCAM TOURAINE CCI",
+        "symbol": "CRTO",
+        "isin": "FR0000045304",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "81.50"
+    },
+    {
+        "name": "CREDIT AGRICOLE",
+        "symbol": "ACA",
+        "isin": "FR0000045072",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "16.82"
+    },
+    {
+        "name": "CROSSWOOD",
+        "symbol": "CROS",
+        "isin": "FR0000050395",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "11.00"
+    },
+    {
+        "name": "DANONE",
+        "symbol": "BN",
+        "isin": "FR0000120644",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "74.92"
+    },
+    {
+        "name": "DASSAULT AVIATION",
+        "symbol": "AM",
+        "isin": "FR0014004L86",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "296.80"
+    },
+    {
+        "name": "DASSAULT SYSTEMES",
+        "symbol": "DSY",
+        "isin": "FR0014003TT8",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "32.33"
+    },
+    {
+        "name": "DBV TECHNOLOGIES",
+        "symbol": "DBV",
+        "isin": "FR0010417345",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.49"
+    },
+    {
+        "name": "DEEZER",
+        "symbol": "DEEZR",
+        "isin": "FR001400AYG6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.415"
+    },
+    {
+        "name": "DEEZER WARRANTS",
+        "symbol": "DEEZW",
+        "isin": "FR0014004JF6",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0005"
+    },
+    {
+        "name": "DEKUPLE",
+        "symbol": "DKUPL",
+        "isin": "FR0000062978",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "29.10"
+    },
+    {
+        "name": "DERICHEBOURG",
+        "symbol": "DBG",
+        "isin": "FR0000053381",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.815"
+    },
+    {
+        "name": "DOCK.PETR.AMBES AM",
+        "symbol": "DPAM",
+        "isin": "FR0000065260",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "670.00"
+    },
+    {
+        "name": "EAGLEFOOTBALLGROUP",
+        "symbol": "EFG",
+        "isin": "FR0010428771",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.80"
+    },
+    {
+        "name": "EDENRED",
+        "symbol": "EDEN",
+        "isin": "FR0010908533",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "26.48"
+    },
+    {
+        "name": "EIFFAGE",
+        "symbol": "FGR",
+        "isin": "FR0000130452",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "115.25"
+    },
+    {
+        "name": "EKINOPS",
+        "symbol": "EKI",
+        "isin": "FR0011466069",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.285"
+    },
+    {
+        "name": "ELEC.STRASBOURG",
+        "symbol": "ELEC",
+        "isin": "FR0000031023",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "135.50"
+    },
+    {
+        "name": "ELECT. MADAGASCAR",
+        "symbol": "EEM",
+        "isin": "FR0000035719",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.62"
+    },
+    {
+        "name": "ELIOR GROUP",
+        "symbol": "ELIOR",
+        "isin": "FR0011950732",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.462"
+    },
+    {
+        "name": "ELIS",
+        "symbol": "ELIS",
+        "isin": "FR0012435121",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "22.18"
+    },
+    {
+        "name": "EMEIS",
+        "symbol": "EMEIS",
+        "isin": "FR001400NLM4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "10.274"
+    },
+    {
+        "name": "EQUASENS",
+        "symbol": "EQS",
+        "isin": "FR0012882389",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "36.90"
+    },
+    {
+        "name": "ERAMET",
+        "symbol": "ERA",
+        "isin": "FR0000131757",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "50.85"
+    },
+    {
+        "name": "ESSILORLUXOTTICA",
+        "symbol": "EL",
+        "isin": "FR0000121667",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "251.70"
+    },
+    {
+        "name": "ESSO",
+        "symbol": "ES",
+        "isin": "FR0000120669",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "141.30"
+    },
+    {
+        "name": "EURASIA FONC INV",
+        "symbol": "EFI",
+        "isin": "FR0000061475",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.20"
+    },
+    {
+        "name": "EURAZEO",
+        "symbol": "RF",
+        "isin": "FR0000121121",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "62.55"
+    },
+    {
+        "name": "EUROAPI",
+        "symbol": "EAPI",
+        "isin": "FR0014008VX5",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.648"
+    },
+    {
+        "name": "EUROFINS SCIENT.",
+        "symbol": "ERF",
+        "isin": "FR0014000MR3",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "54.08"
+    },
+    {
+        "name": "EUTELSAT COMMUNIC.",
+        "symbol": "ETL",
+        "isin": "FR0010221234",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.52"
+    },
+    {
+        "name": "EVERGREEN",
+        "symbol": "EGR",
+        "isin": "FR0000035784",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.33"
+    },
+    {
+        "name": "EXAIL TECHNOLOGIES",
+        "symbol": "EXA",
+        "isin": "FR0000062671",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "45.80"
+    },
+    {
+        "name": "EXEL INDUSTRIES",
+        "symbol": "EXE",
+        "isin": "FR0004527638",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "34.30"
+    },
+    {
+        "name": "EXOSENS",
+        "symbol": "EXENS",
+        "isin": "FR001400Q9V2",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "35.10"
+    },
+    {
+        "name": "EXPLOSIFS PROD.CHI",
+        "symbol": "EXPL",
+        "isin": "FR0014003AQ4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "203.05"
+    },
+    {
+        "name": "FAYENC.SARREGUEMI.",
+        "symbol": "FAYE",
+        "isin": "FR0000031973",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "15.80"
+    },
+    {
+        "name": "FDJ UNITED",
+        "symbol": "FDJU",
+        "isin": "FR0013451333",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "31.04"
+    },
+    {
+        "name": "FERM.CAS.MUN.CANNE",
+        "symbol": "FCMC",
+        "isin": "FR0000062101",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1,450.00"
+    },
+    {
+        "name": "FIDUCIAL OFF.SOL.",
+        "symbol": "SACI",
+        "isin": "FR0000061418",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "27.40"
+    },
+    {
+        "name": "FIDUCIAL REAL EST.",
+        "symbol": "ORIA",
+        "isin": "FR0000060535",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "174.00"
+    },
+    {
+        "name": "FIGEAC AERO",
+        "symbol": "FGA",
+        "isin": "FR0011665280",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "8.42"
+    },
+    {
+        "name": "FIN.OUEST AFRICAIN",
+        "symbol": "FOAF",
+        "isin": "SN0000033192",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "19.30"
+    },
+    {
+        "name": "FINANCIERE MARJOS",
+        "symbol": "FINM",
+        "isin": "FR0000060824",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.098"
+    },
+    {
+        "name": "FINATIS",
+        "symbol": "FNTS",
+        "isin": "FR0000035123",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.37"
+    },
+    {
+        "name": "FIPP",
+        "symbol": "FIPP",
+        "isin": "FR0000038184",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.122"
+    },
+    {
+        "name": "FNAC DARTY",
+        "symbol": "FNAC",
+        "isin": "FR0011476928",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "29.505"
+    },
+    {
+        "name": "FONCIERE 7 INVEST",
+        "symbol": "LEBL",
+        "isin": "FR0000065930",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.40"
+    },
+    {
+        "name": "FONCIERE EURIS",
+        "symbol": "EURS",
+        "isin": "FR0000038499",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.159"
+    },
+    {
+        "name": "FONCIERE INEA",
+        "symbol": "INEA",
+        "isin": "FR0010341032",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "35.80"
+    },
+    {
+        "name": "FONCIERE LYONNAISE",
+        "symbol": "FLY",
+        "isin": "FR0000033409",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "76.68"
+    },
+    {
+        "name": "FONCIERE VOLTA",
+        "symbol": "SPEL",
+        "isin": "FR0000053944",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "9.90"
+    },
+    {
+        "name": "FORESTIERE EQUAT.",
+        "symbol": "FORE",
+        "isin": "CI0000053161",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "985.00"
+    },
+    {
+        "name": "FORSEE POWER",
+        "symbol": "FORSE",
+        "isin": "FR0014005SB3",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.67"
+    },
+    {
+        "name": "FORVIA",
+        "symbol": "FRVIA",
+        "isin": "FR0000121147",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "6.994"
+    },
+    {
+        "name": "FRANCAISE ENERGIE",
+        "symbol": "FDE",
+        "isin": "FR0013030152",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "28.85"
+    },
+    {
+        "name": "FREY",
+        "symbol": "FREY",
+        "isin": "FR0010588079",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "27.60"
+    },
+    {
+        "name": "GAUMONT",
+        "symbol": "GAM",
+        "isin": "FR0000034894",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "84.00"
+    },
+    {
+        "name": "GEA GRENOBL.ELECT.",
+        "symbol": "GEA",
+        "isin": "FR0000053035",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "90.49"
+    },
+    {
+        "name": "GECINA",
+        "symbol": "GFC",
+        "isin": "FR0010040865",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "89.85"
+    },
+    {
+        "name": "GENEURO",
+        "symbol": "GNRO",
+        "isin": "CH0308403085",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.0712"
+    },
+    {
+        "name": "GENFIT",
+        "symbol": "GNFT",
+        "isin": "FR0004163111",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.24"
+    },
+    {
+        "name": "GENSIGHT BIOLOGICS",
+        "symbol": "SIGHT",
+        "isin": "FR0013183985",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "0.2695"
+    },
+    {
+        "name": "GETLINK SE",
+        "symbol": "GET",
+        "isin": "FR0010533075",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "16.05"
+    },
+    {
+        "name": "GL EVENTS",
+        "symbol": "GLO",
+        "isin": "FR0000066672",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "21.65"
+    },
+    {
+        "name": "GPE GROUP PIZZORNO",
+        "symbol": "GPE",
+        "isin": "FR0010214064",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "60.40"
+    },
+    {
+        "name": "GRAINES VOLTZ",
+        "symbol": "GRVO",
+        "isin": "FR0000065971",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.558"
+    },
+    {
+        "name": "GROUPE CRIT",
+        "symbol": "CEN",
+        "isin": "FR0000036675",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "65.40"
+    },
+    {
+        "name": "GROUPE ETPO",
+        "symbol": "INFE",
+        "isin": "FR0000066219",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "60.00"
+    },
+    {
+        "name": "GROUPE JAJ",
+        "symbol": "GJAJ",
+        "isin": "FR0004010338",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.23"
+    },
+    {
+        "name": "GROUPE PARTOUCHE",
+        "symbol": "PARP",
+        "isin": "FR0012612646",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.05"
+    },
+    {
+        "name": "GROUPE SFPI",
+        "symbol": "SFPI",
+        "isin": "FR0004155000",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.0705"
+    },
+    {
+        "name": "GTT",
+        "symbol": "GTT",
+        "isin": "FR0011726835",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "138.50"
+    },
+    {
+        "name": "GUERBET",
+        "symbol": "GBT",
+        "isin": "FR0000032526",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "18.78"
+    },
+    {
+        "name": "GUILLEMOT",
+        "symbol": "GUI",
+        "isin": "FR0000066722",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "4.94"
+    },
+    {
+        "name": "HAULOTTE GROUP",
+        "symbol": "PIG",
+        "isin": "FR0000066755",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2.65"
+    },
+    {
+        "name": "HDF",
+        "symbol": "HDF",
+        "isin": "FR0014003VY4",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "5.40"
+    },
+    {
+        "name": "HERMES INTL",
+        "symbol": "RMS",
+        "isin": "FR0000052292",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "2,378.00"
+    },
+    {
+        "name": "HIGH CO",
+        "symbol": "HCO",
+        "isin": "FR0000054231",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "3.06"
+    },
+    {
+        "name": "HOTELS DE PARIS",
+        "symbol": "HDP",
+        "isin": "FR0004165801",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "1.60"
+    },
+    {
+        "name": "ICADE",
+        "symbol": "ICAD",
+        "isin": "FR0000035081",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "21.00"
+    },
+    {
+        "name": "ID LOGISTICS GROUP",
+        "symbol": "IDL",
+        "isin": "FR0010929125",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "388.00"
+    },
+    {
+        "name": "IDI",
+        "symbol": "IDIP",
+        "isin": "FR0000051393",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "70.80"
+    },
+    {
+        "name": "IMERYS",
+        "symbol": "NK",
+        "isin": "FR0000120859",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "28.88"
+    },
+    {
+        "name": "IMMOB.DASSAULT",
+        "symbol": "IMDA",
+        "isin": "FR0000033243",
+        "mics": [
+            "XPAR"
+        ],
+        "currency": "EUR",
+        "last_price": "53.40"
+    }
+]

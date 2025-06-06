@@ -36,7 +36,7 @@ async def retrieve_conversion_rates() -> dict[str, Decimal]:
         logger.debug("Loaded exchange rates from cache.")
         return cached
 
-    logger.info("Fetching exchange rates from ExchangeRateApi API")
+    logger.info("Fetching exchange rates from ExchangeRateApi API.")
 
     # fetch from API and validate
     api_key = _get_api_key()

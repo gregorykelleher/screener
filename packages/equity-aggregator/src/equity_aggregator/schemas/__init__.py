@@ -1,7 +1,7 @@
 # schemas/__init__.py
 
 from .canonical import EquityFinancials, EquityIdentity, EquityProfile
-from .feeds import EuronextFeedData, LseFeedData, XetraFeedData
+from .feeds import EuronextFeedData, LseFeedData, XetraFeedData, YFinanceFeedData
 from .raw import RawEquity
 
 __all__ = [
@@ -13,6 +13,8 @@ __all__ = [
     "EuronextFeedData",
     "LseFeedData",
     "XetraFeedData",
+    # enrichment feeds
+    "YFinanceFeedData",
     # raw
     "RawEquity",
 ]

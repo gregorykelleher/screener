@@ -59,6 +59,7 @@ class LseFeedData(BaseModel):
         # convert GBX to GBP
         raw = convert_gbx_to_gbp(self)
         return {
+            # issuername → maps to RawEquity.name
             "name": raw["issuername"],
             # tidm → maps to RawEquity.symbol
             "symbol": raw.get("tidm"),

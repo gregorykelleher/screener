@@ -20,32 +20,25 @@ _ENRICH_FEEDS: list[FeedPair] = [
 ]
 
 
-async def enrich(
-    raw_equities: AsyncIterable[RawEquity],
-    *,
-    concurrency: int = 32,
-) -> AsyncIterable[RawEquity]:
+async def enrich(raw_equities: AsyncIterable[RawEquity]) -> AsyncIterable[RawEquity]:
     """
     Enrich a stream of RawEquity objects concurrently using configured enrichment feeds.
 
-    For each RawEquity, schedules an enrichment task (up to `concurrency` in parallel).
-    Yields each enriched RawEquity as soon as its enrichment completes.
+    For each RawEquity, schedules an enrichment task and yields each enriched RawEquity
+    as soon as its enrichment completes.
 
     Args:
         raw_equities (AsyncIterable[RawEquity]):
             An async iterable stream of RawEquity objects to enrich.
-        concurrency (int, optional):
-            Maximum number of concurrent enrichment tasks. Defaults to 32.
 
     Yields:
         RawEquity: The enriched RawEquity object as soon as enrichment finishes.
     """
-    semaphore = asyncio.Semaphore(concurrency)
-    tasks: list[asyncio.Task[RawEquity]] = []
-
-    async for equity in raw_equities:
-        # schedule one enrichment task per incoming RawEquity
-        tasks.append(asyncio.create_task(_enrich_equity(equity, semaphore)))
+    async with asyncio.TaskGroup() as task_group:
+        tasks = [
+            task_group.create_task(_enrich_equity(equity))
+            async for equity in raw_equities
+        ]
 
     for completed in asyncio.as_completed(tasks):
         yield await completed
@@ -59,31 +52,25 @@ async def enrich(
     )
 
 
-async def _enrich_equity(
-    source: RawEquity,
-    semaphore: asyncio.Semaphore,
-) -> RawEquity:
+async def _enrich_equity(source: RawEquity) -> RawEquity:
     """
-    Concurrently enrich a RawEquity instance using all configured enrichment feeds,
-    respecting the provided concurrency semaphore.
+    Concurrently enrich a RawEquity instance using all configured enrichment feeds.
 
     Each feed fetches and validates data for the given equity. Results are merged
     with the original, preferring non-None fields from the source.
 
     Args:
         source (RawEquity): The RawEquity object to enrich (assumed USD-denominated).
-        semaphore (asyncio.Semaphore): Semaphore to limit concurrent feed fetches.
 
     Returns:
         RawEquity: The enriched RawEquity with missing fields filled where possible.
     """
-    async with semaphore:
-        # launch one task per enrich feed
-        tasks = [
-            asyncio.create_task(_enrich_with_feeds(source, feed_pair))
-            for feed_pair in _ENRICH_FEEDS
-        ]
-        enriched_equities = await asyncio.gather(*tasks)
+    # launch one task per enrich feed concurrently
+    tasks = [
+        asyncio.create_task(_enrich_with_feeds(source, feed_pair))
+        for feed_pair in _ENRICH_FEEDS
+    ]
+    enriched_equities = await asyncio.gather(*tasks)
 
     # merge all feed‐enriched RawEquity instances into one
     merged_from_feeds = merge(enriched_equities)

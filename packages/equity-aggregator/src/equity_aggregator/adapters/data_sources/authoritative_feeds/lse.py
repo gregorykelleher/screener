@@ -105,6 +105,9 @@ def _parse_equities(data: dict) -> tuple[list[dict], int | None]:
         tuple[list[dict], int | None]: A tuple containing a list of equity dictionaries
         and the total number of pages (or None if not available).
     """
+    if data is None:
+        logger.debug("Got None in _parse_equities, returning empty page")
+        return [], None
     comp = next(
         (c for c in data.get("content", []) if c.get("name") == "priceexplorersearch"),
         None,
@@ -237,7 +240,7 @@ async def _lse_pages(
     Yields:
         dict: An equity dictionary from the LSE API.
     """
-    first_raw = await _fetch_page(client, _build_payload(0, page_size), semaphore)
+    first_raw = await _fetch_page(client, _build_payload(1, page_size), semaphore)
 
     equities, total_pages = _parse_equities(first_raw)
 

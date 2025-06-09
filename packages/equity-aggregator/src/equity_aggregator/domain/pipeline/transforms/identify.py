@@ -48,6 +48,7 @@ async def identify(
         if figi is None:
             return None
 
+        # if we have a valid FIGI, update the equity record
         return equity.model_copy(
             update={
                 "share_class_figi": figi,

@@ -97,6 +97,7 @@ async def _resolve_feed(
 
     if not fetched_raw_data:
         logger.warning("No raw equities for %s found.", feed_name)
+        return []
 
     validate_fn = _make_validator(feed_model)
 

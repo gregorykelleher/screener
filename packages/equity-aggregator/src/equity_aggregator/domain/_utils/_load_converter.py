@@ -1,4 +1,4 @@
-# _utils/_convert.py
+# _utils/_load_converter.py
 
 import logging
 from collections.abc import Callable
@@ -9,8 +9,10 @@ from equity_aggregator.schemas import RawEquity
 
 logger = logging.getLogger(__name__)
 
+type RawEquityConverter = Callable[[RawEquity], RawEquity]
 
-def _build_usd_converter_loader() -> Callable[[], Callable[[RawEquity], RawEquity]]:
+
+def _build_usd_converter_loader() -> Callable[[], RawEquityConverter]:
     """
     Creates an async loader that fetches FX rates once and returns a USD converter.
 
@@ -21,13 +23,13 @@ def _build_usd_converter_loader() -> Callable[[], Callable[[RawEquity], RawEquit
         None
 
     Returns:
-        Callable[[], Callable[[RawEquity], RawEquity]]:
+        Callable[[], EquityConverter]:
             An async function that, when awaited, returns a callable for converting
             RawEquity objects to USD.
     """
-    converter_fn: Callable[[RawEquity], RawEquity] | None = None
+    converter_fn: RawEquityConverter | None = None
 
-    async def loader() -> Callable[[RawEquity], RawEquity]:
+    async def loader() -> RawEquityConverter:
         nonlocal converter_fn
         if converter_fn is None:
             # first call: retrieve conversion rates and build the converter function
@@ -42,7 +44,7 @@ def _build_usd_converter_loader() -> Callable[[], Callable[[RawEquity], RawEquit
 get_usd_converter = _build_usd_converter_loader()
 
 
-def _build_usd_converter(rates: dict[str, Decimal]) -> Callable[[RawEquity], RawEquity]:
+def _build_usd_converter(rates: dict[str, Decimal]) -> RawEquityConverter:
     """
     Creates a converter function to transform a RawEquity's price and market cap to USD.
 
@@ -51,7 +53,7 @@ def _build_usd_converter(rates: dict[str, Decimal]) -> Callable[[RawEquity], Raw
         conversion rates.
 
     Returns:
-        Callable[[RawEquity], RawEquity]: A function that takes a RawEquity object and
+        EquityConverter: A function that takes a RawEquity object and
             returns a new RawEquity with its respective fields converted to USD, unless
             conversion should be skipped.
     """

@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterable, Awaitable, Callable
+from typing import NamedTuple
 
 from equity_aggregator.adapters import (
     fetch_equities_euronext,
@@ -12,15 +13,20 @@ from equity_aggregator.adapters import (
 from equity_aggregator.schemas import (
     EuronextFeedData,
     LseFeedData,
-    RawEquity,
     XetraFeedData,
 )
 
 logger = logging.getLogger(__name__)
 
-type FetchFunc = Callable[[], Awaitable[list[dict[str, object]]]]
 type FeedPair = tuple[FetchFunc, type]
-type ValidatorFunc = Callable[[dict[str, object]], RawEquity | None]
+type FetchFunc = Callable[[], Awaitable[list[dict[str, object]]]]
+
+
+# Named tuple to hold the feed model and its raw data
+class FeedRecord(NamedTuple):
+    model: type
+    raw_data: dict[str, object]
+
 
 # List of authoritative feed fetchers and their corresponding data models
 _AUTH_FEEDS: list[FeedPair] = [
@@ -30,9 +36,10 @@ _AUTH_FEEDS: list[FeedPair] = [
 ]
 
 
-async def resolve() -> AsyncIterable[RawEquity]:
+async def resolve() -> AsyncIterable[FeedRecord]:
     """
-    Concurrently fetch and yield raw equities from all authoritative feeds.
+    Concurrently fetch and yield raw feed records (unparsed) paired with
+    their feed-model class.
 
     Launches fetches for Euronext, Xetra, and LSE in parallel. As soon as a feed's
     data is available, yields its equities one by one. This minimises memory usage
@@ -42,8 +49,8 @@ async def resolve() -> AsyncIterable[RawEquity]:
         None
 
     Returns:
-        AsyncIterable[RawEquity]: An async iterable yielding validated RawEquity
-        objects from all authoritative feeds.
+        AsyncIterable[FeedRecord]: An async iterable yielding
+            tuples of feed-model classes and their raw record dicts.
     """
     logger.info("Resolving raw equities from authoritative feeds...")
 
@@ -56,13 +63,12 @@ async def resolve() -> AsyncIterable[RawEquity]:
     resolved_equities_total = 0
 
     for coroutine in asyncio.as_completed(tasks):
-        # wait for the feed task to complete
-        resolved_raw_equities = await coroutine
+        records = await coroutine
 
-        resolved_equities_total += _log_count(resolved_raw_equities)
+        resolved_equities_total += _log_count(records)
 
-        for raw_equity in resolved_raw_equities:
-            yield raw_equity
+        for feed_record in records:
+            yield feed_record
 
     logger.info(
         "Resolved %d raw equities from all authoritative feeds.",
@@ -70,19 +76,17 @@ async def resolve() -> AsyncIterable[RawEquity]:
     )
 
 
-async def _resolve_feed(
-    feed_pair: FeedPair,
-) -> list[RawEquity]:
+async def _resolve_feed(feed_pair: FeedPair) -> list[FeedRecord]:
     """
-    Fetches raw equity records from a feed, validates and coerces them using the
-    specified feed model, and returns a list of validated RawEquity objects.
+    Fetches raw equity records from a feed and returns them unparsed as dicts,
+    tagged with their feed_model, for downstream parsing.
 
     Args:
         feed_pair (FeedPair): A tuple containing the fetcher function and feed model.
 
     Returns:
-        list[RawEquity]: A list of validated and normalised RawEquity objects
-            ready for downstream processing.
+        list[FeedRecord]: A list of tuples, each containing the
+            feed model and its corresponding raw record dict.
     """
     # unpack the feed pair into fetcher and model
     fetcher, feed_model = feed_pair
@@ -99,13 +103,7 @@ async def _resolve_feed(
         logger.warning("No raw equities for %s found.", feed_name)
         return []
 
-    validate_fn = _make_validator(feed_model)
-
-    return [
-        validated
-        for validated in (validate_fn(record) for record in fetched_raw_data)
-        if validated is not None
-    ]
+    return [FeedRecord(feed_model, record) for record in fetched_raw_data]
 
 
 async def _safe_fetch(
@@ -141,46 +139,13 @@ async def _safe_fetch(
         return None
 
 
-def _make_validator(
-    feed_model: type,
-) -> ValidatorFunc:
-    """
-    Creates a validator function for a given feed model to validate and coerce records.
-
-    Args:
-        feed_model (type): The Pydantic model class used to validate and coerce input
-            records. The model should define the expected schema for the feed data.
-
-    Returns:
-        ValidatorFunc: A function that takes a record dictionary, validates and coerces
-            it using the feed model, and returns a RawEquity instance if successful.
-            Returns None if validation fails, logging a warning with the feed name and
-            error details.
-    """
-    feed_name = feed_model.__name__.removesuffix("FeedData")
-
-    def validate(record: dict[str, object]) -> RawEquity | None:
-        try:
-            # validate the record against the feed model, coercing types as needed
-            coerced = feed_model.model_validate(record).model_dump()
-
-            # convert the coerced data to a RawEquity instance
-            return RawEquity.model_validate(coerced)
-
-        except Exception as error:
-            logger.warning("Skipping invalid record from %s: %s", feed_name, error)
-            return None
-
-    return validate
-
-
-def _log_count(raw_equities: list[RawEquity]) -> int:
+def _log_count(raw_equities: list[FeedRecord]) -> int:
     """
     Logs the number of equities returned by a feed.
 
     Args:
-        raw_equities (list[RawEquity]): The list of RawEquity objects returned by the
-            feed.
+        raw_equities (list[FeedRecord]): The list of tuples returned
+        by the feed, each containing the feed model and its corresponding raw record.
 
     Returns:
         int: The number of equities in the list.

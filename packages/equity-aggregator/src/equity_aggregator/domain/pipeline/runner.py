@@ -4,10 +4,11 @@ import logging
 from collections.abc import AsyncIterable
 from typing import TypeVar
 
+# from equity_aggregator.domain.pipeline.old_resolve import resolve
 from equity_aggregator.domain.pipeline.resolve import resolve
 from equity_aggregator.schemas import RawEquity
 
-from .transforms import deduplicate, enrich, identify, normalise
+from .transforms import convert, deduplicate, enrich, identify, parse
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
     profiles.
 
     This function streams raw equities through a pipeline of transforms:
-      - normalise: Convert prices to reference currency (USD).
+      - convert: Convert prices to reference currency (USD).
       - identify: Attach identification metadata to each raw equity.
       - deduplicate: Merge duplicate raw equities.
       - enrich: Add additional data to each equity profile.
@@ -51,7 +52,8 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
 
     # arrange the pipeline stages
     transforms = (
-        normalise,
+        parse,
+        convert,
         identify,
         deduplicate,
         # enrich,

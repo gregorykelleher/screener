@@ -1,8 +1,8 @@
-# schemas/xetra_feed_data.py
+# feeds/xetra_feed_data.py
 
 from decimal import Decimal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class XetraFeedData(BaseModel):
@@ -47,21 +47,22 @@ class XetraFeedData(BaseModel):
                 for the RawEquity schema.
         """
         return {
-            "name": self["name"],
+            "name": self.get("name"),
             # wkn → maps to RawEquity.symbol
             "symbol": self.get("wkn"),
             "isin": self.get("isin"),
             # no CUSIP or FIGI in Xetra feed, so intentionally omitted from model
             # default to XETR if mic not provided
-            "mics": [self["mic"]] if self.get("mic") else ["XETR"],
+            "mics": [self.get("mic")] if self.get("mic") else ["XETR"],
             "currency": self.get("currency"),
             # nested fields are flattened
             "last_price": (self.get("overview") or {}).get("lastPrice"),
             "market_cap": (self.get("key_data") or {}).get("marketCapitalisation"),
         }
 
-    class Config:
-        # ignore superfluous fields in incoming Xetra raw data feed
-        extra = "ignore"
+    model_config = ConfigDict(
+        # ignore extra fields in incoming Xetra raw data feed
+        extra="ignore",
         # defer strict type validation to RawEquity
-        strict = False
+        strict=False,
+    )

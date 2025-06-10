@@ -1,8 +1,8 @@
-# schemas/euronext_feed_data.py
+# feeds/euronext_feed_data.py
 
 from decimal import Decimal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class EuronextFeedData(BaseModel):
@@ -52,8 +52,9 @@ class EuronextFeedData(BaseModel):
             "last_price": self.get("last_price"),
         }
 
-    class Config:
+    model_config = ConfigDict(
         # ignore extra fields in incoming Euronext raw data feed
-        extra = "ignore"
+        extra="ignore",
         # defer strict type validation to RawEquity
-        strict = False
+        strict=False,
+    )

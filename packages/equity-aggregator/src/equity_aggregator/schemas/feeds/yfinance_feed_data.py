@@ -1,8 +1,8 @@
-# schemas/yfinance_feed_data.py
+# feeds/yfinance_feed_data.py
 
 from decimal import Decimal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class YFinanceFeedData(BaseModel):
@@ -54,8 +54,9 @@ class YFinanceFeedData(BaseModel):
             "market_cap": self.get("marketCap"),
         }
 
-    class Config:
+    model_config = ConfigDict(
         # ignore extra fields in incoming YFinance raw data feed
-        extra = "ignore"
+        extra="ignore",
         # defer strict type validation to RawEquity
-        strict = False
+        strict=False,
+    )

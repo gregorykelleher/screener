@@ -1,4 +1,4 @@
-# pipeline/test_deduplicate.py
+# transforms/test_deduplicate.py
 
 from collections.abc import AsyncIterator
 from typing import Any

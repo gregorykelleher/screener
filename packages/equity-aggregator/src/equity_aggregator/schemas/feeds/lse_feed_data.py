@@ -1,9 +1,9 @@
-# schemas/lse_feed_data.py
+# feeds/lse_feed_data.py
 
 import re
 from decimal import Decimal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class LseFeedData(BaseModel):
@@ -60,7 +60,7 @@ class LseFeedData(BaseModel):
         raw = convert_gbx_to_gbp(self)
         return {
             # issuername → maps to RawEquity.name
-            "name": raw["issuername"],
+            "name": raw.get("issuername"),
             # tidm → maps to RawEquity.symbol
             "symbol": raw.get("tidm"),
             "isin": raw.get("isin"),
@@ -74,11 +74,12 @@ class LseFeedData(BaseModel):
             "market_cap": raw.get("marketcapitalization"),
         }
 
-    class Config:
+    model_config = ConfigDict(
         # ignore extra fields in incoming LSE raw data feed
-        extra = "ignore"
+        extra="ignore",
         # defer strict type validation to RawEquity
-        strict = False
+        strict=False,
+    )
 
 
 def _gbx_to_decimal(pence: str | None) -> Decimal | None:
@@ -132,15 +133,16 @@ def convert_gbx_to_gbp(raw: dict) -> dict:
     if raw.get("currency") != "GBX":
         return raw
 
-    updates: dict[str, Decimal] = {}
     pence = raw.get("lastprice")
     amount = _gbx_to_decimal(pence)
-    if amount is not None:
-        # scale from pence to pounds
-        updates["lastprice"] = amount / Decimal("100")
+    if amount is None:
+        raise ValueError(f"Invalid GBX lastprice: {pence!r}")
 
-    # always override currency
-    updates["currency"] = "GBP"
+    # convert pence to pounds
+    updates = {
+        "lastprice": amount / Decimal("100"),
+        "currency": "GBP",
+    }
 
     # return a new dict rather than mutating in place
     return {**raw, **updates}

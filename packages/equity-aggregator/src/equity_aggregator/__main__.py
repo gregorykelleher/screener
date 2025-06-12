@@ -1,13 +1,31 @@
 # equity_aggregator/__main__.py
 
 import asyncio
+import logging
 import time
 
 from equity_aggregator import aggregate_equity_profiles, configure_logging
+from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
+    fetch_equity_records as fetch_xetra_equities,
+)
+
+logger = logging.getLogger(__name__)
+
+
+async def main_async() -> None:
+    """Async entrypoint: stream and print Xetra equities."""
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Xetra equities fetch…")
+
+    # Stream each record as it arrives
+    async for equity in fetch_xetra_equities():
+        print(equity)
+        print()
+
+    logger.info("Finished streaming Xetra equities.")
 
 
 def main() -> None:
-    """Entrypoint: run the async main function."""
     configure_logging()
 
     import logging

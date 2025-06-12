@@ -199,7 +199,9 @@ def test_last_price_string_with_comma() -> None:
         "currency": "EUR",
         "last_price": "1,23",
     }
+
     actual = EuronextFeedData(**payload)
+
     assert actual.last_price == "1,23"
 
 
@@ -216,7 +218,9 @@ def test_missing_optional_isin_sets_none() -> None:
         "currency": "EUR",
         "last_price": 1.0,
     }
+
     actual = EuronextFeedData(**payload)
+
     assert actual.isin is None
 
 
@@ -233,7 +237,9 @@ def test_last_price_can_be_none() -> None:
         "currency": "EUR",
         "last_price": None,
     }
+
     actual = EuronextFeedData(**payload)
+
     assert actual.last_price is None
 
 
@@ -250,7 +256,9 @@ def test_mics_can_be_empty_list() -> None:
         "currency": "EUR",
         "last_price": 1.0,
     }
+
     actual = EuronextFeedData(**payload)
+
     assert actual.mics == []
 
 
@@ -268,5 +276,7 @@ def test_extra_field_is_ignored() -> None:
         "last_price": 1.0,
         "extra": "should be ignored",
     }
+
     actual = EuronextFeedData(**payload)
+
     assert not hasattr(actual, "extra")

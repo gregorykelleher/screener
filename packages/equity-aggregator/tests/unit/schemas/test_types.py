@@ -98,7 +98,6 @@ def test_cusip_invalid_pattern() -> None:
         TypeAdapter(CUSIPStr).validate_python("03783310!")
 
 
-# --- FIGIStr ---
 def test_figi_valid() -> None:
     """
     ARRANGE: valid FIGI string

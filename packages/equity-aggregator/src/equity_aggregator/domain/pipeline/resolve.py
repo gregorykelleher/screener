@@ -6,13 +6,13 @@ from collections.abc import AsyncIterator, Callable
 from typing import NamedTuple
 
 from equity_aggregator.adapters import (
-    fetch_equities_euronext,
-    # fetch_equities_lse,
-    fetch_equities_xetra,
+    fetch_equity_records_euronext,
+    fetch_equity_records_lse,
+    fetch_equity_records_xetra,
 )
 from equity_aggregator.schemas import (
     EuronextFeedData,
-    # LseFeedData,
+    LseFeedData,
     XetraFeedData,
 )
 
@@ -30,9 +30,9 @@ class FeedRecord(NamedTuple):
 
 # List of authoritative feed fetchers and their corresponding data models
 _AUTH_FEEDS: list[FeedPair] = [
-    (fetch_equities_euronext, EuronextFeedData),
-    (fetch_equities_xetra, XetraFeedData),
-    # (fetch_equities_lse, LseFeedData),
+    (fetch_equity_records_euronext, EuronextFeedData),
+    (fetch_equity_records_xetra, XetraFeedData),
+    (fetch_equity_records_lse, LseFeedData),
 ]
 
 

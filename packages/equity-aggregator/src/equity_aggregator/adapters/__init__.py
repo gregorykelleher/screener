@@ -1,9 +1,9 @@
 # adapters/__init__.py
 
 from .data_sources.authoritative_feeds import (
-    fetch_equities_euronext,
-    fetch_equities_lse,
-    fetch_equities_xetra,
+    fetch_equity_records_euronext,
+    fetch_equity_records_lse,
+    fetch_equity_records_xetra,
 )
 from .data_sources.enrichment_feeds import (
     fetch_equity_identification,
@@ -13,9 +13,9 @@ from .data_sources.enrichment_feeds import (
 
 __all__ = [
     # authoritative feeds
-    "fetch_equities_euronext",
-    "fetch_equities_lse",
-    "fetch_equities_xetra",
+    "fetch_equity_records_euronext",
+    "fetch_equity_records_lse",
+    "fetch_equity_records_xetra",
     # enrichment feeds
     "fetch_equity_yfinance",
     # reference lookup

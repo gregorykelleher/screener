@@ -12,10 +12,10 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.lse import (
     _build_payload,
     _parse_equities,
     _unique_by_key,
-    fetch_equities,
+    fetch_equity_records,
 )
 
-pytestmark = pytest.mark.unit
+# pytestmark = pytest.mark.unit
 
 
 def test_build_payload_page0() -> None:

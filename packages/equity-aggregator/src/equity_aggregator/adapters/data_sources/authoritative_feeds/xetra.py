@@ -24,12 +24,21 @@ async def fetch_equity_records(
     client_factory: ClientFactory = _DEFAULT_CLIENT_FACTORY,
 ) -> AsyncIterator[dict[str, object]]:
     """
-    Stream all Xetra records, with caching to avoid redundant fetches.
+    Asynchronously stream all Xetra equity records, using cache if available.
+
+    If cached records exist, yields them directly. Otherwise, fetches all records
+    from the Xetra feed, streams them as they arrive, and caches the results for
+    future use.
 
     Args:
-        client_factory (ClientFactory): Callable returning an AsyncClient.
+        client_factory (ClientFactory, optional): Callable that returns an
+            httpx.AsyncClient for HTTP requests. Defaults to _DEFAULT_CLIENT_FACTORY.
+
     Yields:
-        dict[str, object]: Normalised equity record.
+        dict[str, object]: A normalised equity record from the Xetra feed.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
     """
     cached = load_cache("xetra_records")
 
@@ -83,8 +92,12 @@ async def _unique_by_key(
     """
     Yield only the first item for each unique key from an async iterator.
 
+    Iterates over the provided async iterator and yields each item only if its key,
+    as determined by the key_func, has not been seen before. This ensures that only
+    unique items by the specified key are yielded.
+
     Args:
-        async_iter (AsyncIterator[dict[str, object]]): The async iterator to deduplicate.
+        async_iter (AsyncIterator[dict[str, object]]): Async iterator to deduplicate.
         key_func (Callable[[dict[str, object]], object]): Function to extract the
             deduplication key from each item.
 
@@ -104,38 +117,162 @@ async def _download_equity_records(
     client_factory: ClientFactory,
 ) -> AsyncIterator[dict[str, object]]:
     """
-    Yield all equity records by fetching pages concurrently.
-
-    The initial page (offset 0) is fetched first to stream early results
-    and to read `recordsTotal` to compute remaining offsets. Subsequent
-    pages are gathered in parallel and yielded as they arrive.
+    Asynchronously downloads equity records using a provided client factory.
 
     Args:
-        client_factory (ClientFactory): Callable returning an AsyncClient.
+        client_factory (ClientFactory): A callable that returns an asynchronous client
+            context manager for connecting to the data source.
+
     Yields:
-        dict[str, object]: Formatted equity record.
+        dict[str, object]: A dictionary representing a single equity record retrieved
+            from the data source.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An asynchronous iterator yielding equity
+            record dictionaries.
     """
     async with client_factory() as client:
-        first_page = await _fetch_page(client, offset=0)
-        first_records = _extract_equity_records(first_page)
-
-        for record in first_records:
+        async for record in _stream_records_from_client(client):
             yield record
 
-        total_records = _get_total_records(first_page)
-        page_size = len(first_records)
 
-        # if no records or only one page, nothing more to fetch
-        if page_size == 0 or total_records <= page_size:
-            return
+async def _stream_records_from_client(
+    client: httpx.AsyncClient,
+) -> AsyncIterator[dict[str, object]]:
+    """
+    Asynchronously yield all equity records available using the provided HTTP client.
 
-        # compute offsets based on actual page size
-        remaining_offsets = range(page_size, total_records, page_size)
+    Fetches the first page to yield early results and determine total records. If more
+    records exist, streams remaining records from subsequent pages.
 
-        # fetch remaining pages with cancellation support
-        async for page in _fetch_remaining_pages(client, remaining_offsets):
-            for record in _extract_equity_records(page):
-                yield record
+    Args:
+        client (httpx.AsyncClient): The asynchronous HTTP client used for requests.
+
+    Yields:
+        dict[str, object]: Normalised equity record from the Xetra feed.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
+    """
+    page = await _try_fetch_page(client, offset=0)
+    if not page:
+        return
+
+    # Extract records from the first page and yield them
+    first_records = _extract_equity_records(page)
+    page_size = len(first_records)
+    for record in first_records:
+        yield record
+
+    # If total records are less than or equal to page size, no more pages to fetch
+    total = _get_total_records(page)
+    if total <= page_size:
+        return
+
+    # Calculate offsets for remaining pages and stream them
+    offsets = range(page_size, total, page_size)
+    async for record in _stream_remaining_records(client, offsets):
+        yield record
+
+
+async def _try_fetch_page(
+    client: httpx.AsyncClient,
+    offset: int,
+) -> dict[str, object] | None:
+    """
+    Attempt to fetch a page of records from the Xetra data source at the given offset.
+
+    Uses the provided HTTPX async client to retrieve a single page of data. If an
+    HTTP status or read error occurs, logs a warning and returns None.
+
+    Args:
+        client (httpx.AsyncClient): The asynchronous HTTP client for the request.
+        offset (int): The pagination offset for the records to fetch.
+
+    Returns:
+        dict[str, object] | None: The page of records as a dictionary if successful,
+        otherwise None if an error occurs.
+    """
+    try:
+        return await _fetch_page(client, offset)
+    except (httpx.HTTPStatusError, httpx.ReadError) as error:
+        logger.warning("Xetra API error offset %s: %s", offset, error)
+        return None
+
+
+async def _fetch_page(
+    client: httpx.AsyncClient,
+    offset: int,
+) -> dict[str, object]:
+    """
+    Asynchronously fetch a single page of equity records from the Xetra feed.
+
+    Sends a POST request to the Xetra search endpoint with the specified offset
+    to retrieve a page of equity records. Raises an exception if the HTTP
+    response status is not successful.
+
+    Args:
+        client (httpx.AsyncClient): The asynchronous HTTP client used for the request.
+        offset (int): The pagination offset for the records to fetch.
+
+    Returns:
+        dict[str, object]: Parsed JSON response containing the page of records.
+
+    Raises:
+        httpx.HTTPStatusError: If the response status is not 2xx.
+    """
+    response = await client.post(_XETRA_SEARCH_URL, json=_build_search_payload(offset))
+    response.raise_for_status()
+    return response.json()
+
+
+async def _stream_remaining_records(
+    client: httpx.AsyncClient,
+    offsets: range,
+) -> AsyncIterator[dict[str, object]]:
+    """
+    Asynchronously yield equity records for all pages at the specified offsets.
+
+    Args:
+        client (httpx.AsyncClient): The asynchronous HTTP client to use for requests.
+        offsets (range): Range of integer offsets for paginated API requests.
+
+    Yields:
+        dict[str, object]: Normalised equity record from each fetched page.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: Async iterator yielding equity records.
+    """
+    async for page_json in _fetch_remaining_pages(client, offsets):
+        for record in _extract_equity_records(page_json):
+            yield record
+
+
+def _extract_equity_records(page_json: dict[str, object]) -> list[dict[str, object]]:
+    """
+    Normalise raw page data into equity records.
+
+    Args:
+        page_json (dict[str, object]): JSON page with 'data' list.
+    Returns:
+        list[dict[str, object]]: List of formatted equity records.
+    """
+    equity_records = page_json.get("data", [])
+    return [
+        {
+            "name": item["name"]["originalValue"],
+            "wkn": item.get("wkn", ""),
+            "isin": item.get("isin", ""),
+            "slug": item.get("slug", ""),
+            "mic": "XETR",
+            "currency": "EUR",
+            "overview": item.get("overview", {}),
+            "performance": item.get("performance", {}),
+            "key_data": item.get("keyData", {}),
+            "sustainability": item.get("sustainability", {}),
+        }
+        for item in equity_records
+    ]
 
 
 async def _fetch_remaining_pages(
@@ -143,43 +280,29 @@ async def _fetch_remaining_pages(
     offsets: range,
 ) -> AsyncIterator[dict[str, object]]:
     """
-    Fetch multiple pages of equity records concurrently and yield each page.
+    Concurrently fetch and yield JSON pages of equity records for the given offsets.
+
+    For each offset in the provided range, launches an asynchronous request to fetch
+    a page of equity records. Yields each successfully fetched page's JSON as soon as
+    it is available. If a request fails, logs a warning and continues with the rest.
 
     Args:
-        client (httpx.AsyncClient): HTTP client for making requests.
-        offsets (range): Offsets for paginated requests.
+        client (httpx.AsyncClient): The asynchronous HTTP client for API requests.
+        offsets (range): Range of integer offsets for paginated API requests.
 
     Yields:
-        dict[str, object]: JSON response for each fetched page.
-    """
-
-    tasks: list[asyncio.Task[dict[str, object]]] = []
-
-    async with asyncio.TaskGroup() as task_group:
-        for offset in offsets:
-            tasks.append(task_group.create_task(_fetch_page(client, offset)))
-
-    for task in tasks:
-        yield task.result()
-
-
-async def _fetch_page(client: httpx.AsyncClient, offset: int) -> dict[str, object]:
-    """
-    Fetch a single page of equity records from the Xetra feed at the specified offset.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client to use for the request.
-        offset (int): The pagination offset for the records to fetch.
+        dict[str, object]: Parsed JSON response for each successfully fetched page.
 
     Returns:
-        dict[str, object]: The parsed JSON response containing the page of records.
+        AsyncIterator[dict[str, object]]: An async iterator yielding page JSONs.
     """
 
-    response = await client.post(_XETRA_SEARCH_URL, json=_build_search_payload(offset))
+    coroutines = [_try_fetch_page(client, offset) for offset in offsets]
 
-    response.raise_for_status()
-
-    return response.json()
+    for future in asyncio.as_completed(coroutines):
+        page = await future
+        if page:
+            yield page
 
 
 def _build_search_payload(offset: int) -> dict[str, object]:
@@ -209,30 +332,3 @@ def _get_total_records(page_json: dict[str, object]) -> int:
         int: Total number of records.
     """
     return int(page_json.get("recordsTotal", 0))
-
-
-def _extract_equity_records(page_json: dict[str, object]) -> list[dict[str, object]]:
-    """
-    Normalise raw page data into equity records.
-
-    Args:
-        page_json (dict[str, object]): JSON page with 'data' list.
-    Returns:
-        list[dict[str, object]]: List of formatted equity records.
-    """
-    equity_records = page_json.get("data", [])
-    return [
-        {
-            "name": item["name"]["originalValue"],
-            "wkn": item.get("wkn", ""),
-            "isin": item.get("isin", ""),
-            "slug": item.get("slug", ""),
-            "mic": "XETR",
-            "currency": "EUR",
-            "overview": item.get("overview", {}),
-            "performance": item.get("performance", {}),
-            "key_data": item.get("keyData", {}),
-            "sustainability": item.get("sustainability", {}),
-        }
-        for item in equity_records
-    ]

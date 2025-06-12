@@ -13,11 +13,21 @@ from equity_aggregator.adapters.data_sources._utils._client_factory import (
 
 logger = logging.getLogger(__name__)
 
+_XETRA_HEADERS = {
+    "Accept": "application/json, text/plain, */*",
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "application/json; charset=UTF-8",
+    "Referer": "https://www.boerse-frankfurt.de/",
+    "Origin": "https://www.boerse-frankfurt.de",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+}
+
 _XETRA_SEARCH_URL = "https://api.boerse-frankfurt.de/v1/search/equity_search"
 _PAGE_SIZE = 100
 
 ClientFactory = Callable[..., httpx.AsyncClient]
-_DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory()
+_DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_XETRA_HEADERS)
 
 
 async def fetch_equity_records(

@@ -3,15 +3,30 @@
 import asyncio
 import logging
 import re
-from collections.abc import AsyncIterator, Callable, Hashable, Iterable
-from functools import partial
-from typing import Any
+from collections.abc import AsyncIterator, Callable, Iterable
 
 import httpx
 
 from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
+from equity_aggregator.adapters.data_sources._utils import make_client_factory
 
 logger = logging.getLogger(__name__)
+
+_EURONEXT_HEADERS = {
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "X-Requested-With": "XMLHttpRequest",
+    "Origin": "https://live.euronext.com",
+    "Referer": "https://live.euronext.com/en/markets",
+    "Accept-Encoding": "gzip, deflate",
+}
+
+_EURONEXT_SEARCH_URL = "https://live.euronext.com/en/pd_es/data/stocks"
+_PAGE_SIZE = 100
+
+ClientFactory = Callable[..., httpx.AsyncClient]
+_DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_EURONEXT_HEADERS)
 
 _COUNTRY_TO_MIC: dict[str, str] = {
     "France": "XPAR",
@@ -23,112 +38,157 @@ _COUNTRY_TO_MIC: dict[str, str] = {
     "Norway": "XOSL",
 }
 
-_HEADERS = {
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "User-Agent": "Mozilla/5.0",
-    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-}
 
-
-async def fetch_equities(
-    page_size: int = 100,
-    concurrency: int = 8,
-) -> list[dict]:
+async def fetch_equity_records(
+    client_factory: ClientFactory = _DEFAULT_CLIENT_FACTORY,
+) -> AsyncIterator[dict[str, object]]:
     """
-    Fetch a list of unique, valid equities from the Euronext API or cache.
+    Asynchronously stream all Euronext equity records, using cache if available.
+
+    If cached records exist, yields them directly. Otherwise, fetches all records
+    from the Euronext feed, streams them as they arrive, and caches the results for
+    future use.
 
     Args:
-        page_size (int, optional): Number of records to fetch per page. Defaults to 100.
-        concurrency (int, optional): Max number of concurrent requests. Defaults to 8.
+        client_factory (ClientFactory, optional): Callable that returns an
+            httpx.AsyncClient for HTTP requests. Defaults to _DEFAULT_CLIENT_FACTORY.
+
+    Yields:
+        dict[str, object]: A normalised equity record from the Xetra feed.
 
     Returns:
-        list[dict]: List of unique equities, each as a dictionary with keys:
-            - name (str): Equity name.
-            - symbol (str): Ticker symbol.
-            - isin (str): ISIN code.
-            - mics (list[str]): List of MIC codes.
-            - currency (str): Currency code.
-            - last_price (str): Last traded price as a string.
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
     """
-    # load from cache if available (refresh every 24 hours by default)
-    cached = load_cache("euronext_equities")
-    if cached is not None:
-        logger.info("Loaded Euronext raw equities from cache.")
-        return cached
+    cached = load_cache("euronext_records")
 
-    logger.info("Fetching Euronext raw equities from Euronext API.")
+    if cached:
+        logger.info("Loaded %d Euronext records from cache.", len(cached))
+        for record in cached:
+            yield record
+        return
 
-    # fetch and process equities
-    semaphore = asyncio.Semaphore(concurrency)
-    async with httpx.AsyncClient(headers=_HEADERS, timeout=20.0) as client:
-        # merge all country‐streams into one
-        stream = _multi_country_pages(client, page_size, semaphore)
+    async for record in _fetch_and_cache(client_factory):
+        yield record
 
-        deduped = _unique_by_key(stream, key_func=lambda eq: eq["isin"])
 
-        raw_equities = [item async for item in deduped]
+async def _fetch_and_cache(
+    client_factory: ClientFactory,
+) -> AsyncIterator[dict[str, object]]:
+    """
+    Asynchronously fetch and cache all equity records from the Euronext feed.
 
-        logger.debug(
-            f"Fetched {len(raw_equities)} unique raw equities from Euronext API.",
-        )
+    Streams each record as it is retrieved. On successful completion, caches all
+    records locally and logs the total number of records fetched.
 
-        # persist to cache and return
-        save_cache("euronext_equities", raw_equities)
-        logger.info("Saved Euronext raw equities to cache.")
-        return raw_equities
+    Args:
+        client_factory (ClientFactory): A callable that returns an AsyncClient.
+
+    Yields:
+        dict[str, object]: A normalised equity record.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator of equity records.
+    """
+    buffer: list[dict[str, object]] = []
+
+    # stream, deduplicate, accumulate
+    async for record in _unique_by_key(
+        _download_equity_records(client_factory),
+        lambda record: record.get("isin"),
+    ):
+        buffer.append(record)
+        yield record
+
+    # only cache if the download loop completed successfully
+    save_cache("euronext_records", buffer)
+    logger.info("Saved %d Euronext records to cache.", len(buffer))
 
 
 async def _unique_by_key(
-    aiter: AsyncIterator,
-    key_func: Callable[[Any], Hashable],
-) -> AsyncIterator[Any]:
+    async_iter: AsyncIterator[dict[str, object]],
+    key_func: Callable[[dict[str, object]], object],
+) -> AsyncIterator[dict[str, object]]:
     """
-    Async generator that yields the first item for each unique key from async iterable.
+    Yield only the first item for each unique key from an async iterator.
+
+    Iterates over the provided async iterator and yields each item only if its key,
+    as determined by the key_func, has not been seen before. This ensures that only
+    unique items by the specified key are yielded.
 
     Args:
-        aiter (AsyncIterable): An asynchronous iterable of items to filter.
-        key_func (Callable): A function that takes an item and returns a hashable key
-            used to determine uniqueness.
+        async_iter (AsyncIterator[dict[str, object]]): Async iterator to deduplicate.
+        key_func (Callable[[dict[str, object]], object]): Function to extract the
+            deduplication key from each item.
 
-    Yields:
-        Any: The first occurrence of each unique key in the input async iterable.
+    Returns:
+        AsyncIterator[dict[str, object]]: Async iterator yielding unique items by key.
     """
-    seen = set()
-    async for item in aiter:
-        k = key_func(item)
-        if k in seen:
+    seen: set[object] = set()
+    async for record in async_iter:
+        key = key_func(record)
+        if key in seen:
             continue
-        seen.add(k)
-        yield item
+        seen.add(key)
+        yield record
 
 
-async def _multi_country_pages(
-    client: httpx.AsyncClient,
-    page_size: int,
-    sem: asyncio.Semaphore,
-) -> AsyncIterator[dict]:
+async def _download_equity_records(
+    client_factory: ClientFactory,
+) -> AsyncIterator[dict[str, object]]:
     """
-    Fetch and yield equities from all Euronext MICs concurrently.
+    Asynchronously downloads equity records using a provided client factory.
 
     Args:
-        client (httpx.AsyncClient): The HTTP client for making requests.
-        page_size (int): Number of records to fetch per page.
-        sem (asyncio.Semaphore): Semaphore to limit concurrent requests.
+        client_factory (ClientFactory): A callable that returns an asynchronous client
+            context manager for connecting to the data source.
 
     Yields:
-        dict: Parsed equity data for each record from all supported MICs.
+        dict[str, object]: A dictionary representing a single equity record retrieved
+            from the data source.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An asynchronous iterator yielding equity
+            record dictionaries.
+    """
+    async with client_factory() as client:
+        async for record in _fetch_equity_records_from_mics(client):
+            yield record
+
+
+async def _fetch_equity_records_from_mics(
+    client: httpx.AsyncClient,
+) -> AsyncIterator[dict[str, object]]:
+    """
+    Asynchronously fetch and yield equity records from all supported Euronext MICs.
+
+    Launches concurrent tasks to retrieve equities for each MIC code, yielding each
+    parsed equity record as soon as it is available.
+
+    Args:
+        client (httpx.AsyncClient): The HTTP client used for making requests.
+
+    Yields:
+        dict[str, object]: Parsed equity data for each record from all supported MICs.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
     """
 
-    async def _collect(mic: str) -> list[dict]:
-        return [equity async for equity in _country_pages(client, mic, page_size, sem)]
+    async def _collect(mic: str) -> list[dict[str, object]]:
+        return [equity async for equity in _country_pages(client, mic)]
 
     tasks = [asyncio.create_task(_collect(mic)) for mic in _COUNTRY_TO_MIC.values()]
-    for coro in asyncio.as_completed(tasks):
-        for equity in await coro:
+    for coroutine in asyncio.as_completed(tasks):
+        try:
+            equities = await coroutine
+        except (httpx.HTTPStatusError, httpx.ReadError) as error:
+            logger.warning("Euronext API error fetching MIC batch: %s", error)
+            continue
+        for equity in equities:
             yield equity
 
 
-def _build_payload(start: int, length: int, draw: int) -> dict:
+def _build_payload(start: int, length: int, draw: int) -> dict[str, int]:
     """
     Build the form data payload for the Euronext POST endpoint.
 
@@ -149,21 +209,27 @@ def _build_payload(start: int, length: int, draw: int) -> dict:
     }
 
 
-def _parse_equities(aa_data: Iterable) -> Iterable[dict]:
+def _parse_equities(aa_data: Iterable) -> Iterable[dict[str, object]]:
     """
-    Parse the "aaData" rows from the Euronext JSON response and yield a dict per equity.
+    Parse the "aaData" rows from the Euronext JSON response and yield a dict for each
+    equity.
 
     Args:
-        aa_data (Iterable): Rows from the "aaData" field of the Euronext API response.
+        aa_data (Iterable): Iterable of rows from the "aaData" field of the Euronext
+            API response. Each row is a list of HTML strings representing equity data.
 
     Yields:
-        dict: Parsed equity data with keys:
+        dict[str, object]: Parsed equity data with the following keys:
             - name (str): Equity name.
             - symbol (str): Ticker symbol.
             - isin (str): ISIN code.
             - mics (list[str]): List of MIC codes.
-            - currency (str): Currency code.
+            - currency (str): Currency code (e.g., "EUR").
             - last_price (str): Last traded price as a string.
+
+    Returns:
+        Iterable[dict[str, object]]: An iterable of dictionaries, each representing a
+            single equity record.
     """
     for row in aa_data:
         # Extract the equity name from the anchor tag in column 1.
@@ -193,86 +259,112 @@ def _parse_equities(aa_data: Iterable) -> Iterable[dict]:
         }
 
 
-async def _fetch_page(
-    client: httpx.AsyncClient,
-    mic_code: str,
-    payload: dict,
-    semaphore: asyncio.Semaphore,
-) -> dict:
-    """
-    Make a single POST request to the Euronext live endpoint for a given MIC code.
-
-    Args:
-        client (httpx.AsyncClient): The HTTP client for making requests.
-        mic_code (str): The MIC code representing the country exchange.
-        payload (dict): The form data payload for the POST request.
-        semaphore (asyncio.Semaphore): Semaphore to limit concurrent requests.
-
-    Returns:
-        dict: The JSON response from the Euronext API as a dictionary.
-    """
-    url = f"https://live.euronext.com/en/pd_es/data/stocks?mics={mic_code}"
-    async with semaphore:
-        try:
-            response = await client.post(url, data=payload)
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as error:
-            logger.warning("Euronext API 500 for %s: %s", url, error)
-            return {"aaData": [], "iTotalRecords": 0}
-        except httpx.ReadError as error:
-            logger.warning("Network/Read error for %s: %s", url, error)
-            return {"aaData": [], "iTotalRecords": 0}
-
-
 async def _country_pages(
     client: httpx.AsyncClient,
     mic_code: str,
-    page_size: int,
-    semaphore: asyncio.Semaphore,
-) -> AsyncIterator[dict]:
+) -> AsyncIterator[dict[str, object]]:
     """
-    Fetch all equity pages for a single country (MIC) from the Euronext API.
+    Asynchronously fetch and yield all equity records for a single MIC code.
 
-    Strategy:
-      1. Fetch the first page to determine the total number of records.
-      2. Concurrently fetch all remaining pages using the provided semaphore.
+    Fetches the first page of equity records for the specified MIC code. If the
+    first page is available, yields each parsed equity record from it. Then,
+    asynchronously fetches and yields records from all remaining pages.
 
     Args:
-        client (httpx.AsyncClient): The HTTP client for making requests.
-        mic_code (str): The MIC code representing the country exchange.
-        page_size (int): Number of records per page.
-        semaphore (asyncio.Semaphore): Semaphore to limit concurrent requests.
+        client (httpx.AsyncClient): The HTTP client used for making requests.
+        mic_code (str): The MIC code representing the Euronext market to query.
 
     Yields:
-        dict: Parsed equity data for each record.
-    """
-    first_payload = _build_payload(0, page_size, draw=1)
-    first = await _fetch_page(client, mic_code, first_payload, semaphore)
-    for equity in _parse_equities(first["aaData"]):
-        yield equity
+        dict[str, object]: Parsed equity data for each record in the MIC.
 
-    total = first.get("iTotalRecords", 0)
-    if total <= page_size:  # nothing more to fetch
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
+    """
+    first_page = await _fetch_first_page(client, mic_code)
+
+    if not first_page:
         return
 
-    # Prep remaining requests
-    starts = range(page_size, total, page_size)
-    make_payload = partial(_build_payload, length=page_size)
-    tasks = [
-        asyncio.create_task(
-            _fetch_page(
-                client,
-                mic_code,
-                make_payload(start=s, draw=idx + 2),
-                semaphore,
-            ),
-        )
-        for idx, s in enumerate(starts)
-    ]
+    for record in _parse_equities(first_page["aaData"]):
+        yield record
+    async for record in _fetch_remaining_pages(client, mic_code, first_page):
+        yield record
 
-    # Await tasks as they complete
-    for coro in asyncio.as_completed(tasks):
-        data = await coro
-        for equity in _parse_equities(data["aaData"]):
-            yield equity
+
+async def _fetch_first_page(
+    client: httpx.AsyncClient,
+    mic_code: str,
+) -> dict[str, object] | None:
+    """
+    Asynchronously fetch the first page of equity records for a given MIC code.
+
+    Sends a POST request to the Euronext endpoint to retrieve the first page of
+    equities for the specified MIC code. Returns the parsed JSON response if
+    successful, or None if an error occurs.
+
+    Args:
+        client (httpx.AsyncClient): The HTTP client used for making requests.
+        mic_code (str): The MIC code representing the Euronext market to query.
+
+    Returns:
+        dict[str, object] | None: The parsed JSON response for the first page, or
+        None if the request fails or the response is invalid.
+    """
+    payload = _build_payload(0, _PAGE_SIZE, draw=1)
+    url = f"{_EURONEXT_SEARCH_URL}?mics={mic_code}"
+
+    try:
+        response = await client.post(
+            url,
+            data=payload,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    except (httpx.HTTPStatusError, httpx.ReadError, ValueError) as error:
+        logger.warning("Euronext first page error (%s): %s", mic_code, error)
+        return None
+
+
+async def _fetch_remaining_pages(
+    client: httpx.AsyncClient,
+    mic_code: str,
+    first_page: dict[str, object],
+) -> AsyncIterator[dict[str, object]]:
+    """
+    Asynchronously fetch and yield all remaining equity records for a given MIC code,
+    starting from page 2.
+
+    Args:
+        client (httpx.AsyncClient): The HTTP client used for requests.
+        mic_code (str): The MIC code representing the Euronext market.
+        first_page (dict[str, object]): The parsed JSON response from the first page,
+            must include "iTotalRecords".
+
+    Yields:
+        dict[str, object]: Parsed equity record from each subsequent page.
+
+    Returns:
+        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
+    """
+    total_records = first_page.get("iTotalRecords", 0)
+    page_size = _PAGE_SIZE
+
+    if total_records <= page_size:
+        return
+
+    url = f"{_EURONEXT_SEARCH_URL}?mics={mic_code}"
+
+    for draw, start in enumerate(range(page_size, total_records, page_size), start=2):
+        payload = _build_payload(start=start, length=page_size, draw=draw)
+        try:
+            response = await client.post(url, data=payload)
+            response.raise_for_status()
+            page_data = response.json().get("aaData", [])
+
+        except (httpx.HTTPStatusError, httpx.ReadError, ValueError) as exc:
+            logger.warning("Euronext page %d error for %s: %s", draw, mic_code, exc)
+            continue
+
+        for record in _parse_equities(page_data):
+            yield record

@@ -1,6 +1,6 @@
 # authoritative_feeds/__init__.py
 
-from .euronext import fetch_equities as fetch_equities_euronext
+from .euronext import fetch_equity_records as fetch_equities_euronext
 from .lse import fetch_equities as fetch_equities_lse
 from .xetra import fetch_equity_records as fetch_equities_xetra
 

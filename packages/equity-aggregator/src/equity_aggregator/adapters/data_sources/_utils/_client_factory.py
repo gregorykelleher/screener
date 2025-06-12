@@ -11,8 +11,16 @@ DEFAULT_TIMEOUT = Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
 DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)
 DEFAULT_TRANSPORT = AsyncHTTPTransport(retries=2)
 DEFAULT_HEADERS: dict[str, str] = {
-    "Accept": "application/json, text/plain, */*",
+    # accept anything
+    "Accept": "*/*",
+    # accept compressed responses
+    "Accept-Encoding": "gzip, deflate, br",
+    # generic language hint
+    "Accept-Language": "en-US,en;q=0.9",
+    # user agent to identify the client
     "User-Agent": "Mozilla/5.0",
+    # Keep connections alive by default
+    "Connection": "keep-alive",
 }
 
 

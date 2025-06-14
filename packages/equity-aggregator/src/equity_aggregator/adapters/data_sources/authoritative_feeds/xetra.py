@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
+from functools import lru_cache
 
 import httpx
 
@@ -28,6 +29,11 @@ _PAGE_SIZE = 100
 
 ClientFactory = Callable[..., httpx.AsyncClient]
 _DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_XETRA_HEADERS)
+
+
+@lru_cache(maxsize=1)
+def get_client() -> httpx.AsyncClient:
+    return _DEFAULT_CLIENT_FACTORY()
 
 
 async def fetch_equity_records(
@@ -141,9 +147,10 @@ async def _download_equity_records(
         AsyncIterator[dict[str, object]]: An asynchronous iterator yielding equity
             record dictionaries.
     """
-    async with client_factory() as client:
-        async for record in _stream_records_from_client(client):
-            yield record
+    client = get_client()
+
+    async for record in _stream_records_from_client(client):
+        yield record
 
 
 async def _stream_records_from_client(
@@ -213,7 +220,7 @@ async def _try_fetch_page(
 async def _fetch_page(
     client: httpx.AsyncClient,
     offset: int,
-) -> dict[str, object]:
+) -> dict[str, object] | None:
     """
     Asynchronously fetch a single page of equity records from the Xetra feed.
 
@@ -226,14 +233,25 @@ async def _fetch_page(
         offset (int): The pagination offset for the records to fetch.
 
     Returns:
-        dict[str, object]: Parsed JSON response containing the page of records.
+        dict[str, object] | None: Parsed JSON response containing the page of records
+        or None if an error occurs.
 
     Raises:
         httpx.HTTPStatusError: If the response status is not 2xx.
     """
-    response = await client.post(_XETRA_SEARCH_URL, json=_build_search_payload(offset))
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = await client.post(
+            _XETRA_SEARCH_URL,
+            json=_build_payload(offset),
+        )
+        response.raise_for_status()
+        return response.json()
+
+    except (httpx.HTTPStatusError, httpx.ReadError, ValueError) as error:
+        root = error.__context__ or error.__cause__
+        label = repr(root) if root else type(error).__name__
+        logger.warning("Xetra [%s] %s → %r", offset, _XETRA_SEARCH_URL, label)
+        return None
 
 
 async def _stream_remaining_records(
@@ -315,7 +333,7 @@ async def _fetch_remaining_pages(
             yield page
 
 
-def _build_search_payload(offset: int) -> dict[str, object]:
+def _build_payload(offset: int) -> dict[str, object]:
     """
     Build the JSON payload for a search request.
 

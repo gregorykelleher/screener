@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
+from functools import lru_cache
 
 import httpx
 
@@ -28,6 +29,11 @@ _PAGE_SIZE = 100
 
 ClientFactory = Callable[..., httpx.AsyncClient]
 _DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_LSE_HEADERS)
+
+
+@lru_cache(maxsize=1)
+def get_client() -> httpx.AsyncClient:
+    return _DEFAULT_CLIENT_FACTORY()
 
 
 async def fetch_equity_records(
@@ -116,8 +122,13 @@ async def _unique_by_key(
     seen: set[object] = set()
     async for record in async_iter:
         key = key_func(record)
+        if key is None:
+            yield record
+            continue
+
         if key in seen:
             continue
+
         seen.add(key)
         yield record
 
@@ -139,9 +150,10 @@ async def _download_equity_records(
     Raises:
         Any exceptions raised by the client or during data retrieval will propagate.
     """
-    async with client_factory() as client:
-        async for record in _stream_equity_records(client):
-            yield record
+    client = get_client()
+
+    async for record in _stream_equity_records(client):
+        yield record
 
 
 def _build_payload(page: int) -> dict:
@@ -241,8 +253,11 @@ async def _try_fetch_page(client: httpx.AsyncClient, page: int) -> dict | None:
     try:
         payload = _build_payload(page)
         return await _fetch_page(client, payload)
-    except (httpx.HTTPStatusError, httpx.ReadError) as exc:
-        logger.warning("LSE API error: %s", exc)
+
+    except (httpx.HTTPStatusError, httpx.ReadError) as error:
+        root = error.__context__ or error.__cause__
+        label = repr(root) if root else type(error).__name__
+        logger.warning("LSE %s → %s", _LSE_SEARCH_URL, label)
         return None
 
 

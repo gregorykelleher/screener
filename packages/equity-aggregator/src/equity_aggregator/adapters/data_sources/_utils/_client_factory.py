@@ -7,34 +7,18 @@ from httpx import AsyncClient, AsyncHTTPTransport, Limits, Timeout
 
 ClientFactory = Callable[..., AsyncClient]
 
-DEFAULT_TIMEOUT = Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
-DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)
-DEFAULT_TRANSPORT = AsyncHTTPTransport(retries=2)
-DEFAULT_HEADERS: dict[str, str] = {
-    # accept anything
-    "Accept": "*/*",
-    # accept compressed responses
-    "Accept-Encoding": "gzip, deflate, br",
-    # generic language hint
-    "Accept-Language": "en-US,en;q=0.9",
-    # user agent to identify the client
-    "User-Agent": "Mozilla/5.0",
-    # Keep connections alive by default
-    "Connection": "keep-alive",
-}
 
-
-def make_client_factory(**defaults: object) -> ClientFactory:
+def make_client_factory(**overrides: object) -> ClientFactory:
     """
     Create a factory for httpx.AsyncClient with default settings and optional overrides.
 
     Args:
-        **defaults: Arbitrary keyword arguments to override default AsyncClient
+        **overrides: Arbitrary keyword arguments to override default AsyncClient
             parameters such as base_url, headers, timeout, etc.
 
     Returns:
         Callable[..., AsyncClient]: A function that creates AsyncClient instances
-            with merged defaults and per-call overrides.
+            with merged overrides and per-call overrides.
 
     Example:
         xetra_client = make_client_factory(
@@ -45,12 +29,41 @@ def make_client_factory(**defaults: object) -> ClientFactory:
             ...
     """
 
+    limits = Limits(
+        max_connections=128,
+        max_keepalive_connections=64,
+    )
+
+    timeout = Timeout(
+        connect=3.0,  # 3s to establish TLS
+        read=None,  # no read timeout
+        write=5.0,  # up to 5s to send a body
+        pool=None,  # no pool timeout
+    )
+
+    transport = AsyncHTTPTransport(
+        http2=True,
+        retries=1,
+        limits=limits,
+    )
+
+    headers = {
+        # accept anything
+        "Accept": "*/*",
+        # accept compressed responses
+        "Accept-Encoding": "gzip",
+        # generic language hint
+        "Accept-Language": "en-US,en;q=0.9",
+        # user agent to identify the client
+        "User-Agent": "Mozilla/5.0",
+    }
+
     base_params: dict[str, object] = {
-        "timeout": DEFAULT_TIMEOUT,
-        "limits": DEFAULT_LIMITS,
-        "transport": DEFAULT_TRANSPORT,
-        "headers": DEFAULT_HEADERS,
-        **defaults,
+        "http2": True,
+        "transport": transport,
+        "timeout": timeout,
+        "headers": headers,
+        **overrides,
     }
 
     return partial(AsyncClient, **base_params)

@@ -4,6 +4,7 @@ import asyncio
 import logging
 import re
 from collections.abc import AsyncIterator, Callable, Iterable
+from functools import lru_cache
 
 import httpx
 
@@ -11,6 +12,16 @@ from equity_aggregator.adapters.data_sources._cache import load_cache, save_cach
 from equity_aggregator.adapters.data_sources._utils import make_client_factory
 
 logger = logging.getLogger(__name__)
+
+_COUNTRY_TO_MIC: dict[str, str] = {
+    "France": "XPAR",
+    "Netherlands": "XAMS",
+    "Belgium": "XBRU",
+    "Ireland": "XMSM",
+    "Portugal": "XLIS",
+    "Italy": "MTAA",
+    "Norway": "XOSL",
+}
 
 _EURONEXT_HEADERS = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -28,15 +39,10 @@ _PAGE_SIZE = 100
 ClientFactory = Callable[..., httpx.AsyncClient]
 _DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_EURONEXT_HEADERS)
 
-_COUNTRY_TO_MIC: dict[str, str] = {
-    "France": "XPAR",
-    "Netherlands": "XAMS",
-    "Belgium": "XBRU",
-    "Ireland": "XMSM",
-    "Portugal": "XLIS",
-    "Italy": "MTAA",
-    "Norway": "XOSL",
-}
+
+@lru_cache(maxsize=1)
+def get_client() -> httpx.AsyncClient:
+    return _DEFAULT_CLIENT_FACTORY()
 
 
 async def fetch_equity_records(
@@ -150,9 +156,10 @@ async def _download_equity_records(
         AsyncIterator[dict[str, object]]: An asynchronous iterator yielding equity
             record dictionaries.
     """
-    async with client_factory() as client:
-        async for record in _fetch_equity_records_from_mics(client):
-            yield record
+    client = get_client()
+
+    async for record in _fetch_equity_records_from_mics(client):
+        yield record
 
 
 async def _fetch_equity_records_from_mics(
@@ -173,6 +180,7 @@ async def _fetch_equity_records_from_mics(
     Returns:
         AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
     """
+    client = get_client()
 
     async def _collect(mic: str) -> list[dict[str, object]]:
         return [equity async for equity in _country_pages(client, mic)]
@@ -322,7 +330,9 @@ async def _fetch_first_page(
         return response.json()
 
     except (httpx.HTTPStatusError, httpx.ReadError, ValueError) as error:
-        logger.warning("Euronext first page error (%s): %s", mic_code, error)
+        root = error.__context__ or error.__cause__
+        label = repr(root) if root else type(error).__name__
+        logger.warning("Euronext [%s] %s → %s", mic_code, url, label)
         return None
 
 

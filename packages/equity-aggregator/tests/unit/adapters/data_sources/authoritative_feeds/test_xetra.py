@@ -9,7 +9,7 @@ import pytest
 from httpx import AsyncClient, MockTransport
 
 from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
-    _build_search_payload,
+    _build_payload,
     _extract_equity_records,
     _fetch_page,
     _fetch_remaining_pages,
@@ -29,7 +29,7 @@ def test_build_search_payload_contains_expected_keys() -> None:
     """
     offset = 5
 
-    actual = _build_search_payload(offset)
+    actual = _build_payload(offset)
 
     assert set(actual.keys()) == {"stockExchanges", "lang", "offset", "limit"}
 

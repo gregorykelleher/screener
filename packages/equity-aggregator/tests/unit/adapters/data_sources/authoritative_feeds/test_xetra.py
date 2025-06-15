@@ -10,75 +10,131 @@ from httpx import AsyncClient, MockTransport
 
 from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
     _build_payload,
-    _extract_equity_records,
+    _consume_queue,
+    _deduplicate_records,
+    _extract_records,
     _fetch_page,
-    _fetch_remaining_pages,
     _get_total_records,
-    _unique_by_key,
+    _produce_page,
     fetch_equity_records,
 )
 
 pytestmark = pytest.mark.unit
 
 
-def test_build_search_payload_contains_expected_keys() -> None:
+def test_build_payload_contains_expected_keys() -> None:
     """
-    ARRANGE: offset is set to 5
-    ACT:     call _build_search_payload(5)
+    ARRANGE: offset is 5
+    ACT:     call _build_payload(5)
     ASSERT:  keys exactly match expected set
     """
-    offset = 5
+    payload = _build_payload(5)
 
-    actual = _build_payload(offset)
+    assert set(payload.keys()) == {"stockExchanges", "lang", "offset", "limit"}
 
-    assert set(actual.keys()) == {"stockExchanges", "lang", "offset", "limit"}
+
+def test_request_payload_offset_in_body() -> None:
+    """
+    ARRANGE: capture request content
+    ACT:     _fetch_page with offset 7
+    ASSERT:  payload offset equals 7
+    """
+    captured: dict[str, object] = {}
+    expected_offset = 7
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"recordsTotal": 0, "data": []})
+
+    client = AsyncClient(transport=MockTransport(handler))
+
+    asyncio.run(_fetch_page(client, offset=expected_offset))
+
+    assert captured["body"]["offset"] == expected_offset
 
 
 def test_get_total_records_parses_integer() -> None:
     """
-    ARRANGE: page_json with recordsTotal as string
+    ARRANGE: page_json with recordsTotal "7"
     ACT:     call _get_total_records
     ASSERT:  returns integer 7
     """
-    expected_records_total = 7
     page_json = {"recordsTotal": "7"}
+    expected_records_total = 7
 
     actual = _get_total_records(page_json)
 
     assert actual == expected_records_total
 
 
-def test_extract_equity_records_maps_name() -> None:
+def test_get_total_records_returns_zero_when_missing() -> None:
     """
-    ARRANGE: page_json with one record having originalValue "Foo Corp"
-    ACT:     call _extract_equity_records
+    ARRANGE: page_json without recordsTotal
+    ACT:     call _get_total_records
+    ASSERT:  returns 0
+    """
+    actual = _get_total_records({})
+
+    assert actual == 0
+
+
+def test_extract_records_maps_name() -> None:
+    """
+    ARRANGE: page_json with one record named "Foo Corp"
+    ACT:     call _extract_records
     ASSERT:  first record's name == "Foo Corp"
     """
-    record = {
-        "name": {"originalValue": "Foo Corp"},
-        "wkn": "WKN123",
-        "isin": "ISIN123",
-        "slug": "foo-corp",
-        "overview": {"desc": "desc"},
-        "performance": {"p": 1},
-        "keyData": {"k": 2},
-        "sustainability": {"s": 3},
+    page_json = {
+        "data": [
+            {
+                "name": {"originalValue": "Foo Corp"},
+                "wkn": "",
+                "isin": "ISIN1",
+                "slug": "",
+                "overview": {},
+                "performance": {},
+                "keyData": {},
+                "sustainability": {},
+            },
+        ],
     }
-    page_json = {"data": [record]}
 
-    actual = _extract_equity_records(page_json)
+    records = _extract_records(page_json)
 
-    assert actual[0]["name"] == "Foo Corp"
+    assert records[0]["name"] == "Foo Corp"
+
+
+def test_extract_records_empty_data_returns_empty_list() -> None:
+    """
+    ARRANGE: page_json with empty data list
+    ACT:     call _extract_records
+    ASSERT:  returns empty list
+    """
+    records = _extract_records({"data": []})
+
+    assert records == []
+
+
+def test_extract_records_missing_original_value_raises_key_error() -> None:
+    """
+    ARRANGE: data item missing originalValue
+    ACT:     call _extract_records
+    ASSERT:  KeyError is raised
+    """
+    page_json = {"data": [{"name": {}}]}
+
+    with pytest.raises(KeyError):
+        _extract_records(page_json)
 
 
 def test_fetch_page_returns_json_response() -> None:
     """
-    ARRANGE: AsyncClient with MockTransport returning JSON {"a":1}
-    ACT:     call _fetch_page(client, offset=10)
-    ASSERT:  result equals {"a":1}
+    ARRANGE: MockTransport returns JSON {"a":1}
+    ACT:     call _fetch_page(offset=10)
+    ASSERT:  actual equals {"a":1}
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"a": 1})
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -88,72 +144,14 @@ def test_fetch_page_returns_json_response() -> None:
     assert actual == {"a": 1}
 
 
-def test_fetch_equity_records_streams_two_records() -> None:
-    """
-    ARRANGE: two-page MockTransport, each with a single record
-    ACT:     collect via fetch_equity_records with dummy factory
-    ASSERT:  two records are returned
-    """
-    expected_records_total = 2
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content)
-        offset = body.get("offset", 0)
-        if offset == 0:
-            response_json = {
-                "recordsTotal": 2,
-                "data": [
-                    {
-                        "name": {"originalValue": "First"},
-                        "wkn": "",
-                        "isin": "ISIN_FIRST",
-                        "slug": "",
-                        "overview": {},
-                        "performance": {},
-                        "keyData": {},
-                        "sustainability": {},
-                    },
-                ],
-            }
-        else:
-            response_json = {
-                "recordsTotal": 2,
-                "data": [
-                    {
-                        "name": {"originalValue": "Second"},
-                        "wkn": "",
-                        "isin": "ISIN_SECOND",
-                        "slug": "",
-                        "overview": {},
-                        "performance": {},
-                        "keyData": {},
-                        "sustainability": {},
-                    },
-                ],
-            }
-        return httpx.Response(200, json=response_json)
-
-    def factory() -> AsyncClient:
-        return AsyncClient(
-            transport=MockTransport(handler),
-        )
-
-    async def collect() -> list[dict[str, object]]:
-        return [record async for record in fetch_equity_records(client_factory=factory)]
-
-    actual = asyncio.run(collect())
-
-    assert len(actual) == expected_records_total
-
-
 def test_fetch_page_400_bad_request_raises_http_status_error() -> None:
     """
-    ARRANGE: MockTransport returns 400 Bad Request
+    ARRANGE: MockTransport returns 400
     ACT:     call _fetch_page
     ASSERT:  HTTPStatusError is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(400)
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -164,12 +162,12 @@ def test_fetch_page_400_bad_request_raises_http_status_error() -> None:
 
 def test_fetch_page_404_not_found_raises_http_status_error() -> None:
     """
-    ARRANGE: MockTransport returns 404 Not Found
+    ARRANGE: MockTransport returns 404
     ACT:     call _fetch_page
     ASSERT:  HTTPStatusError is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(404)
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -180,12 +178,12 @@ def test_fetch_page_404_not_found_raises_http_status_error() -> None:
 
 def test_fetch_page_429_too_many_requests_raises_http_status_error() -> None:
     """
-    ARRANGE: MockTransport returns 429 Too Many Requests
+    ARRANGE: MockTransport returns 429
     ACT:     call _fetch_page
     ASSERT:  HTTPStatusError is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(429)
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -196,12 +194,12 @@ def test_fetch_page_429_too_many_requests_raises_http_status_error() -> None:
 
 def test_fetch_page_500_internal_server_error_raises_http_status_error() -> None:
     """
-    ARRANGE: MockTransport returns 500 Internal Server Error
+    ARRANGE: MockTransport returns 500
     ACT:     call _fetch_page
     ASSERT:  HTTPStatusError is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(500)
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -210,33 +208,14 @@ def test_fetch_page_500_internal_server_error_raises_http_status_error() -> None
         asyncio.run(_fetch_page(client, offset=0))
 
 
-def test_fetch_equity_records_returns_empty_on_first_page_500() -> None:
-    """
-    ARRANGE: first page -> 500
-    ACT:     collect records
-    ASSERT:  no records returned
-    """
-
-    def handler(_: httpx.Request) -> httpx.Response:
-        return httpx.Response(500)
-
-    def factory() -> AsyncClient:
-        return AsyncClient(transport=MockTransport(handler))
-
-    async def collect() -> list[dict[str, object]]:
-        return [record async for record in fetch_equity_records(client_factory=factory)]
-
-    assert len(asyncio.run(collect())) == 0
-
-
 def test_fetch_page_malformed_json_raises_value_error() -> None:
     """
     ARRANGE: MockTransport returns non-JSON body
     ACT:     call _fetch_page
-    ASSERT:  raises ValueError
+    ASSERT:  ValueError is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, content=b"not json")
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -245,54 +224,14 @@ def test_fetch_page_malformed_json_raises_value_error() -> None:
         asyncio.run(_fetch_page(client, offset=0))
 
 
-def test_fetch_remaining_pages_yields_only_successful_pages() -> None:
-    """
-    ARRANGE: offset 0 OK, offset 1 -> 500
-    ACT:     call _fetch_remaining_pages
-    ASSERT:  only one page yielded
-    """
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content)
-        if body["offset"] == 1:
-            return httpx.Response(500)
-        return httpx.Response(200, json={"data": [], "recordsTotal": 0})
-
-    client = AsyncClient(transport=MockTransport(handler))
-
-    async def collect() -> list[dict[str, object]]:
-        return [page async for page in _fetch_remaining_pages(client, offsets=range(2))]
-
-    assert len(asyncio.run(collect())) == 1
-
-
-def test_unique_by_key_emits_single_record_for_duplicate_isin() -> None:
-    """
-    ARRANGE: two dicts share same ISIN
-    ACT:     run through _unique_by_key
-    ASSERT:  only first dict is yielded
-    """
-
-    async def source() -> AsyncIterator[dict[str, str]]:
-        for r in [{"isin": "DUP"}, {"isin": "DUP"}]:
-            yield r
-
-    async def collect() -> list[dict[str, object]]:
-        return [
-            record async for record in _unique_by_key(source(), lambda x: x["isin"])
-        ]
-
-    assert len(asyncio.run(collect())) == 1
-
-
-def test_fetch_page_read_timeout() -> None:
+def test_fetch_page_read_timeout_propagates() -> None:
     """
     ARRANGE: handler raises ReadTimeout
     ACT:     call _fetch_page
     ASSERT:  ReadTimeout is raised
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("timeout")
 
     client = AsyncClient(transport=MockTransport(handler))
@@ -301,160 +240,164 @@ def test_fetch_page_read_timeout() -> None:
         asyncio.run(_fetch_page(client, offset=0))
 
 
-def test_fetch_equity_records_partial_first_page() -> None:
+def test_deduplicate_records_single_output_for_duplicate_isin() -> None:
     """
-    ARRANGE: first page len=5, total=10
-    ACT:     call fetch_equity_records
-    ASSERT:  yields 10 records
+    ARRANGE: two dicts share same ISIN
+    ACT:     run through _deduplicate_records
+    ASSERT:  only first dict yielded
     """
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content)
-        offset = body.get("offset", 0)
-        if offset == 0:
-            data = [
-                {
-                    "name": {"originalValue": str(i)},
-                    "wkn": "",
-                    "isin": str(i),
-                    "slug": "",
-                    "overview": {},
-                    "performance": {},
-                    "keyData": {},
-                    "sustainability": {},
-                }
-                for i in range(5)
-            ]
-            total = 10
-        else:
-            data = [
-                {
-                    "name": {"originalValue": str(i)},
-                    "wkn": "",
-                    "isin": str(i),
-                    "slug": "",
-                    "overview": {},
-                    "performance": {},
-                    "keyData": {},
-                    "sustainability": {},
-                }
-                for i in range(5, 10)
-            ]
-            total = 10
-        return httpx.Response(200, json={"recordsTotal": total, "data": data})
+    async def source() -> AsyncIterator[dict[str, str]]:
+        for record in [{"isin": "DUP"}, {"isin": "DUP"}]:
+            yield record
 
-    expected_records_total = 10
-
-    def factory() -> AsyncClient:
-        return AsyncClient(transport=MockTransport(handler))
-
-    async def collect() -> list[dict[str, object]]:
-        return [record async for record in fetch_equity_records(client_factory=factory)]
+    async def collect() -> list[dict[str, str]]:
+        dedup = _deduplicate_records(lambda r: r["isin"])
+        return [record async for record in dedup(source())]
 
     actual = asyncio.run(collect())
 
-    assert len(actual) == expected_records_total
+    assert len(actual) == 1
 
 
-def test_extract_equity_records_missing_original_value_raises_key_error() -> None:
+def test_consume_queue_yields_until_sentinel() -> None:
     """
-    ARRANGE: data item missing originalValue
-    ACT:     call _extract_equity_records
-    ASSERT:  KeyError is raised
+    ARRANGE: queue with two items and sentinel
+    ACT:     _consume_queue(expected_sentinels=1)
+    ASSERT:  items [1,2] yielded in order
     """
-    with pytest.raises(KeyError):
-        _extract_equity_records({"data": [{"name": {}}]})
+
+    async def collect() -> list[int]:
+        queue: asyncio.Queue[int | None] = asyncio.Queue()
+        await queue.put(1)
+        await queue.put(2)
+        await queue.put(None)
+        return [record async for record in _consume_queue(queue, expected_sentinels=1)]
+
+    actual = asyncio.run(collect())
+
+    assert actual == [1, 2]
 
 
-def test_request_payload_offset_in_body() -> None:
+def test_produce_page_places_sentinel_on_success() -> None:
     """
-    ARRANGE: capture request content
-    ACT:     call _fetch_page
-    ASSERT:  payload offset equals 7
+    ARRANGE: MockTransport returns single-row page
+    ACT:     _produce_page
+    ASSERT:  record followed by sentinel enqueued
     """
-    seen = {}
-    expected_records_total = 7
+    row = {
+        "name": {"originalValue": "One"},
+        "wkn": "",
+        "isin": "ISIN1",
+        "slug": "",
+        "overview": {},
+        "performance": {},
+        "keyData": {},
+        "sustainability": {},
+    }
+    payload = {"recordsTotal": 1, "data": [row]}
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        seen["body"] = json.loads(request.content)
-        return httpx.Response(200, json={"recordsTotal": 0, "data": []})
+    async def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
 
     client = AsyncClient(transport=MockTransport(handler))
 
-    asyncio.run(_fetch_page(client, offset=7))
+    async def run_test() -> tuple[dict | None, dict | None]:
+        queue: asyncio.Queue[dict | None] = asyncio.Queue()
+        await _produce_page(client, offset=0, queue=queue)
+        return await queue.get(), await queue.get()
 
-    assert seen["body"]["offset"] == expected_records_total
+    first, second = asyncio.run(run_test())
+
+    assert (first, second) == (_extract_records(payload)[0], None)
 
 
-def test_get_total_records_returns_zero_when_missing() -> None:
+def test_fetch_equity_records_streams_two_records() -> None:
     """
-    ARRANGE: page_json without recordsTotal
-    ACT:     call _get_total_records
-    ASSERT:  returns 0
+    ARRANGE: first page has 100 rows, total=101 so a second page is required
+    ACT:     iterate fetch_equity_records with MockTransport
+    ASSERT:  101 records are returned
     """
-    assert _get_total_records({}) == 0
+
+    def make_row(index: int) -> dict[str, object]:
+        return {
+            "name": {"originalValue": f"R{index}"},
+            "wkn": "",
+            "isin": f"ISIN_{index}",
+            "slug": "",
+            "overview": {},
+            "performance": {},
+            "keyData": {},
+            "sustainability": {},
+        }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        offset = json.loads(request.content)["offset"]
+        data = (
+            [make_row(i) for i in range(100)] if offset == 0 else [make_row(100)]
+        )  # first page (100 rows), final page (1 row)
+        return httpx.Response(200, json={"recordsTotal": 101, "data": data})
+
+    expected_total_records = 101
+
+    client = AsyncClient(transport=MockTransport(handler))
+
+    async def collect() -> list[dict[str, object]]:
+        return [record async for record in fetch_equity_records(client)]
+
+    records = asyncio.run(collect())
+
+    assert len(records) == expected_total_records
 
 
-def test_extract_equity_records_empty_data_returns_empty_list() -> None:
+def test_fetch_equity_records_exits_on_first_page_500() -> None:
     """
-    ARRANGE: page_json with empty data list
-    ACT:     call _extract_equity_records
-    ASSERT:  returns empty list
+    ARRANGE: first page returns 500
+    ACT:     iterate fetch_equity_records
+    ASSERT:  SystemExit is raised
     """
-    assert _extract_equity_records({"data": []}) == []
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(500)
+
+    client = AsyncClient(transport=MockTransport(handler))
+
+    async def iterate() -> None:
+        async for _ in fetch_equity_records(client):
+            pass
+
+    with pytest.raises(SystemExit):
+        asyncio.run(iterate())
 
 
-def test_fetch_equity_records_deduplicates_isin_across_pages() -> None:
+def test_fetch_equity_records_deduplicates_across_pages() -> None:
     """
-    ARRANGE: two pages both contain same ISIN
-    ACT:     collect via fetch_equity_records
+    ARRANGE: two pages share same ISIN
+    ACT:     iterate fetch_equity_records
     ASSERT:  only one unique record yielded
     """
 
     def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content)
-        offset = body["offset"]
-        response = {
-            "recordsTotal": 2,
-            "data": [
-                {
-                    "name": {"originalValue": f"name-{offset}"},
-                    "wkn": "",
-                    "isin": "DUPLICATE",
-                    "slug": "",
-                    "overview": {},
-                    "performance": {},
-                    "keyData": {},
-                    "sustainability": {},
-                },
-            ],
-        }
-        return httpx.Response(200, json=response)
-
-    def factory() -> AsyncClient:
-        return AsyncClient(transport=MockTransport(handler))
-
-    async def collect() -> list[dict[str, object]]:
-        return [record async for record in fetch_equity_records(client_factory=factory)]
-
-    assert len(asyncio.run(collect())) == 1
-
-
-def test_fetch_remaining_pages_skips_read_error() -> None:
-    """
-    ARRANGE: offset 0 OK, offset 1 raises ReadError
-    ACT:     _fetch_remaining_pages
-    ASSERT:  only one page yielded
-    """
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        if json.loads(request.content)["offset"] == 1:
-            raise httpx.ReadError("boom")
-        return httpx.Response(200, json={"data": [], "recordsTotal": 0})
+        offset = json.loads(request.content)["offset"]
+        data = [
+            {
+                "name": {"originalValue": f"Name-{offset}"},
+                "wkn": "",
+                "isin": "DUPLICATE",
+                "slug": "",
+                "overview": {},
+                "performance": {},
+                "keyData": {},
+                "sustainability": {},
+            },
+        ]
+        return httpx.Response(200, json={"recordsTotal": 2, "data": data})
 
     client = AsyncClient(transport=MockTransport(handler))
 
     async def collect() -> list[dict[str, object]]:
-        return [page async for page in _fetch_remaining_pages(client, offsets=range(2))]
+        return [record async for record in fetch_equity_records(client)]
 
-    assert len(asyncio.run(collect())) == 1
+    records = asyncio.run(collect())
+
+    assert len(records) == 1

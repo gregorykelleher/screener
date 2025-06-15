@@ -3,8 +3,8 @@
 import asyncio
 import logging
 import re
+import sys
 from collections.abc import AsyncIterator, Callable
-from typing import Final
 
 from httpx import AsyncClient
 
@@ -14,9 +14,9 @@ from equity_aggregator.adapters.data_sources._utils import make_client
 logger = logging.getLogger(__name__)
 
 
-_BASE_URL: Final = "https://live.euronext.com/en/pd_es/data/stocks"
+_BASE_URL = "https://live.euronext.com/en/pd_es/data/stocks"
 
-_HEADERS: Final = {
+_HEADERS = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
     "User-Agent": "Mozilla/5.0",
     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -26,7 +26,7 @@ _HEADERS: Final = {
     "Accept-Encoding": "gzip, deflate",
 }
 
-_COUNTRY_TO_MIC: Final = {
+_COUNTRY_TO_MIC = {
     "France": "XPAR",
     "Netherlands": "XAMS",
     "Belgium": "XBRU",
@@ -51,7 +51,6 @@ UniqueRecordStream = Callable[[RecordStream], RecordStream]
 
 async def fetch_equity_records(
     client: AsyncClient | None = None,
-    page_size: int = 100,
 ) -> AsyncIterator[EquityRecord]:
     """
     Yield each Euronext equity record exactly once, using cache if available.
@@ -61,7 +60,6 @@ async def fetch_equity_records(
 
     Args:
         client (AsyncClient | None): Optional HTTP client to use for requests.
-        page_size (int): Number of records to fetch per page (default: 100).
 
     Yields:
         EquityRecord: Parsed Euronext equity record.
@@ -74,22 +72,48 @@ async def fetch_equity_records(
             yield record
         return
 
-    # use provided client or create a bespoke euronext client
-    client = client or make_client(headers=_HEADERS)
+    try:
+        # use provided client or create a bespoke euronext client
+        client = client or make_client(headers=_HEADERS)
 
-    async with client:
-        # stream all MICs concurrently and deduplicate by ISIN
-        stream = _deduplicate_records(lambda record: record["isin"])(
-            _stream_all_mics(client, page_size),
+        async with client:
+            async for record in _stream_and_cache(client):
+                yield record
+
+    # If any error occurs on the feed, treat it as fatal and exit
+    except Exception as error:
+        logger.fatal(
+            "Fatal error while fetching Euronext records: %s",
+            error,
+            exc_info=True,
         )
+        sys.exit(1)
 
-        # collect all records in a buffer to cache them later
-        buffer: list[EquityRecord] = []
 
-        # stream each record as it arrives, yielding immediately
-        async for record in stream:
-            buffer.append(record)
-            yield record
+async def _stream_and_cache(
+    client: AsyncClient,
+) -> AsyncIterator[EquityRecord]:
+    """
+    Asynchronously stream unique Euronext equity records, cache them, and yield each.
+
+    Args:
+        client (AsyncClient): The asynchronous HTTP client used for requests.
+
+    Yields:
+        EquityRecord: Each unique Euronext equity record as it is retrieved.
+
+    Side Effects:
+        Saves all streamed records to cache after streaming completes.
+    """
+    # collect all records in a buffer to cache them later
+    buffer: list[EquityRecord] = []
+
+    # stream all MICs concurrently and deduplicate by ISIN
+    async for record in _deduplicate_records(lambda record: record["isin"])(
+        _stream_all_mics(client),
+    ):
+        buffer.append(record)
+        yield record
 
     save_cache("euronext_records", buffer)
     logger.info("Saved %d Euronext records to cache.", len(buffer))
@@ -135,85 +159,158 @@ def _deduplicate_records(
 
 async def _stream_all_mics(
     client: AsyncClient,
-    page_size: int,
 ) -> AsyncIterator[EquityRecord]:
     """
-    Asynchronously fetches and yields equity records for all available MICs.
+    Concurrently fetch and yield equity records for all MICs.
 
-    This function launches a separate asynchronous task for each Market Identifier
-    Code (MIC). Each task fetches equity records for its respective MIC using the
-    provided async client and page size. Records are yielded as soon as each task
-    completes, allowing for efficient streaming of results as they become available.
-    If fetching data for a MIC fails, a warning is logged and processing continues
-    for the remaining MICs.
+    For each MIC, a producer coroutine fetches and enqueues parsed records into a
+    shared asyncio.Queue. This function consumes from the queue and yields each record
+    as soon as it is available. Each producer sends a None sentinel when completed; once
+    all sentinels are received, streaming is complete. Any producer exception is
+    propagated and causes a fatal exit.
 
     Args:
-        client (AsyncClient): The asynchronous HTTP client used to fetch data.
-        page_size (int): The number of records to fetch per request.
+        client (AsyncClient): Shared HTTP client for all MIC requests.
 
-    Yields:
-        EquityRecord: Parsed equity records from each MIC as they are retrieved.
+    Returns:
+        AsyncIterator[EquityRecord]: Yields parsed records from all MICs.
     """
+    # records per DataTables page
+    page_size = 100
 
-    async def _task(mic: str) -> list[EquityRecord]:
-        try:
-            return await _fetch_mic_records(client, mic, page_size)
-        except Exception as exc:
-            logger.warning("Euronext MIC %s failed: %s", mic, exc)
-            return []
+    # shared queue for all producers to enqueue records
+    queue: asyncio.Queue[EquityRecord | None] = asyncio.Queue()
 
-    # create a list of tasks for each MIC, fetching concurrently
-    coroutines = [_task(mic) for mic in _COUNTRY_TO_MIC.values()]
+    # spawn one producer task per MIC
+    producers = [
+        asyncio.create_task(_produce_mic(client, mic, page_size, queue))
+        for mic in _COUNTRY_TO_MIC.values()
+    ]
 
-    for future in asyncio.as_completed(coroutines):
-        for record in await future:
-            yield record
+    # forward queue items to the caller until all producers signal completion
+    async for record in _consume_queue(queue, len(producers)):
+        yield record
+
+    # ensure exceptions (if any) propagate after consumption finishes
+    await asyncio.gather(*producers)
 
 
-async def _fetch_mic_records(
+async def _produce_mic(
     client: AsyncClient,
     mic: str,
     page_size: int,
-) -> list[EquityRecord]:
+    queue: asyncio.Queue[EquityRecord | None],
+) -> None:
     """
-    Fetch and parse all paginated equity records for a single Euronext MIC.
+    Asynchronously streams and enqueues all equity records for a given MIC.
+
+    This function fetches records for the specified Market Identifier Code (MIC) using
+    the provided asynchronous client, and pushes each parsed record into given queue.
+    After all records have been processed, a sentinel value (None) is added to the queue
+    to signal completion. If an error occurs in processing, it's logged and re-raised.
 
     Args:
-        client (AsyncClient): HTTP client to perform POST requests.
-        mic (str): Market Identifier Code (e.g., "XPAR").
-        page_size (int): Number of records to request per page.
+        client (AsyncClient): The asynchronous HTTP client used to fetch records.
+        mic (str): The Market Identifier Code to fetch records for.
+        page_size (int): The number of records to fetch per page from the data source.
+        queue (asyncio.Queue[EquityRecord | None]): The queue to which records and the
+            sentinel value are pushed.
 
     Returns:
-        list[EquityRecord]: List of all parsed equity records for the given MIC.
+        None
+    """
+    # Track the number of records processed for this MIC
+    row_count = 0
+
+    try:
+        # Stream records for the specified MIC and enqueue them
+        async for record in _stream_mic_records(client, mic, page_size):
+            row_count += 1
+            await queue.put(record)
+
+        logger.debug("MIC %s completed with %d rows", mic, row_count)
+
+    except Exception as error:
+        logger.fatal("Euronext MIC %s failed: %s", mic, error)
+        raise
+
+    finally:
+        await queue.put(None)
+
+
+async def _consume_queue(
+    queue: asyncio.Queue[EquityRecord | None],
+    expected_sentinels: int,
+) -> AsyncIterator[EquityRecord]:
+    """
+    Yield records from the queue until the expected number of sentinel values (None)
+    have been received, indicating all producers are completed.
+
+    Args:
+        queue (asyncio.Queue[EquityRecord | None]): The queue from which to consume
+            equity records or sentinel values.
+        expected_sentinels (int): The number of sentinel (None) values to wait for
+            before stopping iteration.
+
+    Yields:
+        EquityRecord: Each equity record retrieved from the queue, as they arrive.
+    """
+    completed = 0
+    while completed < expected_sentinels:
+        record = await queue.get()
+        if record is None:
+            completed += 1
+        else:
+            yield record
+
+
+async def _stream_mic_records(
+    client: AsyncClient,
+    mic: str,
+    page_size: int,
+) -> AsyncIterator[EquityRecord]:
+    """
+    Asynchronously streams equity records for a given MIC (Market Identifier Code) from
+    Euronext, yielding each record as soon as its page is parsed.
+
+    Args:
+        client (AsyncClient): An asynchronous HTTP client used to make requests.
+        mic (str): The Market Identifier Code to fetch records for.
+        page_size (int): The number of records to fetch per page.
+
+    Yields:
+        EquityRecord: An equity record parsed from the Euronext feed for specified MIC.
+
+    Raises:
+        HTTPStatusError: If the HTTP request to the Euronext feed fails.
     """
     mic_request_url = f"{_BASE_URL}?mics={mic}"
 
-    # DataTables uses start (offset) and draw (request counter) for paging
+    # pagination cursors for DataTables API
     offset, draw_count = 0, 1
 
-    # accumulate every parsed row across all pages
-    all_records: list[EquityRecord] = []
-
+    # fetch all pages until exhausted
     while True:
         payload = _payload(offset, draw_count, page_size)
-
-        # perform request, fail fast on non-2xx, and deserialise JSON payload
         response = await client.post(mic_request_url, data=payload)
         response.raise_for_status()
+
+        # deserialise JSON payload
         result = response.json()
 
-        # combine parse + accumulate in a single logical statement
-        all_records.extend(map(_parse_row, result.get("aaData", [])))
+        # parse each row in the response and yield it
+        for record in map(_parse_row, result.get("aaData", [])):
+            yield record
 
-        # stop when final page has been consumed or no more records are available
+        # total rows on the server
         total_records = int(result.get("iTotalRecords", 0))
+
+        # determine if final page reached
         if offset + page_size >= total_records:
             break
 
-        # advance paging cursors for the next iteration
+        # advance offset to next page and increment draw counter
         offset, draw_count = offset + page_size, draw_count + 1
-
-    return all_records
 
 
 def _payload(start: int, draw: int, size: int) -> dict[str, int]:

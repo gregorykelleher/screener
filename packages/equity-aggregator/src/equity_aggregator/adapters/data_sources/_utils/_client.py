@@ -1,39 +1,37 @@
-# _utils/_client_factory.py
-
 from collections.abc import Callable
-from functools import partial
 
 from httpx import AsyncClient, AsyncHTTPTransport, Limits, Timeout
 
 ClientFactory = Callable[..., AsyncClient]
 
 
-def make_client_factory(**overrides: object) -> ClientFactory:
+def make_client(**overrides: object) -> AsyncClient:
     """
-    Create a factory for httpx.AsyncClient with default settings and optional overrides.
+    Create a client using default settings and optional overrides.
 
     Args:
         **overrides: Arbitrary keyword arguments to override default AsyncClient
             parameters such as base_url, headers, timeout, etc.
 
     Returns:
-        Callable[..., AsyncClient]: A function that creates AsyncClient instances
-            with merged overrides and per-call overrides.
+        httpx.AsyncClient: A configured AsyncClient instance.
 
     Example:
-        xetra_client = make_client_factory(
+        client = make_client(
             base_url="https://api.xetra.de",
             headers={"X-API-Key": "..."},
         )
-        async with xetra_client(timeout=10.0) as client:
-            ...
+        async with client as session:
+            response = await session.get("/path")
     """
 
+    # Set default limits for connections and keepalive
     limits = Limits(
         max_connections=128,
         max_keepalive_connections=64,
     )
 
+    # Set default timeouts for connections, reading, and writing
     timeout = Timeout(
         connect=3.0,  # 3s to establish TLS
         read=None,  # no read timeout
@@ -41,12 +39,14 @@ def make_client_factory(**overrides: object) -> ClientFactory:
         pool=None,  # no pool timeout
     )
 
+    # Use HTTP/2 transport with retries enabled
     transport = AsyncHTTPTransport(
         http2=True,
         retries=1,
         limits=limits,
     )
 
+    # Set default generic headers
     headers = {
         # accept anything
         "Accept": "*/*",
@@ -58,6 +58,7 @@ def make_client_factory(**overrides: object) -> ClientFactory:
         "User-Agent": "Mozilla/5.0",
     }
 
+    # Combine base parameters with any overrides provided
     base_params: dict[str, object] = {
         "http2": True,
         "transport": transport,
@@ -66,4 +67,4 @@ def make_client_factory(**overrides: object) -> ClientFactory:
         **overrides,
     }
 
-    return partial(AsyncClient, **base_params)
+    return AsyncClient(**base_params)

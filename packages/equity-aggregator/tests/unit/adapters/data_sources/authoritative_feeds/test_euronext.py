@@ -10,7 +10,7 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import
     _consume_queue,
     _deduplicate_records,
     _parse_row,
-    _payload,
+    _build_payload,
     _produce_mic,
     fetch_equity_records,
 )
@@ -26,7 +26,7 @@ def test_payload_correct_values() -> None:
     """
     start, draw, size = 10, 3, 50
 
-    actual = _payload(start, draw, size)
+    actual = _build_payload(start, draw, size)
 
     expected = {
         "draw": 3,
@@ -44,7 +44,7 @@ def test_payload_zero_and_negative() -> None:
     ACT: build payload
     ASSERT: maps values literally
     """
-    payload = _payload(0, 0, -1)
+    payload = _build_payload(0, 0, -1)
 
     assert payload["length"] == -1
 
@@ -464,7 +464,7 @@ def test_payload_large_numbers() -> None:
     expected_start = 1_000_000
     start, draw, size = 1_000_000, 42, 10_000
 
-    payload = _payload(start, draw, size)
+    payload = _build_payload(start, draw, size)
 
     assert payload["start"] == expected_start
 

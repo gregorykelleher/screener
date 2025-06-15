@@ -1,7 +1,7 @@
 # _utils/__init__.py
 
-from ._client_factory import make_client_factory
+from ._client import make_client
 
 __all__ = [
-    "make_client_factory",
+    "make_client",
 ]

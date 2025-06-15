@@ -2,19 +2,19 @@
 
 import asyncio
 import logging
+import sys
 from collections.abc import AsyncIterator, Callable
-from functools import lru_cache
 
-import httpx
+from httpx import AsyncClient
 
 from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
-from equity_aggregator.adapters.data_sources._utils._client_factory import (
-    make_client_factory,
-)
+from equity_aggregator.adapters.data_sources._utils import make_client
 
 logger = logging.getLogger(__name__)
 
-_LSE_HEADERS = {
+_LSE_SEARCH_URL = "https://api.londonstockexchange.com/api/v1/components/refresh"
+
+_HEADERS = {
     "Accept": "application/json, text/plain, */*",
     "User-Agent": "Mozilla/5.0",
     "Content-Type": "application/json; charset=UTF-8",
@@ -24,147 +24,295 @@ _LSE_HEADERS = {
     "Pragma": "no-cache",
 }
 
-_LSE_SEARCH_URL = "https://api.londonstockexchange.com/api/v1/components/refresh"
-_PAGE_SIZE = 100
 
-ClientFactory = Callable[..., httpx.AsyncClient]
-_DEFAULT_CLIENT_FACTORY: ClientFactory = make_client_factory(headers=_LSE_HEADERS)
+# a single equity record
+EquityRecord = dict[str, object]
 
+# an async stream of records
+RecordStream = AsyncIterator[EquityRecord]
 
-@lru_cache(maxsize=1)
-def get_client() -> httpx.AsyncClient:
-    return _DEFAULT_CLIENT_FACTORY()
+# a function that extracts a unique key from an EquityRecord
+RecordUniqueKeyExtractor = Callable[[EquityRecord], object]
+
+# a function that takes a RecordStream and returns a deduplicated RecordStream
+UniqueRecordStream = Callable[[RecordStream], RecordStream]
 
 
 async def fetch_equity_records(
-    client_factory: ClientFactory = _DEFAULT_CLIENT_FACTORY,
-) -> AsyncIterator[dict[str, object]]:
+    client: AsyncClient | None = None,
+) -> RecordStream:
     """
-    Asynchronously stream all LSE equity records, using cache if available.
+    Yield each LSE equity record exactly once, using cache if available.
 
-    If cached records exist, yields them directly. Otherwise, fetches all records
-    from the LSE feed, streams them as they arrive, and caches the results for
-    future use.
+    If a cache is present, loads and yields records from cache. Otherwise, streams
+    all MICs concurrently, yields records as they arrive, and caches the results.
 
     Args:
-        client_factory (ClientFactory, optional): Callable that returns an
-            httpx.AsyncClient for HTTP requests. Defaults to _DEFAULT_CLIENT_FACTORY.
+        client (AsyncClient | None): Optional HTTP client to use for requests.
 
     Yields:
-        dict[str, object]: A normalised equity record from the LSE feed.
-
-    Returns:
-        AsyncIterator[dict[str, object]]: An async iterator yielding equity records.
+        EquityRecord: Parsed LSE equity record.
     """
     cached = load_cache("lse_records")
+
     if cached:
         logger.info("Loaded %d LSE records from cache.", len(cached))
         for record in cached:
             yield record
         return
 
-    async for record in _fetch_and_cache(client_factory):
-        yield record
+    try:
+        # use provided client or create a bespoke lse client
+        client = client or make_client(headers=_HEADERS)
+
+        async with client:
+            async for record in _stream_and_cache(client):
+                yield record
+
+    except Exception as error:
+        logger.fatal(
+            "Fatal error while fetching LSE records: %s",
+            error,
+            exc_info=True,
+        )
+        sys.exit(1)
 
 
-async def _fetch_and_cache(
-    client_factory: ClientFactory,
-) -> AsyncIterator[dict[str, object]]:
+async def _stream_and_cache(client: AsyncClient) -> RecordStream:
     """
-    Asynchronously fetch and cache all equity records from the LSE feed.
-
-    Streams each record as it is retrieved. On successful completion, caches all
-    records locally and logs the total number of records fetched.
+    Asynchronously stream unique LSE equity records, cache them, and yield each.
 
     Args:
-        client_factory (ClientFactory): A callable that returns an AsyncClient.
+        client (AsyncClient): The asynchronous HTTP client used for requests.
 
     Yields:
-        dict[str, object]: A normalised equity record.
+        EquityRecord: Each unique LSE equity record as it is retrieved.
 
-    Returns:
-        AsyncIterator[dict[str, object]]: An async iterator of equity records.
+    Side Effects:
+        Saves all streamed records to cache after streaming completes.
     """
-    buffer: list[dict[str, object]] = []
+    # collect all records in a buffer to cache them later
+    buffer: list[EquityRecord] = []
 
-    # stream, deduplicate, accumulate
-    async for record in _unique_by_key(
-        _download_equity_records(client_factory),
-        lambda record: record.get("isin"),
+    # stream all records concurrently and deduplicate by ISIN
+    async for record in _deduplicate_records(lambda r: r["isin"])(
+        _stream_all_pages(client),
     ):
         buffer.append(record)
         yield record
 
-    # only cache if the download loop completed successfully
     save_cache("lse_records", buffer)
     logger.info("Saved %d LSE records to cache.", len(buffer))
 
 
-async def _unique_by_key(
-    async_iter: AsyncIterator[dict[str, object]],
-    key_func: Callable[[dict[str, object]], object],
-) -> AsyncIterator[dict[str, object]]:
+def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordStream:
     """
-    Yield only the first item for each unique key from an async iterator.
-
-    Iterates over the provided async iterator and yields each item only if its key,
-    as determined by the key_func, has not been seen before. This ensures that only
-    unique items by the specified key are yielded.
-
+    Creates a deduplication coroutine for async iterators of dictionaries, yielding only
+    unique records based on a key extracted from each record.
     Args:
-        async_iter (AsyncIterator[dict[str, object]]): Async iterator to deduplicate.
-        key_func (Callable[[dict[str, object]], object]): Function to extract the
-            deduplication key from each item.
-
+        extract_key (RecordUniqueKeyExtractor): A function that takes a
+            dictionary record and returns a value used to determine uniqueness.
     Returns:
-        AsyncIterator[dict[str, object]]: Async iterator yielding unique items by key.
+        UniqueRecordStream: A coroutine that accepts an async iterator of dictionaries,
+            yields only unique records, as determined by the extracted key.
     """
-    seen: set[object] = set()
-    async for record in async_iter:
-        key = key_func(record)
-        if key is None:
+
+    async def deduplicator(records: RecordStream) -> RecordStream:
+        seen: set[object] = set()
+        async for record in records:
+            record_id = extract_key(record)
+            if record_id in seen:
+                continue
+            seen.add(record_id)
             yield record
-            continue
 
-        if key in seen:
-            continue
-
-        seen.add(key)
-        yield record
+    return deduplicator
 
 
-async def _download_equity_records(
-    client_factory: ClientFactory,
-) -> AsyncIterator[dict[str, object]]:
+async def _stream_all_pages(client: AsyncClient) -> RecordStream:
     """
-    Asynchronously downloads equity records from the LSE authoritative feed.
+    Stream all LSE equity records across all pages.
 
     Args:
-        client_factory (ClientFactory): A factory function that returns an asynchronous
-            HTTP client instance for making requests to the LSE feed.
+        client (AsyncClient): The asynchronous HTTP client used for requests.
 
     Yields:
-        dict[str, object]: A dictionary representing a single equity record retrieved
-            from the LSE feed.
-
-    Raises:
-        Any exceptions raised by the client or during data retrieval will propagate.
+        EquityRecord: Each equity record from all pages, as soon as it is available.
     """
-    client = get_client()
+    # shared queue for all producers to enqueue records
+    queue: asyncio.Queue[EquityRecord | None] = asyncio.Queue()
 
-    async for record in _stream_equity_records(client):
+    first_page = await _fetch_page(client, page=1)
+    first_page_records = _extract_records(first_page)
+
+    total_pages = _get_total_pages(first_page)
+
+    # yield first-page records immediately
+    for record in first_page_records:
         yield record
 
+    logger.debug("LSE page 1 completed")
 
-def _build_payload(page: int) -> dict:
+    # if there is only a single page, just return early
+    if total_pages <= 1:
+        return
+
+    # spawn one producer task per remaining page
+    producers = [
+        asyncio.create_task(_produce_page(client, page, queue))
+        for page in range(2, total_pages + 1)
+    ]
+
+    # consume queue until every producer sends its sentinel
+    async for record in _consume_queue(queue, expected_sentinels=len(producers)):
+        yield record
+
+    # ensure exceptions (if any) propagate after consumption finishes
+    await asyncio.gather(*producers)
+
+
+async def _produce_page(
+    client: AsyncClient,
+    page: int,
+    queue: asyncio.Queue[EquityRecord | None],
+) -> None:
     """
-    Build the JSON payload for the LSE API to fetch equity data for a given page.
+    Fetch a single LSE page, enqueue its records, and signal completion.
 
     Args:
-        page (int): The page number to request from the LSE API.
+        client (AsyncClient): The HTTP client for making requests.
+        page (int): The 1-based page number to fetch.
+        queue (asyncio.Queue[EquityRecord | None]): Queue to put records and sentinel.
+
+    Side Effects:
+        - Puts each EquityRecord from the page into the queue.
+        - Puts None into the queue after all records (even on error) to signal done.
 
     Returns:
-        dict: The payload with path, parameters, and components for the API request.
+        None
+    """
+    try:
+        # stream records from the page and enqueue them
+        page_json = await _fetch_page(client, page)
+        for record in _extract_records(page_json):
+            await queue.put(record)
+
+        logger.debug("LSE page %s completed", page)
+
+    except Exception as error:
+        logger.fatal("LSE page %s failed: %s", page, error, exc_info=True)
+        raise
+
+    finally:
+        await queue.put(None)
+
+
+async def _consume_queue(
+    queue: asyncio.Queue[EquityRecord | None],
+    expected_sentinels: int,
+) -> RecordStream:
+    """
+    Yield records from the queue until the expected number of sentinel values (None)
+    have been received, indicating all producers are completed.
+
+    Args:
+        queue (asyncio.Queue[EquityRecord | None]): The queue from which to consume
+            equity records or sentinel values.
+        expected_sentinels (int): The number of sentinel (None) values to wait for
+            before stopping iteration.
+
+    Yields:
+        EquityRecord: Each equity record retrieved from the queue, as they arrive.
+    """
+    completed = 0
+    while completed < expected_sentinels:
+        item = await queue.get()
+        if item is None:
+            completed += 1
+        else:
+            yield item
+
+
+async def _fetch_page(client: AsyncClient, page: int) -> dict[str, object]:
+    """
+    Fetch a single page of results from the LSE feed.
+
+    Sends a POST request to the LSE search endpoint with the specified page and
+    returns the parsed JSON response. HTTP and JSON errors are propagated to the caller.
+
+    Args:
+        client (AsyncClient): The HTTP client used to send the request.
+        page (int): The 1-based page number to fetch.
+
+    Returns:
+        dict[str, object]: The parsed JSON response from the LSE feed.
+
+        httpx.HTTPStatusError: If the response status is not successful.
+        httpx.ReadError: If there is a network or connection error.
+        ValueError: If the response body cannot be parsed as JSON.
+    """
+    response = await client.post(_LSE_SEARCH_URL, json=_build_payload(page))
+    response.raise_for_status()
+
+    try:
+        return response.json()[0]
+
+    except (ValueError, IndexError) as error:
+        logger.fatal(
+            "LSE JSON decode error at page %s: %s",
+            page,
+            error,
+            exc_info=True,
+        )
+        raise
+
+
+def _extract_records(page_response_json: dict[str, object]) -> list[EquityRecord]:
+    """
+    Normalise raw LSE JSON page data into a list of EquityRecord dictionaries.
+
+    Args:
+        page_response_json (dict[str, object]): Parsed JSON response from a LSE page.
+
+    Returns:
+        list[EquityRecord]: A list of normalized equity records, each as a dictionary
+            with standardized keys matching the eurONext schema.
+    """
+    rows, _ = _parse_equities(page_response_json)
+    records: list[EquityRecord] = []
+
+    for row in rows:
+        record = dict(row)
+        record.setdefault("mics", ["XLON"])
+        records.append(record)
+
+    return records
+
+
+def _get_total_pages(page_json: dict[str, object]) -> int:
+    """
+    Extract the total number of pages from the first page of LSE results.
+
+    Args:
+        page_json (dict[str, object]): Parsed JSON response from a LSE page.
+
+    Returns:
+        int: The total number of result pages. Returns 1 if not found.
+    """
+    _, total_pages = _parse_equities(page_json)
+    return int(total_pages or 1)
+
+
+def _build_payload(page: int, page_size: int = 100) -> dict[str, object]:
+    """
+    Construct the JSON payload for a LSE search POST request.
+
+    Args:
+        page (int): The 1-based page number to request.
+        page_size (int, optional): Number of records per page. Defaults to 100.
+
+    Returns:
+        dict[str, object]: The payload dictionary to send in the POST request.
     """
     return {
         "path": "live-markets/market-data-dashboard/price-explorer",
@@ -177,187 +325,37 @@ def _build_payload(page: int) -> dict:
                 "componentId": "block_content%3A9524a5dd-7053-4f7a-ac75-71d12db796b4",
                 "parameters": (
                     "markets=MAINMARKET&categories=EQUITY&indices=ASX"
-                    f"&showonlylse=true&page={page}&size={_PAGE_SIZE}"
+                    f"&showonlylse=true&page={page}&size={page_size}"
                 ),
             },
         ],
     }
 
 
-def _parse_equities(data: dict) -> tuple[list[dict], int | None]:
+def _parse_equities(page_json: dict[str, object]) -> tuple[list[dict], int | None]:
     """
-    Parse the LSE API response to extract equity records and the total page count.
+    Extracts equity data rows and total page count from a LSE price explorer JSON block.
 
     Args:
-        data (dict): The JSON response from the LSE API.
+        page_json (dict[str, object]): The JSON dictionary representing a page of
+            LSE data, expected to contain a "content" key with blocks.
 
     Returns:
         tuple[list[dict], int | None]: A tuple containing:
-            - A list of equity record dictionaries.
-            - The total number of pages (int), or None if not available.
+            - A list of dictionaries, each representing an equity row from the
+              price explorer block (empty if not found).
+            - The total number of pages as an integer, or None if unavailable.
     """
-    if data is None:
-        logger.debug("LSE API returned None data")
-        return [], None
-
-    price_explorer_data = next(
+    price_explorer_block = next(
         (
-            content_item
-            for content_item in data.get("content", [])
-            if content_item.get("name") == "priceexplorersearch"
+            item
+            for item in page_json.get("content", [])
+            if item.get("name") == "priceexplorersearch"
         ),
         None,
     )
-
-    if not price_explorer_data:
+    if not price_explorer_block:
         return [], None
 
-    value = price_explorer_data.get("value", {})
-    return value.get("content", []), value.get("totalPages")
-
-
-async def _fetch_page(
-    client: httpx.AsyncClient,
-    payload: dict,
-) -> dict:
-    """
-    Send a POST request to the LSE API and return the parsed JSON response.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client used to make
-            the POST request.
-        payload (dict): The JSON payload to include in the POST request body.
-
-    Returns:
-        dict: The first element of the JSON response from the LSE API, containing
-            the requested data.
-    """
-    response = await client.post(_LSE_SEARCH_URL, json=payload)
-    response.raise_for_status()
-    return response.json()[0]
-
-
-async def _try_fetch_page(client: httpx.AsyncClient, page: int) -> dict | None:
-    """
-    Attempts to fetch a page asynchronously using the provided HTTP client and payload.
-    Handles HTTP status/read errors gracefully by logging a warning and returning None.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client to use for the request.
-        page (int): The page number to fetch.
-
-    Returns:
-        dict | None: The response data as a dictionary if successful, otherwise None if
-        HTTP status or read error occurs.
-    """
-    try:
-        payload = _build_payload(page)
-        return await _fetch_page(client, payload)
-
-    except (httpx.HTTPStatusError, httpx.ReadError) as error:
-        root = error.__context__ or error.__cause__
-        label = repr(root) if root else type(error).__name__
-        logger.warning("LSE %s → %s", _LSE_SEARCH_URL, label)
-        return None
-
-
-async def _stream_equity_records(
-    client: httpx.AsyncClient,
-) -> AsyncIterator[dict[str, object]]:
-    """
-    Asynchronously stream individual equity records from the LSE API.
-
-    Fetches the first page of equity records and yields each record. If additional
-    pages exist, fetches the remaining pages concurrently and yields each record as
-    they are retrieved.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client used to make
-            requests to the LSE API.
-
-    Returns:
-        AsyncIterator[dict[str, object]]: An async iterator yielding individual
-            equity record dictionaries from all available pages.
-    """
-    async for records_pages in _equity_pages(client):
-        for record in records_pages:
-            yield record
-
-
-async def _equity_pages(
-    client: httpx.AsyncClient,
-) -> AsyncIterator[list[dict[str, object]]]:
-    """
-    Asynchronously yield lists of equity records from the LSE API, one page at a time.
-
-    Fetches the first page of equity records and yields its list. If additional pages
-    exist, fetches and yields each remaining page's records as they are retrieved.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client used to make
-            requests to the LSE API.
-
-    Returns:
-        AsyncIterator[list[dict[str, object]]]: An async iterator yielding lists of
-            equity records for each page, in the order they are fetched.
-    """
-    first_records, total_pages = await _fetch_first_page(client)
-    if not first_records:
-        return
-
-    yield first_records
-
-    if total_pages and total_pages > 1:
-        async for records_page in _fetch_remaining_pages(client, total_pages):
-            yield records_page
-
-
-async def _fetch_first_page(
-    client: httpx.AsyncClient,
-) -> tuple[list[dict[str, object]], int | None]:
-    """
-    Fetches the first page of equity records from the LSE API, parses the response,
-    and returns a tuple containing the list of records and the total number of pages.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client used to make the
-            request to the LSE API.
-
-    Returns:
-        tuple[list[dict[str, object]], int | None]: A tuple where the first element
-            is a list of equity record dictionaries, and the second element is the
-            total number of pages (int) or None if unavailable or on error.
-    """
-    raw = await _try_fetch_page(client, 1)
-    if not raw:
-        return [], None
-    return _parse_equities(raw)
-
-
-async def _fetch_remaining_pages(
-    client: httpx.AsyncClient,
-    total_pages: int,
-) -> AsyncIterator[list[dict[str, object]]]:
-    """
-    Concurrently fetch and yield equity records for pages 2 through total_pages.
-
-    Args:
-        client (httpx.AsyncClient): The asynchronous HTTP client used for requests.
-        total_pages (int): The total number of pages to fetch (including page 1).
-
-    Yields:
-        list[dict[str, object]]: A list of equity records for each fetched page.
-
-    Returns:
-        AsyncIterator[list[dict[str, object]]]: An async iterator yielding lists of
-        equity records for each page, in the order they complete.
-    """
-    pages = range(2, total_pages + 1)
-    tasks = [_try_fetch_page(client, p) for p in pages]
-
-    for future in asyncio.as_completed(tasks):
-        raw = await future
-        if not raw:
-            continue
-        equities, _ = _parse_equities(raw)
-        yield equities
+    value_section = price_explorer_block.get("value", {})
+    return value_section.get("content", []), value_section.get("totalPages")

@@ -51,7 +51,7 @@ UniqueRecordStream = Callable[[RecordStream], RecordStream]
 
 async def fetch_equity_records(
     client: AsyncClient | None = None,
-) -> AsyncIterator[EquityRecord]:
+) -> RecordStream:
     """
     Yield each Euronext equity record exactly once, using cache if available.
 
@@ -90,9 +90,7 @@ async def fetch_equity_records(
         sys.exit(1)
 
 
-async def _stream_and_cache(
-    client: AsyncClient,
-) -> AsyncIterator[EquityRecord]:
+async def _stream_and_cache(client: AsyncClient) -> RecordStream:
     """
     Asynchronously stream unique Euronext equity records, cache them, and yield each.
 
@@ -108,7 +106,7 @@ async def _stream_and_cache(
     # collect all records in a buffer to cache them later
     buffer: list[EquityRecord] = []
 
-    # stream all MICs concurrently and deduplicate by ISIN
+    # stream all records concurrently and deduplicate by ISIN
     async for record in _deduplicate_records(lambda record: record["isin"])(
         _stream_all_mics(client),
     ):
@@ -119,9 +117,7 @@ async def _stream_and_cache(
     logger.info("Saved %d Euronext records to cache.", len(buffer))
 
 
-def _deduplicate_records(
-    extract_key: RecordUniqueKeyExtractor,
-) -> UniqueRecordStream:
+def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordStream:
     """
     Creates a deduplication coroutine for async iterators of dictionaries, yielding only
     unique records based on a key extracted from each record.
@@ -157,9 +153,7 @@ def _deduplicate_records(
     return deduplicator
 
 
-async def _stream_all_mics(
-    client: AsyncClient,
-) -> AsyncIterator[EquityRecord]:
+async def _stream_all_mics(client: AsyncClient) -> RecordStream:
     """
     Concurrently fetch and yield equity records for all MICs.
 
@@ -173,7 +167,7 @@ async def _stream_all_mics(
         client (AsyncClient): Shared HTTP client for all MIC requests.
 
     Returns:
-        AsyncIterator[EquityRecord]: Yields parsed records from all MICs.
+        RecordStream: Yields parsed records from all MICs.
     """
     # records per DataTables page
     page_size = 100
@@ -187,7 +181,7 @@ async def _stream_all_mics(
         for mic in _COUNTRY_TO_MIC.values()
     ]
 
-    # forward queue items to the caller until all producers signal completion
+    # consume queue until every producer sends its sentinel.
     async for record in _consume_queue(queue, len(producers)):
         yield record
 
@@ -219,11 +213,11 @@ async def _produce_mic(
     Returns:
         None
     """
-    # Track the number of records processed for this MIC
+    # track the number of records processed for this MIC
     row_count = 0
 
     try:
-        # Stream records for the specified MIC and enqueue them
+        # stream records for the specified MIC and enqueue them
         async for record in _stream_mic_records(client, mic, page_size):
             row_count += 1
             await queue.put(record)
@@ -241,7 +235,7 @@ async def _produce_mic(
 async def _consume_queue(
     queue: asyncio.Queue[EquityRecord | None],
     expected_sentinels: int,
-) -> AsyncIterator[EquityRecord]:
+) -> RecordStream:
     """
     Yield records from the queue until the expected number of sentinel values (None)
     have been received, indicating all producers are completed.
@@ -268,7 +262,7 @@ async def _stream_mic_records(
     client: AsyncClient,
     mic: str,
     page_size: int,
-) -> AsyncIterator[EquityRecord]:
+) -> RecordStream:
     """
     Asynchronously streams equity records for a given MIC (Market Identifier Code) from
     Euronext, yielding each record as soon as its page is parsed.
@@ -291,7 +285,7 @@ async def _stream_mic_records(
 
     # fetch all pages until exhausted
     while True:
-        payload = _payload(offset, draw_count, page_size)
+        payload = _build_payload(offset, draw_count, page_size)
         response = await client.post(mic_request_url, data=payload)
         response.raise_for_status()
 
@@ -313,7 +307,7 @@ async def _stream_mic_records(
         offset, draw_count = offset + page_size, draw_count + 1
 
 
-def _payload(start: int, draw: int, size: int) -> dict[str, int]:
+def _build_payload(start: int, draw: int, size: int) -> dict[str, int]:
     """
     Constructs the form-data payload required by Euronext's DataTables back-end API.
 

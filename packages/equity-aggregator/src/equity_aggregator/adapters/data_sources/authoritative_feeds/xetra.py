@@ -163,13 +163,15 @@ async def _stream_all_pages(client: AsyncClient) -> RecordStream:
     queue: asyncio.Queue[EquityRecord | None] = asyncio.Queue()
 
     first_page = await _fetch_page(client, offset=0)
-    total_records = _get_total_records(first_page)
     first_page_records = _extract_records(first_page)
+    total_records = _get_total_records(first_page)
 
-    # if there is only a single page, just yield those records and return
+    # yield first-page records immediately
+    for record in first_page_records:
+        yield record
+
+    # if there is only a single page, just return early
     if total_records <= page_size:
-        for record in first_page_records:
-            yield record
         return
 
     # offsets for remaining pages (skipping the first page already fetched)
@@ -180,10 +182,6 @@ async def _stream_all_pages(client: AsyncClient) -> RecordStream:
         asyncio.create_task(_produce_page(client, offset, queue))
         for offset in remaining_pages
     ]
-
-    # emit first page immediately
-    for record in first_page_records:
-        yield record
 
     # consume queue until every producer sends its sentinel
     async for record in _consume_queue(queue, expected_sentinels=len(producers)):

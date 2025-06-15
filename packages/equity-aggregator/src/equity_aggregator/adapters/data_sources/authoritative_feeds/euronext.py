@@ -14,7 +14,7 @@ from equity_aggregator.adapters.data_sources._utils import make_client
 logger = logging.getLogger(__name__)
 
 
-_BASE_URL = "https://live.euronext.com/en/pd_es/data/stocks"
+_EURONEXT_SEARCH_URL = "https://live.euronext.com/en/pd_es/data/stocks"
 
 _HEADERS = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -284,7 +284,7 @@ async def _stream_mic_records(
     Raises:
         HTTPStatusError: If the HTTP request to the Euronext feed fails.
     """
-    mic_request_url = f"{_BASE_URL}?mics={mic}"
+    mic_request_url = f"{_EURONEXT_SEARCH_URL}?mics={mic}"
 
     # pagination cursors for DataTables API
     offset, draw_count = 0, 1

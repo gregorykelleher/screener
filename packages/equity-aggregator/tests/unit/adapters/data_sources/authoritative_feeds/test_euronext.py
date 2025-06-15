@@ -1,33 +1,32 @@
 # authoritative_feeds/test_euronext.py
 
+import asyncio
 from collections.abc import AsyncGenerator
 
 import httpx
 import pytest
 
 from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import (
-    _build_payload,
-    _country_pages,
-    _fetch_equity_records_from_mics,
-    _fetch_first_page,
-    _parse_equities,
-    _unique_by_key,
+    _consume_queue,
+    _deduplicate_records,
+    _parse_row,
+    _payload,
+    _produce_mic,
+    fetch_equity_records,
 )
 
 pytestmark = pytest.mark.unit
 
 
-def test_build_payload_correct_values() -> None:
+def test_payload_correct_values() -> None:
     """
     ARRANGE: define pagination parameters
     ACT: build payload dictionary
     ASSERT: payload contains expected keys and values
     """
-    start = 10
-    length = 50
-    draw = 3
+    start, draw, size = 10, 3, 50
 
-    actual = _build_payload(start, length, draw)
+    actual = _payload(start, draw, size)
 
     expected = {
         "draw": 3,
@@ -36,287 +35,203 @@ def test_build_payload_correct_values() -> None:
         "iDisplayLength": 50,
         "iDisplayStart": 10,
     }
-
     assert actual == expected
 
 
-def test_parse_equities_name_extraction() -> None:
-    """
-    ARRANGE: aaData row with HTML in name column
-    ACT: parse equities
-    ASSERT: name is extracted without tags
-    """
-    expected_aa_data = [
-        [
-            "",
-            '<a href="#">Example Co.</a>',
-            "ISIN1234",
-            "EXM",
-            "<div>XPAR</div>",
-            "EUR <span>99.99</span>",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["name"] == "Example Co."
-
-
-def test_parse_equities_mics_extraction() -> None:
-    """
-    ARRANGE: aaData row with multiple MICs
-    ACT: parse equities
-    ASSERT: mics list is correct
-    """
-    expected_aa_data = [
-        [
-            "",
-            "Name",
-            "ISIN5678",
-            "SYM",
-            "<div>XAMS, XBRU</div>",
-            "EUR <span>10.00</span>",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["mics"] == ["XAMS", "XBRU"]
-
-
-def test_parse_equities_currency_extraction() -> None:
-    """
-    ARRANGE: aaData row with currency HTML
-    ACT: parse equities
-    ASSERT: currency is parsed correctly
-    """
-    expected_aa_data = [
-        [
-            "",
-            "Name",
-            "ISIN9101",
-            "SYM1",
-            "<div>XCORP</div>",
-            "<div>USD <span>1234.56</span></div>",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["currency"] == "USD"
-
-
-def test_parse_equities_last_price_extraction() -> None:
-    """
-    ARRANGE: aaData row with price HTML
-    ACT: parse equities
-    ASSERT: last_price is parsed correctly
-    """
-    expected_aa_data = [
-        [
-            "",
-            "Name",
-            "ISIN9101",
-            "SYM1",
-            "<div>XCORP</div>",
-            "<div>USD <span>1234.56</span></div>",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["last_price"] == "1234.56"
-
-
-def test_parse_equities_fallback_name() -> None:
-    """
-    ARRANGE: aaData row without HTML tags
-    ACT: parse equities
-    ASSERT: fallback name is used
-    """
-    expected_aa_data = [
-        [
-            "",
-            "PlainName",
-            "",
-            "",
-            "",
-            "",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["name"] == "PlainName"
-
-
-def test_parse_equities_fallback_mics() -> None:
-    """
-    ARRANGE: aaData row without HTML tags
-    ACT: parse equities
-    ASSERT: fallback mics list is empty
-    """
-    expected_aa_data = [
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["mics"] == []
-
-
-def test_parse_equities_fallback_currency() -> None:
-    """
-    ARRANGE: aaData row without HTML tags
-    ACT: parse equities
-    ASSERT: fallback currency is empty string
-    """
-    expected_aa_data = [
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["currency"] == ""
-
-
-def test_parse_equities_fallback_last_price() -> None:
-    """
-    ARRANGE: aaData row without HTML tags
-    ACT: parse equities
-    ASSERT: fallback last_price is empty string
-    """
-    expected_aa_data = [
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-        ],
-    ]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["last_price"] == ""
-
-
-async def test_unique_by_key_filters_duplicates() -> None:
-    """
-    ARRANGE: async iterable with duplicate key values
-    ACT: apply unique_by_key to filter duplicates
-    ASSERT: only first instance of each key is yielded
-    """
-
-    async def sample_iterable() -> AsyncGenerator[dict, None]:
-        yield {"key": 1}
-        yield {"key": 2}
-        yield {"key": 1}
-
-    result = [
-        record
-        async for record in _unique_by_key(
-            sample_iterable(),
-            lambda record: record["key"],
-        )
-    ]
-
-    assert [record["key"] for record in result] == [1, 2]
-
-
-def test_parse_equities_empty_list() -> None:
-    """
-    ARRANGE: empty aaData
-    ACT: parse equities
-    ASSERT: yields nothing
-    """
-    records = list(_parse_equities([]))
-
-    assert records == []
-
-
-def test_parse_equities_symbol_stripped() -> None:
-    """
-    ARRANGE: aaData with padded symbol
-    ACT: parse equities
-    ASSERT: symbol is stripped of whitespace
-    """
-    expected_aa_data = [["", "N", "I", "  SYM  ", "", "", ""]]
-
-    records = list(_parse_equities(expected_aa_data))
-
-    assert records[0]["symbol"] == "SYM"
-
-
-def test_parse_equities_single_mic_no_comma() -> None:
-    """
-    ARRANGE: aaData row with one MIC and no delimiter
-    ACT: parse equities
-    ASSERT: mics list contains single element
-    """
-    aa_data = [["", "", "", "", "<div>XPAR</div>", "", ""]]
-
-    records = list(_parse_equities(aa_data))
-
-    assert records[0]["mics"] == ["XPAR"]
-
-
-def test_parse_equities_price_with_commas() -> None:
-    """
-    ARRANGE: aaData row with price containing commas
-    ACT: parse equities
-    ASSERT: last_price includes commas
-    """
-    aa_data = [["", "", "", "", "", "<div>EUR <span>1,234.56</span></div>"]]
-
-    records = list(_parse_equities(aa_data))
-
-    assert records[0]["last_price"] == "1,234.56"
-
-
-def test_parse_equities_malformed_html() -> None:
-    """
-    ARRANGE: aaData row with broken tags
-    ACT: parse equities
-    ASSERT: fallback to raw text
-    """
-    aa_data = [["", "<a>Broken", "", "", "NoDiv", "NoPrice"]]
-
-    records = list(_parse_equities(aa_data))
-
-    assert records[0]["name"] == "<a>Broken"
-
-
-def test_build_payload_zero_and_negative() -> None:
+def test_payload_zero_and_negative() -> None:
     """
     ARRANGE: zero and negative parameters
     ACT: build payload
     ASSERT: maps values literally
     """
-    payload = _build_payload(0, -1, 0)
+    payload = _payload(0, 0, -1)
 
     assert payload["length"] == -1
 
 
-async def test_unique_by_key_empty() -> None:
+def test_parse_row_name_extraction() -> None:
+    """
+    ARRANGE: aaData row with HTML in name column
+    ACT: parse row
+    ASSERT: name is extracted without tags
+    """
+    row = [
+        "",
+        '<a href="#">Example Co.</a>',
+        "ISIN1234",
+        "EXM",
+        "<div>XPAR</div>",
+        "EUR <span>99.99</span>",
+    ]
+
+    record = _parse_row(row)
+
+    assert record["name"] == "Example Co."
+
+
+def test_parse_row_mics_extraction() -> None:
+    """
+    ARRANGE: aaData row with multiple MICs
+    ACT: parse row
+    ASSERT: mics list is correct
+    """
+    row = [
+        "",
+        "Name",
+        "ISIN5678",
+        "SYM",
+        "<div>XAMS, XBRU</div>",
+        "EUR <span>10.00</span>",
+    ]
+
+    record = _parse_row(row)
+
+    assert record["mics"] == ["XAMS", "XBRU"]
+
+
+def test_parse_row_currency_extraction() -> None:
+    """
+    ARRANGE: aaData row with currency HTML
+    ACT: parse row
+    ASSERT: currency is parsed correctly
+    """
+    row = [
+        "",
+        "Name",
+        "ISIN9101",
+        "SYM1",
+        "<div>XCORP</div>",
+        "<div>USD <span>1234.56</span></div>",
+    ]
+
+    record = _parse_row(row)
+
+    assert record["currency"] == "USD"
+
+
+def test_parse_row_last_price_extraction() -> None:
+    """
+    ARRANGE: aaData row with price HTML
+    ACT: parse row
+    ASSERT: last_price is parsed correctly
+    """
+    row = [
+        "",
+        "Name",
+        "ISIN9101",
+        "SYM1",
+        "<div>XCORP</div>",
+        "<div>USD <span>1234.56</span></div>",
+    ]
+
+    record = _parse_row(row)
+
+    assert record["last_price"] == "1234.56"
+
+
+def test_parse_row_fallbacks() -> None:
+    """
+    ARRANGE: aaData row without optional HTML
+    ACT: parse row
+    ASSERT: fallback values are empty strings or lists
+    """
+    row = ["", "PlainName", "", "  SYM  ", "", ""]
+
+    record = _parse_row(row)
+
+    assert (
+        record["name"],
+        record["mics"],
+        record["currency"],
+        record["last_price"],
+        record["symbol"],
+    ) == ("PlainName", [], "", "", "SYM")
+
+
+def test_parse_row_single_mic_no_comma() -> None:
+    """
+    ARRANGE: aaData row with one MIC and no delimiter
+    ACT: parse row
+    ASSERT: mics list contains single element
+    """
+    row = ["", "", "", "", "<div>XPAR</div>", ""]
+
+    record = _parse_row(row)
+
+    assert record["mics"] == ["XPAR"]
+
+
+def test_parse_row_price_with_commas() -> None:
+    """
+    ARRANGE: aaData row with price containing commas
+    ACT: parse row
+    ASSERT: last_price includes commas
+    """
+    row = ["", "", "", "", "", "<div>EUR <span>1,234.56</span></div>"]
+
+    record = _parse_row(row)
+
+    assert record["last_price"] == "1,234.56"
+
+
+def test_parse_row_malformed_html() -> None:
+    """
+    ARRANGE: aaData row with broken tags
+    ACT: parse row
+    ASSERT: fallback to raw text
+    """
+    row = ["", "<a>Broken", "", "", "NoDiv", "NoPrice"]
+
+    record = _parse_row(row)
+
+    assert record["name"] == "<a>Broken"
+
+
+def test_parse_row_integer_price() -> None:
+    """
+    ARRANGE: aaData row with integer price HTML
+    ACT: parse row
+    ASSERT: last_price equals "100"
+    """
+    row = ["", "", "I", "S", "", "<div>EUR <span>100</span></div>"]
+
+    record = _parse_row(row)
+
+    assert record["last_price"] == "100"
+
+
+def test_parse_row_raises_on_short_row() -> None:
+    """
+    ARRANGE: aaData row with too few columns
+    ACT: parse row
+    ASSERT: IndexError is raised
+    """
+    with pytest.raises(IndexError):
+        _parse_row(["only", "three", "cols"])
+
+
+async def test_deduplicate_records_filters_duplicates() -> None:
+    """
+    ARRANGE: async iterable with duplicate key values
+    ACT: apply deduplicator to filter duplicates
+    ASSERT: only first instance of each key is yielded
+    """
+
+    async def source() -> AsyncGenerator[dict[str, int], None]:
+        yield {"key": 1}
+        yield {"key": 2}
+        yield {"key": 1}
+
+    dedup = _deduplicate_records(lambda r: r["key"])
+    actual = [record async for record in dedup(source())]
+
+    assert [r["key"] for r in actual] == [1, 2]
+
+
+async def test_deduplicate_records_empty_iterable() -> None:
     """
     ARRANGE: empty async iterator
-    ACT: apply unique_by_key
+    ACT: apply deduplicator
     ASSERT: yields empty list
     """
 
@@ -324,14 +239,16 @@ async def test_unique_by_key_empty() -> None:
         if False:
             yield
 
-    result = [record async for record in _unique_by_key(nothing(), lambda x: x)]
-    assert result == []
+    dedup = _deduplicate_records(lambda r: r)
+    actual = [record async for record in dedup(nothing())]
+
+    assert actual == []
 
 
-async def test_unique_by_key_all_duplicates() -> None:
+async def test_deduplicate_records_all_duplicates() -> None:
     """
     ARRANGE: async iterable where every item has the same key
-    ACT: apply unique_by_key
+    ACT: apply deduplicator
     ASSERT: only the first item is retained
     """
 
@@ -339,81 +256,16 @@ async def test_unique_by_key_all_duplicates() -> None:
         for _ in range(3):
             yield {"key": 1}
 
-    result = [
-        record async for record in _unique_by_key(dupes(), lambda record: record["key"])
-    ]
-    assert len(result) == 1
+    dedup = _deduplicate_records(lambda record: record["key"])
+    records = [rec async for rec in dedup(dupes())]
+
+    assert len(records) == 1
 
 
-async def test__fetch_first_page_returns_none_on_500() -> None:
-    """
-    ARRANGE: handler returns 500
-    ACT: call _fetch_page
-    ASSERT: returns None
-    """
-
-    async def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(500)
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-
-    actual = await _fetch_first_page(client, "XPAR")
-
-    assert actual is None
-
-
-async def test__country_pages_empty_if_first_page_none() -> None:
-    """
-    ARRANGE: first page returns 500
-    ACT: iterate _country_pages
-    ASSERT: yields no records
-    """
-
-    async def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(500)
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-
-    records = [record async for record in _country_pages(client, "XPAR")]
-    assert records == []
-
-
-async def test_fetch_equity_records_from_mics_skips_failed_mic() -> None:
-    """
-    ARRANGE: XPAR succeeds, others error
-    ACT: iterate _fetch_equity_records_from_mics
-    ASSERT: yields only successful records
-    """
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        row = [
-            "",
-            "<a>Foo</a>",
-            "ISIN",
-            "SYM",
-            "<div>XPAR</div>",
-            "<div>EUR <span>1.23</span></div>",
-        ]
-        payload = {"aaData": [row]}
-        if b"XPAR" in request.url.query:
-            return httpx.Response(200, json=payload)
-        error_response = httpx.Response(500)
-        raise httpx.HTTPStatusError(
-            "err",
-            request=request,
-            response=error_response,
-        )
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-
-    async for record in _fetch_equity_records_from_mics(client):
-        assert record["symbol"] == "SYM"
-
-
-async def test_unique_by_key_none_keys() -> None:
+async def test_deduplicate_records_none_keys() -> None:
     """
     ARRANGE: async iterable with None keys
-    ACT: apply unique_by_key
+    ACT: apply deduplicator
     ASSERT: only first None key retained
     """
 
@@ -421,60 +273,240 @@ async def test_unique_by_key_none_keys() -> None:
         yield {"key": None}
         yield {"key": None}
 
-    actual = [
-        record
-        async for record in _unique_by_key(source(), lambda record: record["key"])
-    ]
+    dedup = _deduplicate_records(lambda record: record["key"])
+    actual = [record async for record in dedup(source())]
+
     assert len(actual) == 1
 
 
-def test_parse_equities_integer_price() -> None:
+async def test_deduplicate_records_across_mics() -> None:
     """
-    ARRANGE: aaData row with integer price HTML
-    ACT: parse equities
-    ASSERT: last_price equals "100"
+    ARRANGE: queue emits two records with identical ISIN from different MICs
+    ACT: consume queue via _deduplicate_records
+    ASSERT: only first record is yielded
     """
-    expected_aa_data = [["", "", "I", "S", "", "<div>EUR <span>100</span></div>"]]
+    first_record = {"isin": "DUP", "mics": ["XPAR"]}
+    second_record = {"isin": "DUP", "mics": ["XAMS"]}
 
-    record = next(_parse_equities(expected_aa_data))
+    queue: asyncio.Queue[dict | None] = asyncio.Queue()
 
-    assert record["last_price"] == "100"
+    await queue.put(first_record)  # producer-A
+    await queue.put(second_record)  # producer-B
+
+    await queue.put(None)  # sentinel-A
+    await queue.put(None)  # sentinel-B
+
+    stream = _consume_queue(queue, expected_sentinels=2)
+    dedup = _deduplicate_records(lambda record: record["isin"])
+
+    records = [record async for record in dedup(stream)]
+
+    assert records == [first_record]
 
 
-def test_parse_equities_raises_on_short_row() -> None:
+async def test_consume_queue_yields_until_sentinels() -> None:
     """
-    ARRANGE: aaData row with too few columns
-    ACT: parse equities
-    ASSERT: IndexError is raised
+    ARRANGE: queue with two records followed by one sentinel
+    ACT: consume with _consume_queue
+    ASSERT: both records are yielded in order
     """
-    with pytest.raises(IndexError):
-        next(_parse_equities([["only", "three", "cols"]]))
+    queue: asyncio.Queue[int | None] = asyncio.Queue()
+    await queue.put(1)
+    await queue.put(2)
+
+    # sentinel to stop consumption
+    await queue.put(None)
+
+    records = [record async for record in _consume_queue(queue, expected_sentinels=1)]
+
+    assert records == [1, 2]
 
 
-async def test_country_pages_two_pages() -> None:
+def test_parse_row_symbol_trimming() -> None:
     """
-    ARRANGE: handler returns two pages of data
-    ACT: collect with _country_pages
-    ASSERT: names from both pages are returned
+    ARRANGE: aaData with padded symbol
+    ACT: parse row
+    ASSERT: symbol is stripped of whitespace
     """
-    calls = {"count": 0}
+    row = ["", "", "I", "  PAD  ", "", ""]
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        calls["count"] += 1
-        name = f"#{calls['count']}"
-        row = [
-            "",
-            f"<a>{name}</a>",
-            "I",
-            "SYM",
-            "<div>XPAR</div>",
-            "<div>EUR <span>1</span></div>",
-        ]
-        payload = {"aaData": [row], "iTotalRecords": 101}
+    record = _parse_row(row)
+
+    assert record["symbol"] == "PAD"
+
+
+async def test_consume_queue_two_producers() -> None:
+    """
+    ARRANGE: queue with interleaved records and two sentinels
+    ACT: consume with _consume_queue
+    ASSERT: all records returned in insertion order
+    """
+    queue: asyncio.Queue[int | None] = asyncio.Queue()
+
+    # producer #1 pushes 1 then sentinel
+    await queue.put(1)
+    await queue.put(None)
+
+    # producer #2 pushes 2 then sentinel
+    await queue.put(2)
+    await queue.put(None)
+
+    records = [record async for record in _consume_queue(queue, expected_sentinels=2)]
+
+    assert records == [1, 2]
+
+
+async def test_produce_mic_places_sentinel_on_success() -> None:
+    """
+    ARRANGE: mock transport returns one aaData row then normal loop ends
+    ACT: run _produce_mic
+    ASSERT: record followed by sentinel is enqueued
+    """
+    row = [
+        "",
+        "<a>One</a>",
+        "ISIN",
+        "SYM",
+        "<div>XPAR</div>",
+        "<div>EUR <span>1.00</span></div>",
+    ]
+    payload = {"aaData": [row], "iTotalRecords": 1}
+
+    async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=payload)
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    queue: asyncio.Queue[dict | None] = asyncio.Queue()
 
-    names = {record["name"] async for record in _country_pages(client, "XPAR")}
+    await _produce_mic(client, "XPAR", 100, queue)
 
-    assert names == {"#1", "#2"}
+    assert (await queue.get(), await queue.get()) == (
+        {
+            "name": "One",
+            "symbol": "SYM",
+            "isin": "ISIN",
+            "mics": ["XPAR"],
+            "currency": "EUR",
+            "last_price": "1.00",
+        },
+        None,
+    )
+
+
+async def test_fetch_equity_records_exits_on_http_error() -> None:
+    """
+    ARRANGE: mock transport returns 500 for every request
+    ACT: iterate fetch_equity_records
+    ASSERT: SystemExit is raised (fatal exit)
+    """
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def consume() -> None:
+        async for _ in fetch_equity_records(client):
+            pass
+
+    with pytest.raises(SystemExit):
+        await consume()
+
+
+async def test_fetch_equity_records_exits_on_json_error() -> None:
+    """
+    ARRANGE: mock transport returns 200 with invalid JSON
+    ACT: iterate fetch_equity_records
+    ASSERT: SystemExit is raised (fatal exit)
+    """
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        # valid status but body is not JSON -> json() raises JSONDecodeError
+        return httpx.Response(200, content=b"not-json")
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def consume() -> None:
+        async for _ in fetch_equity_records(client):
+            pass
+
+    with pytest.raises(SystemExit):
+        await consume()
+
+
+async def test_fetch_equity_records_exits_on_read_error() -> None:
+    """
+    ARRANGE: mock transport raises httpx.ReadError while reading
+    ACT: iterate fetch_equity_records
+    ASSERT: SystemExit is raised (fatal exit)
+    """
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        # Simulate a socket/read failure during response creation.
+        raise httpx.ReadError("stream interrupted", request=request)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def consume() -> None:
+        async for _ in fetch_equity_records(client):
+            pass
+
+    with pytest.raises(SystemExit):
+        await consume()
+
+
+def test_payload_large_numbers() -> None:
+    """
+    ARRANGE: very large pagination values
+    ACT: build payload
+    ASSERT: fields mirror inputs exactly
+    """
+    expected_start = 1_000_000
+    start, draw, size = 1_000_000, 42, 10_000
+
+    payload = _payload(start, draw, size)
+
+    assert payload["start"] == expected_start
+
+
+def test_parse_row_missing_span() -> None:
+    """
+    ARRANGE: price HTML without <span>
+    ACT: parse row
+    ASSERT: currency and last_price fall back to empty strings
+    """
+    row = ["", "", "", "", "", "<div>EUR </div>"]
+    record = _parse_row(row)
+
+    assert (record["currency"], record["last_price"]) == ("", "")
+
+
+def test_parse_row_mixed_case_mics() -> None:
+    """
+    ARRANGE: MIC div with mixed casing and spaces
+    ACT: parse row
+    ASSERT: mics are trimmed but case preserved
+    """
+    row = ["", "", "", "", "<div>xPar , xBru</div>", ""]
+    record = _parse_row(row)
+
+    assert record["mics"] == ["xPar", "xBru"]
+
+
+async def test_produce_mic_zero_rows_places_only_sentinel() -> None:
+    """
+    ARRANGE: mock transport returns aaData [] and iTotalRecords 0
+    ACT: run _produce_mic
+    ASSERT: queue contains only the sentinel (None)
+    """
+    payload = {"aaData": [], "iTotalRecords": 0}
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    queue: asyncio.Queue[dict | None] = asyncio.Queue()
+
+    await _produce_mic(client, "XPAR", 100, queue)
+
+    assert await queue.get() is None

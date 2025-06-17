@@ -12,6 +12,8 @@ from equity_aggregator.adapters.data_sources._utils import make_client
 
 logger = logging.getLogger(__name__)
 
+_PAGE_SIZE = 100
+
 _XETRA_SEARCH_URL = "https://api.boerse-frankfurt.de/v1/search/equity_search"
 
 _HEADERS = {
@@ -96,7 +98,7 @@ async def _stream_and_cache(client: AsyncClient) -> RecordStream:
     buffer: list[EquityRecord] = []
 
     # stream all records concurrently and deduplicate by ISIN
-    async for record in _deduplicate_records(lambda r: r["isin"])(
+    async for record in _deduplicate_records(lambda record: record["isin"])(
         _stream_all_pages(client),
     ):
         buffer.append(record)
@@ -133,10 +135,10 @@ def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordS
         """
         seen_keys: set[object] = set()
         async for record in records:
-            record_id = extract_key(record)
-            if record_id in seen_keys:
+            key = extract_key(record)
+            if key in seen_keys:
                 continue
-            seen_keys.add(record_id)
+            seen_keys.add(key)
             yield record
 
     return deduplicator
@@ -156,8 +158,6 @@ async def _stream_all_pages(client: AsyncClient) -> RecordStream:
     Yields:
         EquityRecord: Each equity record from all pages, as soon as it is available.
     """
-    # records per page
-    page_size = 100
 
     # shared queue for all producers to enqueue records
     queue: asyncio.Queue[EquityRecord | None] = asyncio.Queue()
@@ -171,11 +171,11 @@ async def _stream_all_pages(client: AsyncClient) -> RecordStream:
         yield record
 
     # if there is only a single page, just return early
-    if total_records <= page_size:
+    if total_records <= _PAGE_SIZE:
         return
 
     # offsets for remaining pages (skipping the first page already fetched)
-    remaining_pages = range(page_size, total_records, page_size)
+    remaining_pages = range(_PAGE_SIZE, total_records, _PAGE_SIZE)
 
     # spawn one producer task per remaining page
     producers = [
@@ -332,13 +332,12 @@ def _get_total_records(page_json: dict[str, object]) -> int:
     return int(page_json.get("recordsTotal", 0))
 
 
-def _build_payload(offset: int, page_size: int = 100) -> dict[str, object]:
+def _build_payload(offset: int) -> dict[str, object]:
     """
     Construct the JSON payload for a Xetra search POST request.
 
     Args:
         offset (int): The pagination offset for the results.
-        page_size (int, optional): No. of results to return per page. Defaults to 100.
 
     Returns:
         dict[str, object]: The payload dictionary for the POST request.
@@ -347,5 +346,5 @@ def _build_payload(offset: int, page_size: int = 100) -> dict[str, object]:
         "stockExchanges": ["XETR"],
         "lang": "en",
         "offset": offset,
-        "limit": page_size,
+        "limit": _PAGE_SIZE,
     }

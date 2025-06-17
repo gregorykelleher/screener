@@ -13,6 +13,7 @@ from equity_aggregator.adapters.data_sources._utils import make_client
 
 logger = logging.getLogger(__name__)
 
+_PAGE_SIZE = 100
 
 _EURONEXT_SEARCH_URL = "https://live.euronext.com/en/pd_es/data/stocks"
 
@@ -144,10 +145,10 @@ def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordS
         """
         seen_keys: set[object] = set()
         async for record in records:
-            record_id = extract_key(record)
-            if record_id in seen_keys:
+            key = extract_key(record)
+            if key in seen_keys:
                 continue
-            seen_keys.add(record_id)
+            seen_keys.add(key)
             yield record
 
     return deduplicator
@@ -169,15 +170,12 @@ async def _stream_all_mics(client: AsyncClient) -> RecordStream:
     Returns:
         RecordStream: Yields parsed records from all MICs.
     """
-    # records per DataTables page
-    page_size = 100
-
     # shared queue for all producers to enqueue records
     queue: asyncio.Queue[EquityRecord | None] = asyncio.Queue()
 
     # spawn one producer task per MIC
     producers = [
-        asyncio.create_task(_produce_mic(client, mic, page_size, queue))
+        asyncio.create_task(_produce_mic(client, mic, queue))
         for mic in _COUNTRY_TO_MIC.values()
     ]
 
@@ -192,7 +190,6 @@ async def _stream_all_mics(client: AsyncClient) -> RecordStream:
 async def _produce_mic(
     client: AsyncClient,
     mic: str,
-    page_size: int,
     queue: asyncio.Queue[EquityRecord | None],
 ) -> None:
     """
@@ -218,7 +215,7 @@ async def _produce_mic(
 
     try:
         # stream records for the specified MIC and enqueue them
-        async for record in _stream_mic_records(client, mic, page_size):
+        async for record in _stream_mic_records(client, mic):
             row_count += 1
             await queue.put(record)
 
@@ -261,7 +258,6 @@ async def _consume_queue(
 async def _stream_mic_records(
     client: AsyncClient,
     mic: str,
-    page_size: int,
 ) -> RecordStream:
     """
     Asynchronously streams equity records for a given MIC (Market Identifier Code) from
@@ -285,7 +281,7 @@ async def _stream_mic_records(
 
     # fetch all pages until exhausted
     while True:
-        payload = _build_payload(offset, draw_count, page_size)
+        payload = _build_payload(offset, draw_count)
         response = await client.post(mic_request_url, data=payload)
         response.raise_for_status()
 
@@ -300,21 +296,20 @@ async def _stream_mic_records(
         total_records = int(result.get("iTotalRecords", 0))
 
         # determine if final page reached
-        if offset + page_size >= total_records:
+        if offset + _PAGE_SIZE >= total_records:
             break
 
         # advance offset to next page and increment draw counter
-        offset, draw_count = offset + page_size, draw_count + 1
+        offset, draw_count = offset + _PAGE_SIZE, draw_count + 1
 
 
-def _build_payload(start: int, draw: int, size: int) -> dict[str, int]:
+def _build_payload(start: int, draw: int) -> dict[str, int]:
     """
     Constructs the form-data payload required by Euronext's DataTables back-end API.
 
     Args:
         start (int): The starting index of the data to fetch (pagination offset).
         draw (int): Draw counter for DataTables to ensure correct sequence of requests.
-        size (int): Number of records to retrieve per page.
 
     Returns:
         dict[str, int]: Dictionary containing the payload parameters for the request.
@@ -322,8 +317,8 @@ def _build_payload(start: int, draw: int, size: int) -> dict[str, int]:
     return {
         "draw": draw,
         "start": start,
-        "length": size,
-        "iDisplayLength": size,
+        "length": _PAGE_SIZE,
+        "iDisplayLength": _PAGE_SIZE,
         "iDisplayStart": start,
     }
 

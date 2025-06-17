@@ -252,7 +252,7 @@ def test_deduplicate_records_single_output_for_duplicate_isin() -> None:
             yield record
 
     async def collect() -> list[dict[str, str]]:
-        dedup = _deduplicate_records(lambda r: r["isin"])
+        dedup = _deduplicate_records(lambda record: record["isin"])
         return [record async for record in dedup(source())]
 
     actual = asyncio.run(collect())

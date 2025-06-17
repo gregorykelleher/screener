@@ -326,7 +326,7 @@ def test_deduplicate_records_preserves_all_none_keys() -> None:
         yield {"isin": "A", "val": 5}
 
     async def collect() -> list[dict]:
-        dedup = _deduplicate_records(lambda r: r["isin"])
+        dedup = _deduplicate_records(lambda record: record["isin"])
         return [record async for record in dedup(src())]
 
     actual = asyncio.run(collect())

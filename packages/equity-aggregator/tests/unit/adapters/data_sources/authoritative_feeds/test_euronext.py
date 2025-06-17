@@ -7,35 +7,15 @@ import httpx
 import pytest
 
 from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import (
+    _build_payload,
     _consume_queue,
     _deduplicate_records,
     _parse_row,
-    _build_payload,
     _produce_mic,
     fetch_equity_records,
 )
 
 pytestmark = pytest.mark.unit
-
-
-def test_payload_correct_values() -> None:
-    """
-    ARRANGE: define pagination parameters
-    ACT: build payload dictionary
-    ASSERT: payload contains expected keys and values
-    """
-    start, draw, size = 10, 3, 50
-
-    actual = _build_payload(start, draw, size)
-
-    expected = {
-        "draw": 3,
-        "start": 10,
-        "length": 50,
-        "iDisplayLength": 50,
-        "iDisplayStart": 10,
-    }
-    assert actual == expected
 
 
 def test_payload_zero_and_negative() -> None:
@@ -44,9 +24,9 @@ def test_payload_zero_and_negative() -> None:
     ACT: build payload
     ASSERT: maps values literally
     """
-    payload = _build_payload(0, 0, -1)
+    payload = _build_payload(0, 0)
 
-    assert payload["length"] == -1
+    assert payload["start"] == 0
 
 
 def test_parse_row_name_extraction() -> None:
@@ -222,10 +202,10 @@ async def test_deduplicate_records_filters_duplicates() -> None:
         yield {"key": 2}
         yield {"key": 1}
 
-    dedup = _deduplicate_records(lambda r: r["key"])
+    dedup = _deduplicate_records(lambda record: record["key"])
     actual = [record async for record in dedup(source())]
 
-    assert [r["key"] for r in actual] == [1, 2]
+    assert [record["key"] for record in actual] == [1, 2]
 
 
 async def test_deduplicate_records_empty_iterable() -> None:
@@ -239,7 +219,7 @@ async def test_deduplicate_records_empty_iterable() -> None:
         if False:
             yield
 
-    dedup = _deduplicate_records(lambda r: r)
+    dedup = _deduplicate_records(lambda record: record)
     actual = [record async for record in dedup(nothing())]
 
     assert actual == []
@@ -378,7 +358,7 @@ async def test_produce_mic_places_sentinel_on_success() -> None:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     queue: asyncio.Queue[dict | None] = asyncio.Queue()
 
-    await _produce_mic(client, "XPAR", 100, queue)
+    await _produce_mic(client, "XPAR", queue)
 
     assert (await queue.get(), await queue.get()) == (
         {
@@ -462,9 +442,9 @@ def test_payload_large_numbers() -> None:
     ASSERT: fields mirror inputs exactly
     """
     expected_start = 1_000_000
-    start, draw, size = 1_000_000, 42, 10_000
+    start, draw = 1_000_000, 42
 
-    payload = _build_payload(start, draw, size)
+    payload = _build_payload(start, draw)
 
     assert payload["start"] == expected_start
 
@@ -507,6 +487,6 @@ async def test_produce_mic_zero_rows_places_only_sentinel() -> None:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     queue: asyncio.Queue[dict | None] = asyncio.Queue()
 
-    await _produce_mic(client, "XPAR", 100, queue)
+    await _produce_mic(client, "XPAR", queue)
 
     assert await queue.get() is None

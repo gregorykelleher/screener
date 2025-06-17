@@ -95,7 +95,7 @@ async def _stream_and_cache(client: AsyncClient) -> RecordStream:
     buffer: list[EquityRecord] = []
 
     # stream all records concurrently and deduplicate by ISIN
-    async for record in _deduplicate_records(lambda r: r["isin"])(
+    async for record in _deduplicate_records(lambda record: record["isin"])(
         _stream_all_pages(client),
     ):
         buffer.append(record)
@@ -120,10 +120,10 @@ def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordS
     async def deduplicator(records: RecordStream) -> RecordStream:
         seen: set[object] = set()
         async for record in records:
-            record_id = extract_key(record)
-            if record_id in seen:
+            key = extract_key(record)
+            if key in seen:
                 continue
-            seen.add(record_id)
+            seen.add(key)
             yield record
 
     return deduplicator

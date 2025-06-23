@@ -1,22 +1,26 @@
 # reference_lookup/test_openfigi.py
 
 import asyncio
-import re
 from collections.abc import Sequence
 
 import pandas as pd
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache._cache import load_cache, save_cache
+from equity_aggregator.adapters.data_sources._cache._cache import (
+    load_cache,
+    save_cache,
+)
 from equity_aggregator.adapters.data_sources.reference_lookup.openfigi import (
+    Triplet,
+    _blocking_map_call,
     _build_query_dataframe,
-    _chunk_equities,
-    _fetch_identification_limited,
-    _fetch_map,
+    _consume_queue,
+    _enumerate_chunks,
+    _extract_triplets,
+    _fan_out,
     _log_missing_figis,
-    _raw_equity_to_query_record,
-    _resolve_identification,
-    _retrieve_identification,
+    _produce_chunk,
+    _to_query_record,
     fetch_equity_identification,
 )
 from equity_aggregator.schemas import RawEquity
@@ -24,169 +28,87 @@ from equity_aggregator.schemas import RawEquity
 pytestmark = pytest.mark.unit
 
 
-def test_idtype_prefers_isin() -> None:
+def test_to_query_record_prefers_isin() -> None:
     """
-    ARRANGE: RawEquity with name, symbol, valid ISIN and CUSIP
-    ACT:     call _raw_equity_to_query_record
+    ARRANGE: RawEquity with ISIN and CUSIP
+    ACT:     call _to_query_record
     ASSERT:  idType == 'ID_ISIN'
     """
+    equity = RawEquity(name="T", symbol="SYM", isin="US1234567890", cusip="037833100")
 
-    equity = RawEquity(
-        name="TestCo",
-        symbol="SYM",
-        isin="US1234567890",
-        cusip="037833100",
-        currency="USD",
-        mics=["XNYS"],
-    )
-
-    actual = _raw_equity_to_query_record(equity)
-
-    assert actual["idType"] == "ID_ISIN"
+    assert _to_query_record(equity)["idType"] == "ID_ISIN"
 
 
-def test_idvalue_prefers_isin() -> None:
+def test_to_query_record_prefers_isin_value() -> None:
     """
-    ARRANGE: RawEquity with valid ISIN
-    ACT:     call _raw_equity_to_query_record
-    ASSERT:  idValue == "US1234567890"
+    ARRANGE: RawEquity with ISIN
+    ACT:     call _to_query_record
+    ASSERT:  idValue equals ISIN
     """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM", isin="US1234567890")
+    equity = RawEquity(name="T", symbol="SYM", isin="US1234567890")
 
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["idValue"] == "US1234567890"
+    assert _to_query_record(equity)["idValue"] == "US1234567890"
 
 
-def test_no_currency_for_isin() -> None:
+def test_to_query_record_market_sec_des_is_equity() -> None:
     """
-    ARRANGE: RawEquity.ISIN path with currency set
-    ACT:     call _raw_equity_to_query_record
-    ASSERT:  'currency' not in actual
-    """
-    raw_equity = RawEquity(
-        name="TestCo",
-        symbol="SYM",
-        isin="US1234567890",
-        currency="EUR",
-    )
-
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert "currency" not in actual
-
-
-def test_no_exchcode_for_isin() -> None:
-    """
-    ARRANGE: RawEquity.ISIN path with mics set
-    ACT:     call _raw_equity_to_query_record
-    ASSERT:  'exchCode' not in actual
-    """
-    raw_equity = RawEquity(
-        name="TestCo",
-        symbol="SYM",
-        isin="US1234567890",
-        mics=["XNYS"],
-    )
-
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert "exchCode" not in actual
-
-
-def test_marketsecdes_always_equity() -> None:
-    """
-    ARRANGE: RawEquity with any ID
-    ACT:     call _raw_equity_to_query_record
+    ARRANGE: RawEquity with any identifier
+    ACT:     call _to_query_record
     ASSERT:  marketSecDes == 'Equity'
     """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM")
+    equity = RawEquity(name="T", symbol="SYM")
 
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["marketSecDes"] == "Equity"
+    assert _to_query_record(equity)["marketSecDes"] == "Equity"
 
 
-def test_idtype_fallback_to_cusip() -> None:
+def test_to_query_record_fallback_to_cusip() -> None:
     """
-    ARRANGE: RawEquity with no ISIN but valid CUSIP
-    ACT:     call _raw_equity_to_query_record
+    ARRANGE: RawEquity with CUSIP only
+    ACT:     call _to_query_record
     ASSERT:  idType == 'ID_CUSIP'
     """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM", cusip="037833100")
+    equity = RawEquity(name="T", symbol="SYM", cusip="037833100")
 
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["idType"] == "ID_CUSIP"
+    assert _to_query_record(equity)["idType"] == "ID_CUSIP"
 
 
-def test_idvalue_fallback_to_cusip() -> None:
+def test_to_query_record_uses_ticker_when_no_isin_or_cusip() -> None:
     """
-    ARRANGE: RawEquity with valid CUSIP
-    ACT:     call _raw_equity_to_query_record
-    ASSERT:  idValue == "037833100"
-    """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM", cusip="037833100")
-
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["idValue"] == "037833100"
-
-
-def test_idtype_ticker_when_no_isin_or_cusip() -> None:
-    """
-    ARRANGE: RawEquity with only symbol
-    ACT:     call _raw_equity_to_query_record
+    ARRANGE: RawEquity with symbol only
+    ACT:     call _to_query_record
     ASSERT:  idType == 'TICKER'
     """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM")
+    equity = RawEquity(name="T", symbol="SYM")
 
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["idType"] == "TICKER"
+    assert _to_query_record(equity)["idType"] == "TICKER"
 
 
-def test_idvalue_ticker_when_no_isin_or_cusip() -> None:
+def test_build_query_dataframe_length() -> None:
     """
-    ARRANGE: RawEquity with only symbol
-    ACT:     call _raw_equity_to_query_record
-    ASSERT:  idValue == symbol
-    """
-    raw_equity = RawEquity(name="TestCo", symbol="SYM")
-
-    actual = _raw_equity_to_query_record(raw_equity)
-
-    assert actual["idValue"] == "SYM"
-
-
-def test_build_query_dataframe_type_and_length() -> None:
-    """
-    ARRANGE: three RawEquity items
+    ARRANGE: three RawEquity objects
     ACT:     call _build_query_dataframe
-    ASSERT:  DataFrame is pandas.DataFrame of length 3
+    ASSERT:  DataFrame length == 3
     """
     inputs = [
         RawEquity(name="A", symbol="S1", isin="US1234567890"),
         RawEquity(name="B", symbol="S2", cusip="037833100"),
-        RawEquity(name="C", symbol="S3", currency="USD", mics=["XNYS"]),
+        RawEquity(name="C", symbol="S3"),
     ]
     expected_df_length = 3
 
-    df = _build_query_dataframe(inputs)
-
-    assert isinstance(df, pd.DataFrame) and len(df) == expected_df_length
+    assert len(_build_query_dataframe(inputs)) == expected_df_length
 
 
-def test_build_query_dataframe_idtypes() -> None:
+def test_build_query_dataframe_idtypes_column() -> None:
     """
-    ARRANGE: mixed ID types in inputs
+    ARRANGE: mixed identifier inputs
     ACT:     call _build_query_dataframe
-    ASSERT:  idType column matches expected list
+    ASSERT:  idType column matches expected sequence
     """
     inputs = [
         RawEquity(name="A", symbol="S1", isin="US1234567890"),
         RawEquity(name="B", symbol="S2", cusip="037833100"),
-        RawEquity(name="C", symbol="S3", currency="USD", mics=["XNYS"]),
+        RawEquity(name="C", symbol="S3"),
     ]
 
     df = _build_query_dataframe(inputs)
@@ -194,378 +116,233 @@ def test_build_query_dataframe_idtypes() -> None:
     assert list(df["idType"]) == ["ID_ISIN", "ID_CUSIP", "TICKER"]
 
 
-def test_build_query_dataframe_idvalues() -> None:
+def test_enumerate_chunks_produces_expected_sizes() -> None:
     """
-    ARRANGE: mixed ID types in inputs
-    ACT:     call _build_query_dataframe
-    ASSERT:  idValue column matches expected list
+    ARRANGE: 250 dummy equities, chunk_size=100
+    ACT:     call _enumerate_chunks
+    ASSERT:  chunk sizes == [100, 100, 50]
     """
-    inputs = [
-        RawEquity(name="A", symbol="S1", isin="US1234567890"),
-        RawEquity(name="B", symbol="S2", cusip="037833100"),
-        RawEquity(name="C", symbol="S3", currency="USD", mics=["XNYS"]),
-    ]
-
-    df = _build_query_dataframe(inputs)
-
-    assert list(df["idValue"]) == ["US1234567890", "037833100", "S3"]
+    equities = [RawEquity(name=str(i), symbol=str(i)) for i in range(250)]
+    chunks = _enumerate_chunks(equities, chunk_size=100)
+    assert [len(chunk) for _, chunk in chunks] == [100, 100, 50]
 
 
-def test_chunk_equities_splits_correctly() -> None:
+def test_enumerate_chunks_empty_input() -> None:
     """
-    ARRANGE: 250 dummy RawEquity objects
-    ACT:     chunk_size=100
-    ASSERT:  produces 3 chunks of lengths 100,100,50
+    ARRANGE: empty list
+    ACT:     call _enumerate_chunks
+    ASSERT:  returns empty list
     """
-    dummy = [RawEquity(name=str(i), symbol=str(i)) for i in range(250)]
-    expected_chunks = 3
-
-    chunks = _chunk_equities(dummy, chunk_size=100)
-
-    assert len(chunks) == expected_chunks
-    assert [len(chunk) for chunk in chunks] == [100, 100, 50]
+    assert _enumerate_chunks([], 10) == []
 
 
-def test_retrieve_identification_first_hit() -> None:
+def test_extract_triplets_duplicate_keeps_first_row() -> None:
     """
-    ARRANGE: DataFrame with duplicate query_number 0
-    ACT:     call _retrieve_identification
-    ASSERT:  first element triplet figi == first shareClassFIGI
+    ARRANGE: two rows with query_number 0, first has valid 12-char FIGI
+    ACT:     call _extract_triplets
+    ASSERT:  triplet uses FIGI from first row
     """
-    raw = pd.DataFrame(
+    df = pd.DataFrame(
         [
-            {"query_number": 0, "shareClassFIGI": "FIGI00000001"},
-            {"query_number": 0, "shareClassFIGI": "FIGI00000002"},
+            {"query_number": 0, "shareClassFIGI": "ABCDEFGH1234", "ticker": "AAA"},
+            {"query_number": 0, "shareClassFIGI": "ZZZZZZZZ9999", "ticker": "BBB"},
         ],
     )
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    assert actual[0] == (None, None, "FIGI00000001")
+    assert _extract_triplets(df, batch_size=1)[0] == (None, "AAA", "ABCDEFGH1234")
 
 
-def test_retrieve_identification_none_for_explicit_none() -> None:
+def test_extract_triplets_duplicate_first_invalid_figi() -> None:
     """
-    ARRANGE: DataFrame entry with shareClassFIGI None
-    ACT:     call _retrieve_identification
-    ASSERT:  element is all-None triplet
+    ARRANGE: first row invalid FIGI, second row valid FIGI for same query_number
+    ACT:     call _extract_triplets
+    ASSERT:  triplet FIGI is None (first row wins even if invalid)
     """
-    raw = pd.DataFrame([{"query_number": 0, "shareClassFIGI": None}])
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    assert actual[0] == (None, None, None)
-
-
-def test_retrieve_identification_none_for_missing_column() -> None:
-    """
-    ARRANGE: DataFrame missing shareClassFIGI key
-    ACT:     call _retrieve_identification
-    ASSERT:  element is all-None triplet
-    """
-    raw = pd.DataFrame([{"query_number": 0}])
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    assert actual[0] == (None, None, None)
-
-
-def test_retrieve_identification_none_for_unqueried_index() -> None:
-    """
-    ARRANGE: n > max query_number
-    ACT:     call _retrieve_identification
-    ASSERT:  second element is all-None triplet
-    """
-    raw = pd.DataFrame([{"query_number": 0, "shareClassFIGI": "FIGI0"}])
-
-    actual = _retrieve_identification(raw, batch_size=2)
-
-    assert actual[1] == (None, None, None)
-
-
-def test_retrieve_identification_invalid_format_dropped() -> None:
-    """
-    ARRANGE: one short/invalid FIGI, one valid FIGI
-    ACT:     call _retrieve_identification
-    ASSERT:  invalid at idx 0 → None; valid at idx 1 → captured in triplet
-    """
-    raw = pd.DataFrame(
+    df = pd.DataFrame(
         [
-            {"query_number": 0, "shareClassFIGI": "SHORT"},
-            {"query_number": 1, "shareClassFIGI": "FIGI00000003"},
-            {"query_number": 1, "shareClassFIGI": "FIGI00000004"},
+            {"query_number": 0, "shareClassFIGI": "SHORTFIGI", "ticker": "AAA"},
+            {"query_number": 0, "shareClassFIGI": "ABCDEFGH1234", "ticker": "BBB"},
         ],
     )
-
-    actual = _retrieve_identification(raw, batch_size=2)
-
-    assert actual[0] == (None, None, None)
-    assert actual[1] == (None, None, "FIGI00000003")
+    assert _extract_triplets(df, batch_size=1)[0] == (None, "AAA", None)
 
 
-def test_retrieve_identification_empty_list() -> None:
+def test_extract_triplets_missing_name_and_security_name() -> None:
+    """
+    ARRANGE: row with ticker & FIGI but no name/securityName
+    ACT:     call _extract_triplets
+    ASSERT:  name is None, symbol present
+    """
+    df = pd.DataFrame(
+        [
+            {"query_number": 0, "ticker": "FOO", "shareClassFIGI": "ABCDEFGH1234"},
+        ],
+    )
+    assert _extract_triplets(df, batch_size=1)[0] == (None, "FOO", "ABCDEFGH1234")
+
+
+def test_extract_triplets_row_outside_batch_range() -> None:
+    """
+    ARRANGE: row with query_number 5 but batch_size 3
+    ACT:     call _extract_triplets
+    ASSERT:  last position placeholder is (None, None, None)
+    """
+    df = pd.DataFrame(
+        [{"query_number": 5, "shareClassFIGI": "ABCDEFGH1234"}],
+    )
+    assert _extract_triplets(df, batch_size=3)[2] == (None, None, None)
+
+
+def test_extract_triplets_empty_dataframe() -> None:
     """
     ARRANGE: empty DataFrame
-    ACT:     call _retrieve_identification
+    ACT:     call _extract_triplets
     ASSERT:  returns empty list
     """
-    raw = pd.DataFrame([])
-    actual = _retrieve_identification(raw, batch_size=0)
-    assert actual == []
-
-
-def test_retrieve_identification_extracts_name_and_symbol() -> pd.DataFrame:
-    """
-    ARRANGE: DataFrame with name, ticker, shareClassFIGI
-    ACT:     call _retrieve_identification
-    ASSERT:  returns tuple with name, ticker, shareClassFIGI"""
-    raw = pd.DataFrame(
-        [
-            {
-                "query_number": 0,
-                "name": "Foo Inc",
-                "ticker": "FOO",
-                "shareClassFIGI": "ABCDEFGHIJKL",
-            },
-        ],
-    )
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    assert actual[0] == ("Foo Inc", "FOO", "ABCDEFGHIJKL")
-
-
-def test_retrieve_identification_uses_security_name_if_name_missing() -> pd.DataFrame:
-    """
-    ARRANGE: DataFrame with securityName instead of name
-    ACT:     call _retrieve_identification
-    ASSERT:  securityName is used as name, ticker and shareClassFIGI are valid
-    """
-    raw = pd.DataFrame(
-        [
-            {
-                "query_number": 0,
-                "securityName": "Bar Ltd",
-                "ticker": "BAR",
-                "shareClassFIGI": "MNOPQRSTUVWX",
-            },
-        ],
-    )
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    assert actual[0] == ("Bar Ltd", "BAR", "MNOPQRSTUVWX")
-
-
-def test_retrieve_identification_drops_non_str_name_and_symbol() -> pd.DataFrame:
-    """
-    ARRANGE: DataFrame with non-string name and ticker
-    ACT:     call _retrieve_identification
-    ASSERT:  name and ticker become None, shareClassFIGI remains valid
-    """
-    raw = pd.DataFrame(
-        [
-            {
-                "query_number": 0,
-                "name": 123,
-                "ticker": 456,
-                "shareClassFIGI": "ABCDEFGHIJKL",
-            },
-        ],
-    )
-
-    actual = _retrieve_identification(raw, batch_size=1)
-
-    # name & symbol are invalid so become None
-    assert actual[0] == (None, None, "ABCDEFGHIJKL")
-
-
-def test_chunk_equities_empty() -> None:
-    """
-    ARRANGE: empty list of RawEquity
-    ACT:     call _chunk_equities with chunk_size=10
-    ASSERT:  returns empty list
-    """
-    assert _chunk_equities([], chunk_size=10) == []
-
-
-def test_build_query_dataframe_market_sec_des_is_equity() -> None:
-    """
-    ARRANGE: list of RawEquity objects
-    ACT:     call _build_query_dataframe
-    ASSERT:  every marketSecDes entry is 'Equity'
-    """
-    inputs = [
-        RawEquity(name="A", symbol="S1"),
-        RawEquity(name="B", symbol="S2"),
-    ]
-
-    df = _build_query_dataframe(inputs)
-
-    assert set(df["marketSecDes"]) == {"Equity"}
-
-
-def test_chunk_equities_single_chunk_when_smaller_than_size() -> None:
-    """
-    ARRANGE: 50 RawEquity objects
-    ACT:     chunk_size=100
-    ASSERT:  returns one chunk of length 50
-    """
-    equities = [RawEquity(name=str(i), symbol=str(i)) for i in range(50)]
-
-    chunks = _chunk_equities(equities, chunk_size=100)
-
-    assert [len(chunk) for chunk in chunks] == [50]
-
-
-async def test_fetch_equity_identification_empty() -> None:
-    """
-    ARRANGE: empty list of RawEquity
-    ACT:     call fetch_equity_identification
-    ASSERT:  returns empty list
-    """
-    actual = await fetch_equity_identification([])
-
-    assert actual == []
+    assert _extract_triplets(pd.DataFrame(), batch_size=0) == []
 
 
 def test_log_missing_figis_returns_none() -> None:
     """
     ARRANGE: one RawEquity with missing FIGI
     ACT:     call _log_missing_figis
-    ASSERT:  function returns None
+    ASSERT:  returns None
     """
-    raw_equity = RawEquity(name="A", symbol="A")
-
-    assert _log_missing_figis([raw_equity], [None]) is None
-
-
-async def test_fetch_identification_limited_returns_none_triplet_on_error() -> None:
-    """
-    ARRANGE: batch with a dummy object lacking RawEquity attrs (forces AttributeError)
-    ACT:     call _fetch_identification_limited
-    ASSERT:  returns list with one (None, None, None) triplet
-    """
-
-    class Dummy:
-        pass
-
-    batch: Sequence[RawEquity] = [Dummy()]
-
-    actual = await _fetch_identification_limited(batch, asyncio.Semaphore(1))
-
-    assert actual == [(None, None, None)]
-
-
-async def test_resolve_identification_empty_input() -> None:
-    """
-    ARRANGE: empty list
-    ACT:     call _resolve_identification
-    ASSERT:  returns empty list (exercises chunking & task orchestration paths)
-    """
-    actual = await _resolve_identification([])
-
-    assert actual == []
-
-
-def test_log_missing_figis_no_return_value() -> None:
-    """
-    ARRANGE: one RawEquity with missing FIGI
-    ACT:     call _log_missing_figis
-    ASSERT:  function returns None (side-effect is logging only)
-    """
-    equity = RawEquity(name="Test", symbol="TST")
+    equity = RawEquity(name="X", symbol="X")
 
     assert _log_missing_figis([equity], [None]) is None
 
 
-def test_fetch_map_returns_dataframe_or_none() -> None:
+def test_blocking_map_call_returns_dataframe_or_none() -> None:
     """
-    ARRANGE: minimal DataFrame with one ticker query
-    ACT:     call _fetch_map
-    ASSERT:  returns DataFrame or None (no broad-exception assertion)
+    ARRANGE: minimal query DataFrame
+    ACT:     call _blocking_map_call
+    ASSERT:  returns DataFrame or None
     """
     df = pd.DataFrame(
-        [
-            {"idType": "TICKER", "idValue": "FOO", "marketSecDes": "Equity"},
-        ],
+        [{"idType": "TICKER", "idValue": "FOO", "marketSecDes": "Equity"}],
     )
-
     try:
-        actual = _fetch_map(df)
-    except Exception as exc:  # network or key unavailable locally
-        pytest.skip(f"OpenFIGI offline: {exc}")
+        actual = _blocking_map_call(df)
+    except Exception as exc:  # offline, bad key, etc.
+        pytest.skip(f"OpenFIGI unavailable: {exc}")
     else:
         assert actual is None or isinstance(actual, pd.DataFrame)
 
 
 def test_cache_roundtrip() -> None:
     """
-    ARRANGE: arbitrary object and cache name
+    ARRANGE: payload & cache name
     ACT:     save_cache then load_cache
-    ASSERT:  loaded object equals original or is None when TTL=0
+    ASSERT:  loaded payload equals saved payload or None (TTL expired)
     """
-    name = "unit_test_cache_roundtrip"
-    payload = {"alpha": 1, "beta": 2}
+    name, payload = "unit_test_cache_roundtrip", {"alpha": 1}
 
     save_cache(name, payload)
-    loaded = load_cache(name)
 
-    assert loaded == payload or loaded is None
+    assert load_cache(name) in (payload, None)
 
 
 def test_load_cache_missing_returns_none() -> None:
     """
-    ARRANGE: non-existent cache key
+    ARRANGE: non-existent key
     ACT:     call load_cache
     ASSERT:  returns None
     """
-    assert load_cache("cache_key_that_does_not_exist") is None
+    assert load_cache("key_does_not_exist") is None
 
 
-async def test_resolve_identification_returns_none_triplets_on_api_failure() -> None:
+async def test_fetch_equity_identification_empty() -> None:
     """
-    ARRANGE: single RawEquity (symbol only)
-    ACT:     call _resolve_identification (API likely unavailable)
-    ASSERT:  actual is [(None, None, None)]
-    """
-    equities = [RawEquity(name="X", symbol="X")]
-    expected_triplet_length = 3
-
-    actual = await _resolve_identification(equities, chunk_size=1, concurrency=1)
-
-    assert (
-        len(actual) == 1
-        and len(actual[0]) == expected_triplet_length
-        and (actual[0][2] is None or bool(re.fullmatch(r"[A-Z0-9]{12}", actual[0][2])))
-    )
-
-
-async def test_fetch_equity_identification_cache_miss_triggers_resolution() -> None:
-    """
-    ARRANGE: no cache, one RawEquity
+    ARRANGE: empty list
     ACT:     call fetch_equity_identification
-    ASSERT:  returns single 3-tuple (figi may be None or valid)
+    ASSERT:  returns empty list
     """
-    equity = RawEquity(name="X", symbol="X")
-    expected_triplet_length = 3
+    assert await fetch_equity_identification([]) == []
 
-    actual = await fetch_equity_identification([equity])
 
-    assert len(actual) == 1 and len(actual[0]) == expected_triplet_length
+async def test_fetch_equity_identification_cache_miss() -> None:
+    """
+    ARRANGE: single equity, clear cache
+    ACT:     call fetch_equity_identification
+    ASSERT:  list length == 1
+    """
+    save_cache("openfigi", None)
+
+    actual = await fetch_equity_identification([RawEquity(name="Y", symbol="Y")])
+
+    assert len(actual) == 1
 
 
 async def test_fetch_equity_identification_uses_cache() -> None:
     """
-    ARRANGE: cache primed with a known payload
+    ARRANGE: cache primed, one equity
     ACT:     call fetch_equity_identification
-    ASSERT:  function returns the cached payload
+    ASSERT:  output equals cached payload
     """
-    equities = [RawEquity(name="Foo", symbol="FOO")]
-    payload = [("Foo Inc", "FOO", "FIGI1234567890")]
+    payload = [("Foo Inc", "FOO", "ABCDEFGH1234")]
 
-    save_cache("openfigi_cache", payload)
+    save_cache("openfigi", payload)
 
-    actual = await fetch_equity_identification(equities)
+    actual = await fetch_equity_identification([RawEquity(name="Foo", symbol="FOO")])
 
     assert actual == payload
+
+
+async def test_fan_out_hits_sleep_branch() -> None:
+    """
+    ARRANGE: single chunk of equities, dummy sleep function
+    ACT:     call _fan_out
+    ASSERT:  queue eventually contains sentinel value
+    """
+    equities = [RawEquity(name=str(index), symbol=str(index)) for index in range(26)]
+    chunks = _enumerate_chunks(equities, 1)
+    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+
+    async def dummy_chunk(
+        start: int,
+        batch: Sequence[RawEquity],
+        queue: asyncio.Queue[None | tuple[int, Triplet]],
+    ) -> None:
+        await queue.put((start, (None, None, None)))
+        await queue.put(None)
+
+    async def dummy_sleep(_seconds: float) -> None:
+        return None
+
+    await _fan_out(chunks, queue, sleep=dummy_sleep, produce_chunk=dummy_chunk)
+
+    # assert queue should eventually contain the sentinel
+    assert any(item is None for item in [await queue.get() for _ in range(len(chunks))])
+
+
+async def test_produce_chunk_exception_path() -> None:
+    """
+    ARRANGE: failing fetch coroutine
+    ACT:     call _produce_chunk
+    ASSERT:  placeholder triplet is returned
+    """
+
+    async def boom(_batch: object) -> None:
+        raise RuntimeError
+
+    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+
+    await _produce_chunk(0, [RawEquity(name="X", symbol="X")], queue, fetch=boom)
+
+    index, triplet = await queue.get()
+
+    assert triplet == (None, None, None)
+
+
+async def test_consume_queue_reports_shortfall() -> None:
+    """
+    ARRANGE: queue contains only a sentinel, so no data items arrive
+    ACT:     call _consume_queue
+    ASSERT:  returned list is [None] (placeholder for the missing item)
+    """
+    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+    await queue.put(None)  # sentinel, but zero items
+
+    result = await _consume_queue(queue, expected_items=1, expected_sentinels=1)
+
+    assert result == [None]

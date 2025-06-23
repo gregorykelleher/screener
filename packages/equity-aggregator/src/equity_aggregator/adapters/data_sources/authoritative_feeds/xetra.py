@@ -3,12 +3,18 @@
 import asyncio
 import logging
 import sys
-from collections.abc import AsyncIterator, Callable
 
 from httpx import AsyncClient
 
 from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
 from equity_aggregator.adapters.data_sources._utils import make_client
+
+from ._record_types import (
+    EquityRecord,
+    RecordStream,
+    RecordUniqueKeyExtractor,
+    UniqueRecordStream,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,19 +31,6 @@ _HEADERS = {
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
 }
-
-
-# a single equity record
-EquityRecord = dict[str, object]
-
-# an async stream of records
-RecordStream = AsyncIterator[EquityRecord]
-
-# a function that extracts a unique key from an EquityRecord
-RecordUniqueKeyExtractor = Callable[[EquityRecord], object]
-
-# a function that takes a RecordStream and returns a deduplicated RecordStream
-UniqueRecordStream = Callable[[RecordStream], RecordStream]
 
 
 async def fetch_equity_records(

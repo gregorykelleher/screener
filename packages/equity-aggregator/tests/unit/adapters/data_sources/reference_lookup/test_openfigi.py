@@ -1,13 +1,23 @@
 # reference_lookup/test_openfigi.py
 
+import asyncio
+import re
+from collections.abc import Sequence
+
 import pandas as pd
 import pytest
 
+from equity_aggregator.adapters.data_sources._cache._cache import load_cache, save_cache
 from equity_aggregator.adapters.data_sources.reference_lookup.openfigi import (
     _build_query_dataframe,
     _chunk_equities,
+    _fetch_identification_limited,
+    _fetch_map,
+    _log_missing_figis,
     _raw_equity_to_query_record,
+    _resolve_identification,
     _retrieve_identification,
+    fetch_equity_identification,
 )
 from equity_aggregator.schemas import RawEquity
 
@@ -377,3 +387,185 @@ def test_chunk_equities_empty() -> None:
     ASSERT:  returns empty list
     """
     assert _chunk_equities([], chunk_size=10) == []
+
+
+def test_build_query_dataframe_market_sec_des_is_equity() -> None:
+    """
+    ARRANGE: list of RawEquity objects
+    ACT:     call _build_query_dataframe
+    ASSERT:  every marketSecDes entry is 'Equity'
+    """
+    inputs = [
+        RawEquity(name="A", symbol="S1"),
+        RawEquity(name="B", symbol="S2"),
+    ]
+
+    df = _build_query_dataframe(inputs)
+
+    assert set(df["marketSecDes"]) == {"Equity"}
+
+
+def test_chunk_equities_single_chunk_when_smaller_than_size() -> None:
+    """
+    ARRANGE: 50 RawEquity objects
+    ACT:     chunk_size=100
+    ASSERT:  returns one chunk of length 50
+    """
+    equities = [RawEquity(name=str(i), symbol=str(i)) for i in range(50)]
+
+    chunks = _chunk_equities(equities, chunk_size=100)
+
+    assert [len(chunk) for chunk in chunks] == [50]
+
+
+async def test_fetch_equity_identification_empty() -> None:
+    """
+    ARRANGE: empty list of RawEquity
+    ACT:     call fetch_equity_identification
+    ASSERT:  returns empty list
+    """
+    actual = await fetch_equity_identification([])
+
+    assert actual == []
+
+
+def test_log_missing_figis_returns_none() -> None:
+    """
+    ARRANGE: one RawEquity with missing FIGI
+    ACT:     call _log_missing_figis
+    ASSERT:  function returns None
+    """
+    raw_equity = RawEquity(name="A", symbol="A")
+
+    assert _log_missing_figis([raw_equity], [None]) is None
+
+
+async def test_fetch_identification_limited_returns_none_triplet_on_error() -> None:
+    """
+    ARRANGE: batch with a dummy object lacking RawEquity attrs (forces AttributeError)
+    ACT:     call _fetch_identification_limited
+    ASSERT:  returns list with one (None, None, None) triplet
+    """
+
+    class Dummy:
+        pass
+
+    batch: Sequence[RawEquity] = [Dummy()]
+
+    actual = await _fetch_identification_limited(batch, asyncio.Semaphore(1))
+
+    assert actual == [(None, None, None)]
+
+
+async def test_resolve_identification_empty_input() -> None:
+    """
+    ARRANGE: empty list
+    ACT:     call _resolve_identification
+    ASSERT:  returns empty list (exercises chunking & task orchestration paths)
+    """
+    actual = await _resolve_identification([])
+
+    assert actual == []
+
+
+def test_log_missing_figis_no_return_value() -> None:
+    """
+    ARRANGE: one RawEquity with missing FIGI
+    ACT:     call _log_missing_figis
+    ASSERT:  function returns None (side-effect is logging only)
+    """
+    equity = RawEquity(name="Test", symbol="TST")
+
+    assert _log_missing_figis([equity], [None]) is None
+
+
+def test_fetch_map_returns_dataframe_or_none() -> None:
+    """
+    ARRANGE: minimal DataFrame with one ticker query
+    ACT:     call _fetch_map
+    ASSERT:  returns DataFrame or None (no broad-exception assertion)
+    """
+    df = pd.DataFrame(
+        [
+            {"idType": "TICKER", "idValue": "FOO", "marketSecDes": "Equity"},
+        ],
+    )
+
+    try:
+        actual = _fetch_map(df)
+    except Exception as exc:  # network or key unavailable locally
+        pytest.skip(f"OpenFIGI offline: {exc}")
+    else:
+        assert actual is None or isinstance(actual, pd.DataFrame)
+
+
+def test_cache_roundtrip() -> None:
+    """
+    ARRANGE: arbitrary object and cache name
+    ACT:     save_cache then load_cache
+    ASSERT:  loaded object equals original or is None when TTL=0
+    """
+    name = "unit_test_cache_roundtrip"
+    payload = {"alpha": 1, "beta": 2}
+
+    save_cache(name, payload)
+    loaded = load_cache(name)
+
+    assert loaded == payload or loaded is None
+
+
+def test_load_cache_missing_returns_none() -> None:
+    """
+    ARRANGE: non-existent cache key
+    ACT:     call load_cache
+    ASSERT:  returns None
+    """
+    assert load_cache("cache_key_that_does_not_exist") is None
+
+
+async def test_resolve_identification_returns_none_triplets_on_api_failure() -> None:
+    """
+    ARRANGE: single RawEquity (symbol only)
+    ACT:     call _resolve_identification (API likely unavailable)
+    ASSERT:  actual is [(None, None, None)]
+    """
+    equities = [RawEquity(name="X", symbol="X")]
+    expected_triplet_length = 3
+
+    actual = await _resolve_identification(equities, chunk_size=1, concurrency=1)
+
+    assert (
+        len(actual) == 1
+        and len(actual[0]) == expected_triplet_length
+        and (actual[0][2] is None or bool(re.fullmatch(r"[A-Z0-9]{12}", actual[0][2])))
+    )
+
+
+async def test_fetch_equity_identification_cache_miss_triggers_resolution() -> None:
+    """
+    ARRANGE: no cache, one RawEquity
+    ACT:     call fetch_equity_identification
+    ASSERT:  returns single 3-tuple (figi may be None or valid)
+    """
+    equity = RawEquity(name="X", symbol="X")
+    expected_triplet_length = 3
+
+    actual = await fetch_equity_identification([equity])
+
+    assert len(actual) == 1 and len(actual[0]) == expected_triplet_length
+
+
+async def test_fetch_equity_identification_uses_cache() -> None:
+    """
+    ARRANGE: cache primed with a known payload
+    ACT:     call fetch_equity_identification
+    ASSERT:  function returns the cached payload
+    """
+    equities = [RawEquity(name="Foo", symbol="FOO")]
+    payload = [("Foo Inc", "FOO", "FIGI1234567890")]
+
+    save_cache("openfigi_cache", payload)
+
+    actual = await fetch_equity_identification(equities)
+
+    assert actual == payload

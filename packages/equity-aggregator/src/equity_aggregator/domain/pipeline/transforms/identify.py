@@ -13,30 +13,33 @@ type IdentificationMetadata = tuple[str | None, str | None, str | None]
 
 async def identify(
     raw_equities_stream: AsyncIterable[RawEquity],
+    fetch_fn: callable = fetch_equity_identification,
 ) -> AsyncIterator[RawEquity]:
     """
-    Associates raw equities with identification metadata sourced from OpenFigi.
+    Identifies and updates raw equities with metadata from OpenFIGI.
 
-    This function collects all RawEquity records from the input async stream,
-    resolves their identification metadata (name, symbol, ShareClassFIGI) in batch using
-    OpenFIGI, and yields only those records for which a valid FIGI is found.
-
-    Note:
-        The original RawEquity record's name and symbol fields are overwritten with new
-        resolved values from OpenFIGI.
+    This function consumes an async stream of RawEquity objects, batches them, and
+    retrieves identification metadata (name, symbol, ShareClassFIGI) from OpenFIGI.
+    Only records with a valid FIGI are yielded. The name and symbol fields are
+    overwritten with values resolved from OpenFIGI.
 
     Args:
         raw_equities_stream (AsyncIterable[RawEquity]):
-            Async stream of RawEquity records to process.
+            An asynchronous iterable of RawEquity records to be identified.
+        fetch_fn (callable, optional):
+            A function to fetch identification metadata for a batch of RawEquity
+            objects. Defaults to fetch_equity_identification.
 
-    Yields:
-        RawEquity: Updated RawEquity records with identification fields set.
+    Returns:
+        AsyncIterator[RawEquity]:
+            An asynchronous iterator yielding updated RawEquity records with
+            identification fields set, for those with a valid FIGI.
     """
     raw_equities = [equity async for equity in raw_equities_stream]
     if not raw_equities:
         return
 
-    identification_metadata = await fetch_equity_identification(raw_equities)
+    identification_metadata = await fetch_fn(raw_equities)
     updated_iter = _generate_updates(raw_equities, identification_metadata)
 
     # yield each updated record, count successes for logging

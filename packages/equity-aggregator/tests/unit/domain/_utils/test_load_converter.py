@@ -17,7 +17,7 @@ def test_fx_conversion_divides_by_rate() -> None:
     """
     ARRANGE: 1 EUR, rate 0.8 EUR per USD
     ACT:     _convert_to_usd
-    ASSERT:  result == 1.25 USD
+    ASSERT:  actual == 1.25 USD
     """
     expected = Decimal("1.25")
 

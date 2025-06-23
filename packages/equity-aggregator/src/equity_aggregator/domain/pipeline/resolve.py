@@ -30,14 +30,16 @@ class FeedRecord(NamedTuple):
 
 
 # List of authoritative feed fetchers and their corresponding data models
-_AUTH_FEEDS: list[FeedPair] = [
+_AUTH_FEEDS: tuple[FeedPair] = [
     (fetch_equity_records_euronext, EuronextFeedData),
     (fetch_equity_records_xetra, XetraFeedData),
     (fetch_equity_records_lse, LseFeedData),
 ]
 
 
-async def resolve() -> AsyncIterator[FeedRecord]:
+async def resolve(
+    feeds: tuple[FeedPair, ...] | None = None,
+) -> AsyncIterator[FeedRecord]:
     """
     Merge all authoritative feed streams into a single asynchronous output.
 
@@ -54,15 +56,17 @@ async def resolve() -> AsyncIterator[FeedRecord]:
     """
     logger.info("Resolving raw equities from authoritative feeds...")
 
+    # TODO: temp time logging, remove later
     start_ts = time.perf_counter()
+    feeds = feeds or _AUTH_FEEDS
     queue: asyncio.Queue[FeedRecord | None] = asyncio.Queue()
 
     async with asyncio.TaskGroup() as task_group:
-        for fetcher, model in _AUTH_FEEDS:
+        for fetcher, model in feeds:
             task_group.create_task(_produce(fetcher, model, queue))
 
         # consume the queue until all producers are exhausted
-        async for record in _consume(queue, len(_AUTH_FEEDS)):
+        async for record in _consume(queue, len(feeds)):
             yield record
 
     # TODO: temp logging, remove later

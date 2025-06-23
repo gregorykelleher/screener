@@ -40,6 +40,9 @@ def _get_cache_ttl() -> int:
     CACHE_TTL_MINUTES. If the variable is not set, defaults to 1440 minutes (24 hours).
     Validates that the value is a non-negative integer.
 
+    CACHE_TTL_MINUTES > 0 → maximum age (in minutes) before an entry is stale.
+    CACHE_TTL_MINUTES == 0 → disable expiry (entries persist until explicitly deleted).
+
     Args:
         None
 
@@ -79,7 +82,11 @@ def _db_path(name: str) -> str:
 
 def _is_expired(timestamp: datetime) -> bool:
     """
-    Check if a timestamp is older than the allowed TTL (time-to-live) in minutes.
+    Determine whether a cache entry has expired, by checking if a timestamp is older
+    than the allowed TTL (time-to-live) in minutes.
+
+    If _CACHE_TTL_MINUTES ≤ 0, expiry is disabled, and the entry is always considered
+    fresh.
 
     Args:
         timestamp (datetime): The original timestamp of the cache entry.
@@ -87,6 +94,10 @@ def _is_expired(timestamp: datetime) -> bool:
     Returns:
         bool: True if the cache entry has expired, False otherwise.
     """
+    if _CACHE_TTL_MINUTES <= 0:
+        # forever cache – never expires automatically
+        return False
+
     return datetime.now(UTC) > timestamp + timedelta(minutes=_CACHE_TTL_MINUTES)
 
 

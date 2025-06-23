@@ -65,10 +65,10 @@ async def test_rows_non_empty(
     name, rows = retrieve_feed_rows
 
     # ACT
-    result = bool(rows)
+    actual = bool(rows)
 
     # ASSERT
-    assert result, f"{name}: empty result"
+    assert actual, f"{name}: empty result"
 
 
 async def test_required_keys(

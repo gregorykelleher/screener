@@ -42,6 +42,8 @@ UniqueRecordStream = Callable[[RecordStream], RecordStream]
 
 async def fetch_equity_records(
     client: AsyncClient | None = None,
+    *,
+    cache_key: str = "xetra_records",
 ) -> RecordStream:
     """
     Yield each Xetra equity record exactly once, using cache if available.
@@ -51,11 +53,12 @@ async def fetch_equity_records(
 
     Args:
         client (AsyncClient | None): Optional HTTP client to use for requests.
+        cache_key (str): The key under which to cache the records.
 
     Yields:
         EquityRecord: Parsed Xetra equity record.
     """
-    cached = load_cache("xetra_records")
+    cached = load_cache(cache_key)
 
     if cached:
         logger.info("Loaded %d Xetra records from cache.", len(cached))
@@ -68,7 +71,7 @@ async def fetch_equity_records(
         client = client or make_client(headers=_HEADERS)
 
         async with client:
-            async for record in _stream_and_cache(client):
+            async for record in _stream_and_cache(client, cache_key=cache_key):
                 yield record
 
     # If any error occurs on the feed, treat it as fatal and exit
@@ -81,12 +84,17 @@ async def fetch_equity_records(
         sys.exit(1)
 
 
-async def _stream_and_cache(client: AsyncClient) -> RecordStream:
+async def _stream_and_cache(
+    client: AsyncClient,
+    *,
+    cache_key: str,
+) -> RecordStream:
     """
     Asynchronously stream unique Xetra equity records, cache them, and yield each.
 
     Args:
         client (AsyncClient): The asynchronous HTTP client used for requests.
+        cache_key (str): The key under which to cache the records.
 
     Yields:
         EquityRecord: Each unique Xetra equity record as it is retrieved.
@@ -104,7 +112,7 @@ async def _stream_and_cache(client: AsyncClient) -> RecordStream:
         buffer.append(record)
         yield record
 
-    save_cache("xetra_records", buffer)
+    save_cache(cache_key, buffer)
     logger.info("Saved %d Xetra records to cache.", len(buffer))
 
 

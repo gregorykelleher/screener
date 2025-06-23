@@ -595,3 +595,117 @@ def test_merge_mismatched_share_class_figi_raises_error() -> None:
 
     with pytest.raises(ValueError):
         merge(raw_equities)
+
+
+def test_merge_name_best_cluster_appears_later() -> None:
+    """
+    ARRANGE: first name belongs to a 1-member cluster,
+             a later 2-member cluster has higher weight.
+    ACT:     merge
+    ASSERT:  earliest spelling from majority cluster is chosen.
+    """
+    equities = [
+        RawEquity(name="BAR CORP", symbol="X", share_class_figi="FIGI00000001"),
+        RawEquity(name="FOO INC", symbol="X", share_class_figi="FIGI00000001"),
+        RawEquity(name="FOO INC.", symbol="X", share_class_figi="FIGI00000001"),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.name == "FOO INC"
+
+
+def test_merge_isin_majority_appears_later() -> None:
+    """
+    ARRANGE: first ISIN unique, majority value follows.
+    ACT:     merge
+    ASSERT:  majority ISIN wins even though it is not first.
+    """
+    equities = [
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="US1234567890",
+        ),
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="US1234567890",
+        ),
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="US1234567890",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.isin == "US1234567890"
+
+
+def test_merge_id_majority_appears_later() -> None:
+    """
+    ARRANGE: minority identifier comes first; majority identifier follows twice.
+    ACT:     merge
+    ASSERT:  majority identifier returned.
+    """
+    equities = [
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="MIN111111111",
+        ),
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="MAJ222222222",
+        ),
+        RawEquity(
+            name="Z",
+            symbol="Z",
+            share_class_figi="FIGI00000001",
+            isin="MAJ222222222",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.isin == "MAJ222222222"
+
+
+def test_merge_currency_majority_appears_later() -> None:
+    """
+    ARRANGE: EUR once, then USD twice.
+    ACT:     merge
+    ASSERT:  majority currency USD returned.
+    """
+    equities = [
+        RawEquity(
+            name="C",
+            symbol="C",
+            share_class_figi="FIGI00000001",
+            currency="EUR",
+        ),
+        RawEquity(
+            name="C",
+            symbol="C",
+            share_class_figi="FIGI00000001",
+            currency="usd",
+        ),
+        RawEquity(
+            name="C",
+            symbol="C",
+            share_class_figi="FIGI00000001",
+            currency="USD",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.currency == "USD"

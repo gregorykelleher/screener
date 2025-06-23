@@ -48,6 +48,26 @@ env = [
   "CACHE_TTL_MINUTES=0",
 ]
 
+[tool.coverage.run]
+source = ["src"]
+branch = true
+data_file = "data/.coverage"
+omit = [
+  "*/__init__.py",
+  "*/__main__.py",
+  "*/logging_config.py"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = false
+fail_under = 90
+
+[tool.coverage.html]
+directory = "data/htmlcov"
+title = "Equity Aggregator Test Coverage"
+
+
 [tool.ruff]
 cache-dir = "data/cache/ruff"
 line-length = 88

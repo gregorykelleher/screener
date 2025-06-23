@@ -456,3 +456,74 @@ def test_make_validator_returns_none_for_partial_missing() -> None:
     validator = _make_validator(PartialFeedData)
 
     assert validator(raw) is None
+
+
+def test_safe_fetch_times_out_and_returns_none() -> None:
+    """
+    ARRANGE: slow fetcher that honours the signature and sleeps past the timeout
+    ACT:     call _safe_fetch with a tight wait_timeout
+    ASSERT:  returns None (TimeoutError branch)
+    """
+
+    async def slow_fetcher(
+        **kwargs: dict[str, object],
+    ) -> dict[str, object]:
+        await asyncio.sleep(0.05)
+        return {"ignored": True}
+
+    src = RawEquity(
+        name="TO",
+        symbol="TO",
+        isin="ISIN00000005",
+        mics=["XLON"],
+        currency="USD",
+        last_price=Decimal("0"),
+        market_cap=Decimal("0"),
+    )
+
+    actual = asyncio.run(_safe_fetch(src, slow_fetcher, "Slow", wait_timeout=0.01))
+
+    assert actual is None
+
+
+def test_enrich_with_feeds_completes_success_path() -> None:
+    """
+    ARRANGE:  source missing financials; fetcher returns a full record
+    ACT:      call _enrich_with_feeds
+    ASSERT:   enriched RawEquity contains the fetched last_price & market_cap
+    """
+
+    async def good_fetcher(
+        symbol: str,
+        name: str,
+        isin: str | None,
+        cusip: str | None,
+    ) -> dict[str, object]:
+        _ = (symbol, name, isin, cusip)
+        return {
+            "name": name,
+            "symbol": symbol,
+            "isin": isin,
+            "cusip": cusip,
+            "mics": ["XLON"],
+            "currency": "USD",  # already USD ⇒ converter is no-op
+            "last_price": Decimal("123"),
+            "market_cap": Decimal("4567"),
+        }
+
+    source = RawEquity(
+        name="OK",
+        symbol="OK",
+        isin="ISIN00000006",
+        mics=["XLON"],
+        currency="USD",
+        last_price=None,
+        market_cap=None,
+    )
+
+    enriched = asyncio.run(_enrich_with_feeds(source, (good_fetcher, GoodFeedData)))
+
+    assert (enriched.last_price, enriched.market_cap) == (
+        Decimal("123"),
+        Decimal("4567"),
+    )

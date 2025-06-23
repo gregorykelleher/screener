@@ -119,8 +119,8 @@ def _merge_name(duplicate_group: Sequence[RawEquity], *, threshold: int = 90) ->
         if equity.name in best_cluster:  # first in order wins
             return equity.name
 
-    # should never fall through; if it does, return the first name
-    return duplicate_group[0].name
+    # Unreachable by construction; defensive only
+    return duplicate_group[0].name  # pragma: no cover
 
 
 def _merge_symbol(duplicate_group: Sequence[RawEquity]) -> str:
@@ -217,8 +217,8 @@ def _merge_id(duplicate_group: Sequence[RawEquity], field: str) -> str | None:
         if value is not None and counts[value] == best_freq:
             return value
 
-    # defensive fallback – shouldn’t happen
-    return values[0]
+    # Unreachable by construction; defensive only
+    return values[0]  # pragma: no cover
 
 
 def _merge_mics(duplicate_group: Sequence[RawEquity]) -> list[str] | None:
@@ -269,7 +269,8 @@ def _merge_currency(duplicate_group: Sequence[RawEquity]) -> str | None:
         if currency is not None and freq[currency] == best_freq:
             return currency
 
-    return currency_codes[0]  # defensive fallback
+    # Unreachable by construction; defensive only
+    return currency_codes[0]  # pragma: no cover
 
 
 @cache

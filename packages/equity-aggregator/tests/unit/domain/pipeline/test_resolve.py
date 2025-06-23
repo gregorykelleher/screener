@@ -9,9 +9,15 @@ from equity_aggregator.domain.pipeline.resolve import (
     FeedRecord,
     _consume,
     _produce,
+    resolve,
 )
 
 pytestmark = pytest.mark.unit
+
+
+async def _generate_values(*values: int) -> AsyncIterable[dict[str, int]]:
+    for value in values:
+        yield {"value": value}
 
 
 class DummyModel:
@@ -159,3 +165,68 @@ async def test_produce_and_consume_error_signals_completion_without_records() ->
     records = [record async for record in _consume(queue, total_producers=1)]
 
     assert records == []
+
+
+async def test_resolve_yields_all_items() -> None:
+    """
+    ARRANGE: a feed generator yielding two items and a dummy model
+    ACT:     call resolve with the feed and model
+    ASSERT:  yields exactly two records
+    """
+    feeds = ((lambda: _generate_values(1, 2), DummyModel),)
+    expected_records = 2
+
+    records = [record async for record in resolve(feeds)]
+
+    assert len(records) == expected_records
+
+
+async def test_resolve_propagates_models() -> None:
+    """
+    ARRANGE: a feed generator yielding one item and a dummy model
+    ACT:     call resolve with the feed and model
+    ASSERT:  record.model is the dummy model
+    """
+    feeds = ((lambda: _generate_values(7), DummyModel),)
+
+    records = [record async for record in resolve(feeds)]
+
+    assert records[0].model is DummyModel
+
+
+async def test_resolve_merges_multiple_feeds() -> None:
+    """
+    ARRANGE: two feed generators yielding different items and a dummy model
+    ACT:     call resolve with both feeds and model
+    ASSERT:  yields all items from both feeds
+    """
+    feeds = (
+        (lambda: _generate_values(1), DummyModel),
+        (lambda: _generate_values(2, 3), DummyModel),
+    )
+
+    records = [record async for record in resolve(feeds)]
+
+    assert {record.raw_data["value"] for record in records} == {1, 2, 3}
+
+
+async def test_resolve_ignores_failing_feed() -> None:
+    """
+    ARRANGE: one feed generator that raises an error and one that yields an item
+    ACT:     call resolve with both feeds and model
+    ASSERT:  yields only the item from the successful feed
+    """
+
+    async def _boom() -> AsyncIterable[dict[str, int]]:
+        raise RuntimeError("fail")
+        if False:
+            yield {}
+
+    feeds = (
+        (_boom, DummyModel),
+        (lambda: _generate_values(42), DummyModel),
+    )
+
+    records = [record async for record in resolve(feeds)]
+
+    assert records[0].raw_data == {"value": 42}

@@ -48,6 +48,8 @@ async def fetch_equity_identification(
 
     _log_missing_figis(raw_equities, [figi for _, _, figi in identification])
 
+    # TODO: add exception handling and exit strategy
+
     # persist retrieved shareClassFIGIs to cache
     save_cache("openfigi_cache", identification)
     logger.debug("Saved OpenFIGI identification metadata to cache.")
@@ -58,6 +60,7 @@ async def fetch_equity_identification(
 async def _resolve_identification(
     raw_equities: Sequence[RawEquity],
     chunk_size: int = 100,
+    # TODO: refactor out concurrency
     concurrency: int = 10,
 ) -> list[tuple[str | None, str | None, str | None]]:
     """

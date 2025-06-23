@@ -8,11 +8,13 @@ import httpx
 import pytest
 from httpx import AsyncClient, MockTransport
 
+from equity_aggregator.adapters.data_sources._cache._cache import save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.lse import (
     _build_payload,
     _deduplicate_records,
     _fetch_page,
     _parse_equities,
+    _produce_page,
     _stream_all_pages,
     fetch_equity_records,
 )
@@ -131,7 +133,7 @@ def test_fetch_page_returns_first_json_element() -> None:
     """
     ARRANGE: transport returns JSON list [{'a':1}]
     ACT:     call _fetch_page(client, page=1)
-    ASSERT:  result == {'a':1}
+    ASSERT:  actual == {'a':1}
     """
 
     def handler(_: httpx.Request) -> httpx.Response:
@@ -335,3 +337,50 @@ def test_deduplicate_records_preserves_all_none_keys() -> None:
         {"isin": None, "val": 1},
         {"isin": "A", "val": 3},
     ]
+
+
+def test_produce_page_on_error_always_puts_sentinel() -> None:
+    """
+    ARRANGE: a client whose .post(...) raises
+    ACT:     run _produce_page and then consume its queue
+    ASSERT:  we get exactly one None sentinel, even though it raised
+    """
+
+    class BadClient:
+        async def post(self, *args: object, **kwargs: object) -> None:
+            raise RuntimeError("boom!")
+
+    queue: asyncio.Queue[dict | None] = asyncio.Queue()
+
+    async def run_and_collect() -> list[None]:
+        import contextlib
+
+        with contextlib.suppress(RuntimeError):
+            await _produce_page(BadClient(), page=5, queue=queue)
+
+        # Ensure that a sentinel is in the queue
+        return [await queue.get()]
+
+    actual = asyncio.run(run_and_collect())
+    assert actual == [None]
+
+
+def test_fetch_equity_records_uses_cache() -> None:
+    """
+    ARRANGE: cache primed with two known records
+    ACT:     collect via fetch_equity_records
+    ASSERT:  yielded records equal the cached payload
+    """
+    payload = [
+        {"isin": "CACHED1", "mics": ["XLON"]},
+        {"isin": "CACHED2", "mics": ["XLON"]},
+    ]
+
+    save_cache("lse_records", payload)
+
+    async def collect() -> list[dict]:
+        return [record async for record in fetch_equity_records()]
+
+    actual = asyncio.run(collect())
+
+    assert actual == payload

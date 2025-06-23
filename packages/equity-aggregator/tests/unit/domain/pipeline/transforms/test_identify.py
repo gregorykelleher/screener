@@ -1,7 +1,7 @@
 # tests/test_identify.py
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Sequence
 
 import pytest
 
@@ -258,3 +258,87 @@ def test_generate_updates_preserves_input_order() -> None:
 
     # should yield first_equity then third_equity, in that order
     assert [u.share_class_figi for u in actual] == ["FIG1", "FIG3"]
+
+
+def test_identify_yields_only_with_figi() -> None:
+    """
+    ARRANGE: async stream of two RawEquity, only first gets FIGI
+    ACT:     run identify()
+    ASSERT:  yields only updated RawEquity with FIGI
+    """
+    equities = [
+        _make_dummy_equity("A", "A"),
+        _make_dummy_equity("B", "B"),
+    ]
+
+    async def src() -> AsyncIterable[RawEquity]:
+        for equity in equities:
+            yield equity
+
+    async def fetch_fn(_: Sequence[RawEquity]) -> list[tuple[str, str, str | None]]:
+        return [
+            ("A", "A", "FIGI1"),
+            ("B", "B", None),
+        ]
+
+    async def runner() -> list[RawEquity]:
+        return [equity async for equity in identify(src(), fetch_fn=fetch_fn)]
+
+    actual = asyncio.run(runner())
+
+    assert [equity.share_class_figi for equity in actual] == ["FIGI1"]
+
+
+async def test_identify_batches_entire_stream() -> None:
+    """
+    ARRANGE: async stream of two RawEquity
+    ACT:     run identify()
+    ASSERT:  fetch_fn receives the complete batch of RawEquity
+    """
+    equities = [
+        _make_dummy_equity("X", "X"),
+        _make_dummy_equity("Y", "Y"),
+    ]
+    captured: list[RawEquity] = []
+
+    async def src() -> AsyncIterable[RawEquity]:
+        for equity in equities:
+            yield equity
+
+    async def fetch_fn(batch: Sequence[RawEquity]) -> list[tuple[str, str, str | None]]:
+        captured.extend(batch)
+        return [
+            ("X", "X", None),
+            ("Y", "Y", None),
+        ]
+
+    async for _ in identify(src(), fetch_fn=fetch_fn):
+        pass
+
+    assert tuple(captured) == tuple(equities)
+
+
+def test_identify_updates_fields_from_metadata() -> None:
+    """
+    ARRANGE: async stream with one RawEquity, metadata provides new name/symbol/FIGI
+    ACT:     run identify()
+    ASSERT:  returned RawEquity has updated fields
+    """
+    equity = _make_dummy_equity("OldName", "OldSym")
+
+    async def src() -> AsyncIterable[RawEquity]:
+        yield equity
+
+    async def fetch_fn(_: Sequence[RawEquity]) -> list[tuple[str, str, str | None]]:
+        return [("NewName", "NewSym", "FIGI123")]
+
+    async def runner() -> list[RawEquity]:
+        return [equity async for equity in identify(src(), fetch_fn=fetch_fn)]
+
+    actual = asyncio.run(runner())[0]
+
+    assert (
+        actual.name,
+        actual.symbol,
+        actual.share_class_figi,
+    ) == ("NewName", "NewSym", "FIGI123")

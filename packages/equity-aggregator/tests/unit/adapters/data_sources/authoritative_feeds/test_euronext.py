@@ -6,12 +6,15 @@ from collections.abc import AsyncGenerator
 import httpx
 import pytest
 
+from equity_aggregator.adapters.data_sources._cache._cache import load_cache, save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import (
+    _PAGE_SIZE,
     _build_payload,
     _consume_queue,
     _deduplicate_records,
     _parse_row,
     _produce_mic,
+    _stream_mic_records,
     fetch_equity_records,
 )
 
@@ -490,3 +493,116 @@ async def test_produce_mic_zero_rows_places_only_sentinel() -> None:
     await _produce_mic(client, "XPAR", queue)
 
     assert await queue.get() is None
+
+
+def test_fetch_equity_records_uses_cache() -> None:
+    """
+    ARRANGE: cache primed with two known records
+    ACT:     collect via fetch_equity_records
+    ASSERT:  yielded records equal the cached payload
+    """
+    payload = [
+        {"isin": "CACHED1", "mics": ["XPAR"]},
+        {"isin": "CACHED2", "mics": ["XAMS"]},
+    ]
+    save_cache("euronext_records", payload)
+
+    async def collect() -> list[dict]:
+        return [rec async for rec in fetch_equity_records()]
+
+    actual = asyncio.run(collect())
+
+    assert actual == payload
+
+
+async def test_fetch_equity_records_saves_to_cache() -> None:
+    """
+    ARRANGE: empty cache and mock transport returning two rows
+    ACT:     iterate fetch_equity_records once
+    ASSERT:  cache now identical to streamed payload
+    """
+    save_cache("euronext_records", [])  # start with an empty cache
+
+    row_a = [
+        "",
+        "<a>A</a>",
+        "ISIN_A",
+        "SYMA",
+        "<div>XPAR</div>",
+        "<div>EUR <span>1.00</span></div>",
+    ]
+    row_b = [
+        "",
+        "<a>B</a>",
+        "ISIN_B",
+        "SYMB",
+        "<div>XPAR</div>",
+        "<div>EUR <span>2.00</span></div>",
+    ]
+    payload = {"aaData": [row_a, row_b], "iTotalRecords": 2}
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def consume() -> None:
+        async for _ in fetch_equity_records(client):
+            pass
+
+    await consume()
+
+    assert load_cache("euronext_records") == [
+        {
+            "name": "A",
+            "symbol": "SYMA",
+            "isin": "ISIN_A",
+            "mics": ["XPAR"],
+            "currency": "EUR",
+            "last_price": "1.00",
+        },
+        {
+            "name": "B",
+            "symbol": "SYMB",
+            "isin": "ISIN_B",
+            "mics": ["XPAR"],
+            "currency": "EUR",
+            "last_price": "2.00",
+        },
+    ]
+
+
+async def test_stream_mic_records_paginates() -> None:
+    """
+    ARRANGE: mock transport forces two-page fetch (iTotalRecords > _PAGE_SIZE)
+    ACT:     exhaust _stream_mic_records
+    ASSERT:  second request's payload 'start' equals _PAGE_SIZE
+    """
+    starts: list[int] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        # form-encoded body: b'draw=1&start=0&length=100&...'
+        form = dict(pair.split("=", 1) for pair in request.content.decode().split("&"))
+        starts.append(int(form["start"]))
+
+        # always return a single dummy row; iTotalRecords makes caller paginate
+        row = [
+            "",
+            "<a>X</a>",
+            "ISIN_X",
+            "SYMX",
+            "<div>XPAR</div>",
+            "<div>EUR <span>9.99</span></div>",
+        ]
+        body = {"aaData": [row], "iTotalRecords": _PAGE_SIZE + 1}
+        return httpx.Response(200, json=body)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def drain() -> None:
+        async for _ in _stream_mic_records(client, "XPAR"):
+            pass
+
+    await drain()
+
+    assert starts[-1] == _PAGE_SIZE

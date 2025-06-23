@@ -8,6 +8,7 @@ import httpx
 import pytest
 from httpx import AsyncClient, MockTransport
 
+from equity_aggregator.adapters.data_sources._cache._cache import save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
     _build_payload,
     _consume_queue,
@@ -401,3 +402,44 @@ def test_fetch_equity_records_deduplicates_across_pages() -> None:
     records = asyncio.run(collect())
 
     assert len(records) == 1
+
+
+async def test_produce_page_raises_and_still_sends_sentinel() -> None:
+    """
+    ARRANGE: MockTransport whose handler raises ReadTimeout
+    ACT:     call _produce_page
+    ASSERT:  ReadTimeout propagates *and* exactly one sentinel enqueued
+    """
+
+    async def handler(_: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timeout")
+
+    client = AsyncClient(transport=MockTransport(handler))
+    queue: asyncio.Queue[dict | None] = asyncio.Queue()
+
+    with pytest.raises(httpx.ReadTimeout):
+        await _produce_page(client, offset=0, queue=queue)
+
+    sentinel = await queue.get()
+    assert sentinel is None
+
+
+def test_fetch_equity_records_uses_cache() -> None:
+    """
+    ARRANGE: cache primed with two known records
+    ACT:     collect via fetch_equity_records (no HTTP invoked)
+    ASSERT:  yielded records equal the cached payload
+    """
+    payload = [
+        {"isin": "XCACHED1", "mics": ["XETR"]},
+        {"isin": "XCACHED2", "mics": ["XETR"]},
+    ]
+
+    save_cache("xetra_records", payload)
+
+    async def collect() -> list[dict]:
+        return [record async for record in fetch_equity_records()]
+
+    actual = asyncio.run(collect())
+
+    assert actual == payload

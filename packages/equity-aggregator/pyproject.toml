@@ -16,12 +16,12 @@ dependencies = [
     "httpx[http2]>=0.28.1",
     "respx>=0.22.0",
     "openfigipy>=0.1.6",
-    "yfinance>=0.2.61",
     "pytest>=8.3.5",
     "pytest-env>=1.1.5",
     "pytest-asyncio>=1.0.0",
     "pytest-timeout>=2.4.0",
     "pytest-cov>=6.2.0",
+    "pytest-xdist>=3.7.0",
 ]
 
 [build-system]
@@ -103,5 +103,3 @@ max-statements      = 15
 max-branches        = 5
 max-args            = 5
 max-returns         = 3
-
-

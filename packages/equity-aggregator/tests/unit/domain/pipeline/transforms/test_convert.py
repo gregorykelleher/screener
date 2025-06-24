@@ -1,54 +1,52 @@
 # transforms/test_convert.py
 
 import asyncio
-import os
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 
-import httpx
 import pytest
-from respx import MockRouter
 
+from equity_aggregator.adapters.data_sources._cache import save_cache
 from equity_aggregator.domain.pipeline.transforms import convert
 from equity_aggregator.schemas import RawEquity
 
 pytestmark = pytest.mark.unit
 
 
-# small fixture to stub the external Exchange Rate API call
-@pytest.fixture(autouse=True)
-def fake_fx_api(respx_mock: MockRouter) -> Iterator[None]:
+def _run(
+    stream: AsyncGenerator[RawEquity, None],
+) -> list[RawEquity]:
     """
-    Fixture to set the EXCHANGE_RATE_API_KEY environment variable and mock the HTTP
-    call to the external exchange rate API, returning fixed conversion rates for tests.
+    Runs the asynchronous conversion of a stream of RawEquity objects and returns the
+    results as a list.
+
+    This function sets up a cache for exchange rates, then asynchronously collects all
+    converted RawEquity objects from the provided stream using the `convert` function.
 
     Args:
-        respx_mock (MockRouter): The respx mock router for HTTPX requests.
+        stream (AsyncGenerator[RawEquity, None]): An asynchronous generator yielding
+            RawEquity objects to be converted.
 
-    Yields:
-        None: This is a pytest fixture for use in test setup.
+    Returns:
+        list[RawEquity]: A list of converted RawEquity objects.
     """
-    os.environ["EXCHANGE_RATE_API_KEY"] = "dummy-key"
-    url = "https://v6.exchangerate-api.com/v6/dummy-key/latest/USD"
-    respx_mock.get(url).mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "result": "success",
-                "conversion_rates": {
-                    "EUR": 0.5,  # 1 USD == 0.5 EUR → 1 EUR == 2 USD
-                    "GBP": 0.25,  # 1 USD == 0.25 GBP → 1 GBP == 4 USD
-                },
-            },
-        ),
-    )
-    yield
 
-
-# helper function to run the async convert() function and return the results
-def _run(stream: AsyncGenerator[RawEquity, None]) -> list[RawEquity]:
     async def runner() -> list[RawEquity]:
-        return [raw_equity async for raw_equity in convert(stream)]
+        """
+        Asynchronously runs the conversion process on a stream of equities after setting
+        up a mock exchange rate cache.
+
+        Args:
+            None
+
+        Returns:
+            list[RawEquity]: A list of RawEquity objects resulting from the conversion.
+        """
+        save_cache(
+            "exchange_rate_api",
+            {"EUR": Decimal("0.5"), "GBP": Decimal("0.25")},
+        )
+        return [equity async for equity in convert(stream)]
 
     return asyncio.run(runner())
 

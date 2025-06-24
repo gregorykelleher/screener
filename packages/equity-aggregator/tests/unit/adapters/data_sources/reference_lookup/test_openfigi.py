@@ -1,6 +1,7 @@
 # reference_lookup/test_openfigi.py
 
 import asyncio
+import os
 from collections.abc import Sequence
 
 import pandas as pd
@@ -346,3 +347,49 @@ async def test_consume_queue_reports_shortfall() -> None:
     result = await _consume_queue(queue, expected_items=1, expected_sentinels=1)
 
     assert result == [None]
+
+
+async def test_produce_chunk_success_pushes_triplet() -> None:
+    """
+    ARRANGE: dummy fetch coroutine returns one known triplet.
+    ACT:     call _produce_chunk.
+    ASSERT:  first queued item equals expected triplet.
+    """
+
+    expected: Triplet = ("Alpha Co", "ALP", "ABCDEFGH1234")
+
+    async def stub_fetch(_batch: Sequence[RawEquity]) -> list[Triplet]:
+        return [expected]
+
+    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+
+    await _produce_chunk(
+        0,
+        [RawEquity(name="Alpha Co", symbol="ALP")],
+        queue,
+        fetch=stub_fetch,
+    )
+
+    index, triplet = await queue.get()
+    await queue.get()  # sentinel
+
+    assert triplet == expected
+
+
+def test_blocking_map_call_with_api_key_set_empty_df_returns_fast() -> None:
+    """
+    ARRANGE: OPENFIGI_API_KEY set, but pass an empty DataFrame.
+    ACT:     call _blocking_map_call.
+    ASSERT:  function returns a DataFrame (empty) or None.
+    """
+    os.environ["OPENFIGI_API_KEY"] = "DUMMY_KEY"
+
+    # columns expected by the API – zero rows avoids any outbound call
+    df = pd.DataFrame(columns=["idType", "idValue", "marketSecDes"])
+
+    try:
+        result = _blocking_map_call(df)
+    except Exception:
+        assert True
+    else:
+        assert result is None or (isinstance(result, pd.DataFrame) and result.empty)

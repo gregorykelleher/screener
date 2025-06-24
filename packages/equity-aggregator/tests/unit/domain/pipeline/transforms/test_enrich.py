@@ -8,7 +8,7 @@ import pytest
 
 from equity_aggregator.domain.pipeline.transforms.enrich import (
     ValidatorFunc,
-    _enrich_with_feeds,
+    _enrich_with_feed,
     _has_missing_fields,
     _make_validator,
     _replace_none_with_enriched,
@@ -178,10 +178,10 @@ def test_enrich_passes_through_when_no_missing_fields() -> None:
     assert symbols == ["ONE", "TWO"]
 
 
-def test__enrich_with_feeds_skips_when_no_missing() -> None:
+def test__enrich_with_feed_skips_when_no_missing() -> None:
     """
     ARRANGE: fully populated RawEquity, dummy fetcher that would error if called
-    ACT:     call _enrich_with_feeds
+    ACT:     call _enrich_with_feed
     ASSERT:  returns the same object without calling fetcher
     """
 
@@ -200,7 +200,7 @@ def test__enrich_with_feeds_skips_when_no_missing() -> None:
         market_cap=Decimal("40"),
     )
 
-    actual = asyncio.run(_enrich_with_feeds(full, (should_not_be_called, object)))
+    actual = asyncio.run(_enrich_with_feed(full, (should_not_be_called, object)))
 
     assert actual is full
 
@@ -410,10 +410,10 @@ def test_make_validator_returns_none_on_error() -> None:
     assert validator(raw_record) is None
 
 
-def test_enrich_with_feeds_falls_back_on_empty_dict() -> None:
+def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
     """
     ARRANGE: a RawEquity instance
-    ACT:     call _enrich_with_feeds with an empty fetcher
+    ACT:     call _enrich_with_feed with an empty fetcher
     ASSERT:  returns the original RawEquity unchanged
     """
 
@@ -431,7 +431,7 @@ def test_enrich_with_feeds_falls_back_on_empty_dict() -> None:
         market_cap=None,
     )
 
-    actual = asyncio.run(_enrich_with_feeds(source, (empty_fetcher, GoodFeedData)))
+    actual = asyncio.run(_enrich_with_feed(source, (empty_fetcher, GoodFeedData)))
 
     assert actual is source
 
@@ -486,10 +486,10 @@ def test_safe_fetch_times_out_and_returns_none() -> None:
     assert actual is None
 
 
-def test_enrich_with_feeds_completes_success_path() -> None:
+def test_enrich_with_feed_completes_success_path() -> None:
     """
     ARRANGE:  source missing financials; fetcher returns a full record
-    ACT:      call _enrich_with_feeds
+    ACT:      call _enrich_with_feed
     ASSERT:   enriched RawEquity contains the fetched last_price & market_cap
     """
 
@@ -521,7 +521,7 @@ def test_enrich_with_feeds_completes_success_path() -> None:
         market_cap=None,
     )
 
-    enriched = asyncio.run(_enrich_with_feeds(source, (good_fetcher, GoodFeedData)))
+    enriched = asyncio.run(_enrich_with_feed(source, (good_fetcher, GoodFeedData)))
 
     assert (enriched.last_price, enriched.market_cap) == (
         Decimal("123"),

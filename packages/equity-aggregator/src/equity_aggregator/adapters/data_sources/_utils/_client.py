@@ -31,6 +31,7 @@ def make_client(**overrides: object) -> AsyncClient:
     limits = Limits(
         max_connections=128,
         max_keepalive_connections=64,
+        keepalive_expiry=1.5,
     )
 
     # Set default timeouts for connections, reading, and writing

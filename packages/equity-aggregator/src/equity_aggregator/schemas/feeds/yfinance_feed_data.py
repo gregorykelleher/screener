@@ -45,7 +45,8 @@ class YFinanceFeedData(BaseModel):
         return {
             # longName → maps to RawEquity.name
             "name": self.get("longName"),
-            "symbol": self.get("symbol"),
+            # underlyingSymbol → maps to RawEquity.symbol
+            "symbol": self.get("underlyingSymbol"),
             # no ISIN, CUSIP, FIGI or MICS in YFinance feed, so intentionally omitted
             "currency": self.get("currency"),
             # currentPrice → maps to RawEquity.last_price

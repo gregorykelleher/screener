@@ -250,7 +250,7 @@ def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
     """
     Maps a DataFrame of identifiers to OpenFIGI results using a blocking API call.
 
-    This function initializes an OpenFigiClient with the API key from the environment,
+    This function initialises an OpenFigiClient with the API key from the environment,
     establishes a connection, and submits the provided DataFrame for mapping.
 
     Args:
@@ -259,7 +259,12 @@ def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame containing the mapping results from the OpenFIGI API.
     """
-    client = OpenFigiClient(api_key=os.getenv("OPENFIGI_API_KEY"))
+    api_key = os.getenv("OPENFIGI_API_KEY")
+
+    if not api_key:
+        return None
+
+    client = OpenFigiClient(api_key=api_key)
     client.connect()
     return client.map(df)
 

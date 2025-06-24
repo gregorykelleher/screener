@@ -1,0 +1,218 @@
+# yfinance/api.py
+
+import logging
+from collections.abc import Iterable, Mapping
+
+import httpx
+from rapidfuzz import fuzz
+
+from .session import YFSession
+
+logger = logging.getLogger(__name__)
+
+
+async def search_quotes(
+    session: YFSession,
+    query: str,
+) -> list[dict]:
+    """
+    Asynchronously search Yahoo Finance for equities matching a query string.
+
+    This coroutine sends a GET request to Yahoo Finance's search API using the
+    provided query. The response is parsed for a "quotes" field, which should
+    contain a list of quote dictionaries. Only quotes where "quoteType" is
+    "EQUITY" are included in the result.
+
+    Args:
+        session (YFSession): The Yahoo Finance session for making HTTP requests.
+        query (str): The search query (symbol, name, ISIN, or CUSIP).
+
+    Returns:
+        list[dict]: List of quote dictionaries for equities matching the query.
+    """
+    logger.debug("Searching Yahoo Finance for query: %s", query)
+
+    try:
+        response = await session.get(
+            session.config.search_url,
+            params={"q": query},
+        )
+        response.raise_for_status()
+        raw_data = response.json().get("quotes", [])
+
+    except httpx.HTTPError as exc:
+        logger.error("HTTP error during search for %s: %s", query, exc)
+        return []
+
+    except Exception as exc:
+        logger.error("Unexpected error during search for %s: %s", query, exc)
+        return []
+
+    # filter out non-equity quotes
+    return [quote for quote in raw_data if quote.get("quoteType") == "EQUITY"]
+
+
+async def get_info(
+    session: YFSession,
+    ticker: str,
+    modules: Iterable[str] | None = None,
+) -> dict[str, object] | None:
+    """
+    Fetch and flatten Yahoo Finance quoteSummary modules for a given ticker.
+
+    This coroutine retrieves detailed equity data for the specified ticker symbol
+    from Yahoo Finance's quoteSummary endpoint. It requests all specified modules
+    in a single call, then merges the resulting module dictionaries into a single
+    flat mapping for convenience.
+
+    Args:
+        session (YFSession): The Yahoo Finance session for making HTTP requests.
+        ticker (str): The stock symbol to fetch (e.g., "AAPL").
+        modules (Iterable[str] | None): Optional iterable of module names to
+            retrieve. If None, uses the default modules from the session config.
+
+    Returns:
+        dict[str, object] | None: A flattened dictionary containing all fields from
+        the requested modules, or None if no data is found.
+    """
+
+    modules = tuple(modules or session.config.modules)
+
+    url = session.config.quote_base + ticker
+
+    response = await session.get(
+        url,
+        params={
+            "modules": ",".join(modules),
+            "corsDomain": "finance.yahoo.com",
+            "formatted": "false",
+        },
+    )
+    response.raise_for_status()
+    raw = response.json().get("quoteSummary", {}).get("result", [])
+
+    if not raw:
+        logger.debug("No data found for ticker: %s", ticker)
+        return None
+
+    return _flatten_module_dicts(modules, raw[0] if raw else {})
+
+
+def _flatten_module_dicts(
+    modules: Iterable[str],
+    payload: Mapping[str, object],
+) -> dict[str, object]:
+    """
+    Merge and flatten module dictionaries from a Yahoo Finance API payload.
+
+    For each module name in `modules`, if the corresponding value in `payload` is a
+    dictionary, its key-value pairs are merged into a single dictionary. Keys from
+    later modules can overwrite those from earlier modules.
+
+    Args:
+        modules (Iterable[str]): Module names to extract and merge from the payload.
+        payload (Mapping[str, object]): Mapping of module names to their data
+            (typically from the Yahoo Finance API response).
+
+    Returns:
+        dict[str, object]: A merged dictionary containing all key-value pairs from
+        the specified module dictionaries found in the payload.
+    """
+    merged: dict[str, object] = {}
+    for module in modules:
+        if (value := payload.get(module)) and isinstance(value, dict):
+            merged.update(value)
+    return merged
+
+
+def pick_best_symbol(
+    quotes: list[dict],
+    *,
+    name_key: str,
+    expected_name: str,
+    expected_symbol: str,
+    min_score: int = 0,
+) -> str | None:
+    """
+    Select the best-matching symbol from a list of Yahoo Finance quotes using
+    fuzzy matching.
+
+    For each quote, this function computes a combined fuzzy score based on the
+    similarity between the quote's symbol and the expected symbol, and between the
+    quote's name (using `name_key`) and the expected name. Quote with the highest
+    combined score is selected if its score meets or exceeds `min_score`. If no
+    quote meets the threshold, None is returned.
+
+    Args:
+        quotes (list[dict]): List of quote dictionaries, each with at least a
+            "symbol" key and a name field specified by `name_key`.
+        name_key (str): The key in each quote dict for equity name
+            (e.g., "longname").
+        expected_name (str): The expected equity name to match against.
+        expected_symbol (str): The expected ticker symbol to match against.
+        min_score (int, optional): Minimum combined fuzzy score required to accept a
+            match. Defaults to 0.
+
+    Returns:
+        str | None: Best-matching symbol if a suitable match is found, else None.
+    """
+
+    if not quotes:
+        return None
+
+    scored = [
+        (
+            fuzz.ratio(quote.get("symbol", ""), expected_symbol)
+            + fuzz.token_sort_ratio(quote.get(name_key, ""), expected_name),
+            quote["symbol"],
+        )
+        for quote in quotes
+    ]
+
+    # compute the best score and symbol from the scored list
+    best_score, best_symbol = max(scored, key=lambda t: t[0])
+    logger.debug(
+        "Best fuzzy score for %s/%s: %d (symbol: %s)",
+        expected_name,
+        expected_symbol,
+        best_score,
+        best_symbol,
+    )
+
+    # if the best score is below the minimum threshold, return None
+    if best_score < min_score:
+        logger.debug(
+            "Best fuzzy score %d below threshold %d for %s / %s",
+            best_score,
+            min_score,
+            expected_name,
+            expected_symbol,
+        )
+        return None
+
+    # otherwise, return the best symbol found
+    return best_symbol
+
+
+def log_discovered_symbol(
+    result: dict,
+    requested_symbol: str,
+) -> None:
+    """
+    Log the discovered Yahoo Finance symbol with respect to the requested symbol.
+
+    Args:
+        result (dict): The dictionary containing discovered equity data, expected
+            to include a "symbol" key.
+        requested_symbol (str): The symbol originally requested by the user.
+
+    Returns:
+        None
+    """
+    discovered = result.get("symbol")
+    if discovered:
+        logger.debug(
+            "Discovered Yahoo Finance symbol %s for requested symbol %s",
+            discovered,
+            requested_symbol,
+        )

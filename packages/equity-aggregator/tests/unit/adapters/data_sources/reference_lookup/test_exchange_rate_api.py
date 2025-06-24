@@ -5,13 +5,14 @@ from decimal import Decimal
 import httpx
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache._cache import save_cache
+from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
 from equity_aggregator.adapters.data_sources.reference_lookup.exchange_rate_api import (
     _assert_success,
     _build_url,
     _convert_rate,
     _fetch_and_validate,
     _get_api_key,
+    _get_rates,
     retrieve_conversion_rates,
 )
 
@@ -162,3 +163,78 @@ def test_fetch_and_validate_json_error_propagates() -> None:
 
     with pytest.raises(ValueError):
         asyncio.run(run())
+
+
+def test_fetch_and_validate_success_returns_payload() -> None:
+    """
+    ARRANGE: 200 OK with valid JSON {'result':'success', 'conversion_rates':{}}.
+    ACT:     call _fetch_and_validate().
+    ASSERT:  payload['result'] == 'success'.
+    """
+
+    async def handler(_: httpx.Request) -> httpx.Response:
+        body = {"result": "success", "conversion_rates": {"USD": 1}}
+        return httpx.Response(200, json=body)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    url = "https://test.invalid"
+
+    async def run() -> dict:
+        return await _fetch_and_validate(client, url)
+
+    payload = asyncio.run(run())
+
+    assert payload["result"] == "success"
+
+
+def test_get_rates_converts_numbers_to_decimal() -> None:
+    """
+    ARRANGE: HTTP transport returns 200 with numeric rates.
+    ACT:     call _get_rates().
+    ASSERT:  returned mapping contains Decimal values.
+    """
+
+    async def handler(_: httpx.Request) -> httpx.Response:
+        body = {
+            "result": "success",
+            "conversion_rates": {"JPY": 110.0},
+        }
+        return httpx.Response(200, json=body)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    url = "https://example.invalid"
+
+    async def run() -> dict[str, Decimal]:
+        return await _get_rates(client, url)
+
+    rates = asyncio.run(run())
+
+    assert rates["JPY"] == Decimal("110.0")
+
+
+def test_retrieve_conversion_rates_fetches_and_caches() -> None:
+    """
+    ARRANGE: empty cache + mocked HTTP transport that succeeds.
+    ACT:     call retrieve_conversion_rates().
+    ASSERT:  data is persisted to cache (second load_cache yields same mapping).
+    """
+    cache_key = "exchange_rate_api_test"
+    os.environ["EXCHANGE_RATE_API_KEY"] = "DUMMY_KEY"
+
+    body = {
+        "result": "success",
+        "conversion_rates": {"GBP": 0.7, "USD": 1},
+    }
+
+    async def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=body)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    async def run() -> dict[str, Decimal]:
+        return await retrieve_conversion_rates(client, cache_key=cache_key)
+
+    first_call = asyncio.run(run())
+    cached_after_call = load_cache(cache_key)
+
+    assert cached_after_call == first_call

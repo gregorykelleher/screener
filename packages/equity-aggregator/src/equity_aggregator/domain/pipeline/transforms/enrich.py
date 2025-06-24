@@ -2,22 +2,25 @@
 
 import asyncio
 import logging
-from collections.abc import AsyncIterable, Awaitable, Callable
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable
+from contextlib import AsyncExitStack
 
-from equity_aggregator.adapters import fetch_equity_yfinance
+from equity_aggregator.adapters import open_yfinance_feed
 from equity_aggregator.domain._utils import get_usd_converter, merge
 from equity_aggregator.schemas import RawEquity, YFinanceFeedData
 
 type FetchFunc = Callable[..., Awaitable[dict[str, object]]]
 type FeedPair = tuple[FetchFunc, type]
+type FeedFactory = Callable[[], AsyncIterator[object]]
+type FeedRegistry = list[tuple[FeedFactory, type]]
+
+feed_factories: FeedRegistry = [
+    (open_yfinance_feed, YFinanceFeedData),
+]
+
 ValidatorFunc = Callable[[dict[str, object]], RawEquity | None]
 
 logger = logging.getLogger(__name__)
-
-# List of enrichment feed fetchers and their corresponding data models
-_ENRICH_FEEDS: list[FeedPair] = [
-    (fetch_equity_yfinance, YFinanceFeedData),
-]
 
 
 async def enrich(raw_equities: AsyncIterable[RawEquity]) -> AsyncIterable[RawEquity]:
@@ -34,25 +37,36 @@ async def enrich(raw_equities: AsyncIterable[RawEquity]) -> AsyncIterable[RawEqu
     Yields:
         RawEquity: The enriched RawEquity object as soon as enrichment finishes.
     """
-    async with asyncio.TaskGroup() as task_group:
-        tasks = [
-            task_group.create_task(_enrich_equity(equity))
-            async for equity in raw_equities
-        ]
 
-    for completed in asyncio.as_completed(tasks):
+    async with AsyncExitStack() as stack:
+        feeds: list[FeedPair] = []
+
+        # open every feed context and collect (fetch, model) pairs
+        for factory, model in feed_factories:
+            enrichment_feed = await stack.enter_async_context(factory())
+            feeds.append((enrichment_feed.fetch_equity, model))
+
+        # schedule one enrichment task per equity
+        async with asyncio.TaskGroup() as task_group:
+            enrich_tasks = [
+                task_group.create_task(_enrich_equity(equity, feeds))
+                async for equity in raw_equities
+            ]
+
+    for completed in asyncio.as_completed(enrich_tasks):
         yield await completed
 
     logger.debug(
         "Enrichment finished for %d equities using enrichment feeds: %s",
-        len(tasks),
-        ", ".join(
-            model.__name__.removesuffix("FeedData") for _, model in _ENRICH_FEEDS
-        ),
+        len(enrich_tasks),
+        ", ".join(model.__name__.removesuffix("FeedData") for _, model in feeds),
     )
 
 
-async def _enrich_equity(source: RawEquity) -> RawEquity:
+async def _enrich_equity(
+    source: RawEquity,
+    feeds: list[FeedPair],
+) -> RawEquity:
     """
     Concurrently enrich a RawEquity instance using all configured enrichment feeds.
 
@@ -67,8 +81,7 @@ async def _enrich_equity(source: RawEquity) -> RawEquity:
     """
     # launch one task per enrich feed concurrently
     tasks = [
-        asyncio.create_task(_enrich_with_feeds(source, feed_pair))
-        for feed_pair in _ENRICH_FEEDS
+        asyncio.create_task(_enrich_with_feed(source, feed_pair)) for feed_pair in feeds
     ]
     enriched_equities = await asyncio.gather(*tasks)
 
@@ -79,12 +92,12 @@ async def _enrich_equity(source: RawEquity) -> RawEquity:
     return _replace_none_with_enriched(source, merged_from_feeds)
 
 
-async def _enrich_with_feeds(
+async def _enrich_with_feed(
     source: RawEquity,
     feed_pair: FeedPair,
 ) -> RawEquity:
     """
-    Fetch raw JSON from a feed, normalise it to RawEquity, and convert to USD.
+    Fetch raw data from a feed, normalise it to RawEquity, and convert to USD.
 
     If the source has no missing fields, returns the source immediately. If fetching
     or validation fails, returns the source. Otherwise, returns a USD-denominated
@@ -112,14 +125,14 @@ async def _enrich_with_feeds(
     # fetch the raw data, with timeout and exception handling
     fetched_raw_data = await _safe_fetch(source, fetcher, feed_name)
 
+    # if no data was fetched, return the original source
     if not fetched_raw_data:
         logger.warning("No raw equities for %s found.", feed_name)
-
-    validate_fn = _make_validator(feed_model)
-
-    validated = validate_fn(fetched_raw_data)
-    if validated is None:
         return source
+
+    # validate the fetched data against the feed model
+    validate_fn = _make_validator(feed_model)
+    validated = validate_fn(fetched_raw_data)
 
     # always convert enriched equities to USD before returning
     convert_to_usd = await get_usd_converter()
@@ -131,10 +144,10 @@ async def _safe_fetch(
     fetcher: FetchFunc,
     feed_name: str,
     *,
-    wait_timeout: float = 10.0,
+    wait_timeout: float = 15.0,
 ) -> dict[str, object] | None:
     """
-    Safely fetch raw JSON data from the feed for the given RawEquity.
+    Safely fetch raw data from the feed for the given RawEquity.
 
     Args:
         fetcher (FetchFunc): The async fetch function for the enrichment feed.

@@ -5,32 +5,27 @@ import logging
 import time
 
 from equity_aggregator import aggregate_equity_profiles, configure_logging
-from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
-    fetch_equity_records as fetch_xetra_equities,
-)
 
 logger = logging.getLogger(__name__)
-
-
-async def main_async() -> None:
-    """Async entrypoint: stream and print Xetra equities."""
-    logger = logging.getLogger(__name__)
-    logger.info("Starting Xetra equities fetch…")
-
-    # Stream each record as it arrives
-    async for equity in fetch_xetra_equities():
-        print(equity)
-        print()
-
-    logger.info("Finished streaming Xetra equities.")
 
 
 def main() -> None:
     configure_logging()
 
-    import logging
+    # try:
+    #     start_time = time.perf_counter()
+    #     flat = asyncio.run(_get_info("MSFT"))
+    #     elapsed = time.perf_counter() - start_time
+    #     logger.info("`_get_info` completed in %.3f seconds", elapsed)
+    # except Exception as exc:
+    #     logger.exception("Unhandled exception during fetch")
+    #     return
 
-    logger = logging.getLogger(__name__)
+    # if not flat:
+    #     logger.error("No data returned for MSFT")
+    #     return
+
+    # print(json.dumps(flat, indent=2))
 
     start = time.monotonic()
     profiles = asyncio.run(aggregate_equity_profiles())

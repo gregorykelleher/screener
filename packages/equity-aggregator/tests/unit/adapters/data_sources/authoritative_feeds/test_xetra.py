@@ -355,7 +355,7 @@ def test_fetch_equity_records_exits_on_first_page_500() -> None:
     """
     ARRANGE: first page returns 500
     ACT:     iterate fetch_equity_records
-    ASSERT:  SystemExit is raised
+    ASSERT:  httpx.HTTPStatusError is raised
     """
 
     def handler(_: httpx.Request) -> httpx.Response:
@@ -367,7 +367,7 @@ def test_fetch_equity_records_exits_on_first_page_500() -> None:
         async for _ in fetch_equity_records(client):
             pass
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(httpx.HTTPStatusError):
         asyncio.run(iterate())
 
 

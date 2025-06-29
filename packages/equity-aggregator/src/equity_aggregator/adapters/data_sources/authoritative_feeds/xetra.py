@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import sys
 
 from httpx import AsyncClient
 
@@ -59,22 +58,12 @@ async def fetch_equity_records(
             yield record
         return
 
-    try:
-        # use provided client or create a bespoke xetra client
-        client = client or make_client(headers=_HEADERS)
+    # use provided client or create a bespoke xetra client
+    client = client or make_client(headers=_HEADERS)
 
-        async with client:
-            async for record in _stream_and_cache(client, cache_key=cache_key):
-                yield record
-
-    # If any error occurs on the feed, treat it as fatal and exit
-    except Exception as error:
-        logger.fatal(
-            "Fatal error while fetching Xetra records: %s",
-            error,
-            exc_info=True,
-        )
-        sys.exit(1)
+    async with client:
+        async for record in _stream_and_cache(client, cache_key=cache_key):
+            yield record
 
 
 async def _stream_and_cache(

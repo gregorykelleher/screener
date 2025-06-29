@@ -380,7 +380,7 @@ async def test_fetch_equity_records_exits_on_http_error() -> None:
     """
     ARRANGE: mock transport returns 500 for every request
     ACT: iterate fetch_equity_records
-    ASSERT: SystemExit is raised (fatal exit)
+    ASSERT: httpx.HTTPStatusError is raised
     """
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -392,7 +392,7 @@ async def test_fetch_equity_records_exits_on_http_error() -> None:
         async for _ in fetch_equity_records(client):
             pass
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(httpx.HTTPStatusError):
         await consume()
 
 
@@ -400,7 +400,7 @@ async def test_fetch_equity_records_exits_on_json_error() -> None:
     """
     ARRANGE: mock transport returns 200 with invalid JSON
     ACT: iterate fetch_equity_records
-    ASSERT: SystemExit is raised (fatal exit)
+    ASSERT: ValueError is raised
     """
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -413,7 +413,7 @@ async def test_fetch_equity_records_exits_on_json_error() -> None:
         async for _ in fetch_equity_records(client):
             pass
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(ValueError):
         await consume()
 
 
@@ -421,7 +421,7 @@ async def test_fetch_equity_records_exits_on_read_error() -> None:
     """
     ARRANGE: mock transport raises httpx.ReadError while reading
     ACT: iterate fetch_equity_records
-    ASSERT: SystemExit is raised (fatal exit)
+    ASSERT: httpx.ReadError is raised
     """
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -434,7 +434,7 @@ async def test_fetch_equity_records_exits_on_read_error() -> None:
         async for _ in fetch_equity_records(client):
             pass
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(httpx.ReadError):
         await consume()
 
 

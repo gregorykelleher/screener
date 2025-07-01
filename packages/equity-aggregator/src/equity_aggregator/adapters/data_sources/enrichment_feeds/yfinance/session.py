@@ -1,5 +1,6 @@
 # yfinance/session.py
 
+import asyncio
 from collections.abc import Mapping
 
 import httpx
@@ -29,6 +30,9 @@ class YFSession:
 
     __slots__ = ("_client", "_config", "_crumb")
 
+    # shared semaphore to cap concurrent streams to maximum limits for HTTP/2
+    _stream_semaphore: asyncio.Semaphore = asyncio.Semaphore(100)
+
     def __init__(
         self,
         config: FeedConfig,
@@ -55,26 +59,88 @@ class YFSession:
         params: Mapping[str, str] | None = None,
     ) -> httpx.Response:
         """
-        Asynchronously perform a GET request, auto-injecting crumb if required.
+        Perform an asynchronous GET request with crumb handling and retry logic.
+
+        This method injects the Yahoo Finance crumb token if required, bootstraps
+        the session as needed, and retries once on HTTP 401 errors. It also
+        enforces a concurrency cap using a shared semaphore to avoid exceeding
+        HTTP/2 stream limits.
 
         Args:
-            url (str): The URL to request.
-            params (Mapping[str, str] | None, optional): Query parameters for the
-                request. Defaults to None.
+            url (str): The URL to send the GET request to.
+            params (Mapping[str, str] | None, optional): Query parameters to include
+                in the request. Defaults to None.
 
         Returns:
-            httpx.Response: The HTTP response object.
+            httpx.Response: The HTTP response object from the GET request.
         """
-        if self._requires_crumb(url):
-            ticker = self._extract_ticker(url)
-            await self._bootstrap_and_fetch_crumb(ticker)
+        async with self.__class__._stream_semaphore:
+            # merge requested parameters with anti-CSRF token (i.e. crumb)
+            merged_params = self._attach_crumb(url, dict(params or {}))
 
-        if params is None:
-            params = {}
+            # perform the GET request with retry logic in case of crumb expiration
+            return await self._fetch_with_retry(url, merged_params)
+
+    def _attach_crumb(self, url: str, params: dict[str, str]) -> dict[str, str]:
+        """
+        Attach the authentication crumb to the request parameters if required.
+
+        This method checks if a crumb value is available and if the provided URL starts
+        with the configured quote base URL. If both conditions are met, it adds the
+        crumb to the request parameters dictionary.
+
+        Args:
+            url (str): The URL to which the request will be sent.
+            params (dict[str, str]): The dictionary of request parameters.
+
+        Returns:
+            dict[str, str]: The updated dictionary of request parameters, potentially
+                including the crumb.
+        """
         if self._crumb and url.startswith(self._config.quote_base):
-            params = {**params, "crumb": self._crumb}
+            params["crumb"] = self._crumb
+        return params
 
-        return await self._client.get(url, params=params)
+    async def _fetch_with_retry(
+        self,
+        url: str,
+        params: dict[str, str],
+    ) -> httpx.Response:
+        """
+        Perform a GET request with crumb handling and retry on HTTP 401 errors.
+
+        Attempts to fetch the given URL with the provided parameters. If a 401
+        Unauthorized error is encountered, the method will re-bootstrap the session,
+        refresh the crumb token, and retry the request once.
+
+        Args:
+            url (str): The URL to send the GET request to.
+            params (dict[str, str]): Query parameters to include in the request.
+
+        Returns:
+            httpx.Response: The HTTP response object from the GET request.
+
+        Raises:
+            httpx.HTTPStatusError: If the request fails with a non-401 HTTP error,
+                or if the retry also fails.
+        """
+        try:
+            response = await self._client.get(url, params=params)
+            response.raise_for_status()
+            return response
+
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code != httpx.codes.UNAUTHORIZED:
+                raise
+
+            ticker = self._extract_ticker(url)
+
+            await self._bootstrap_and_fetch_crumb(ticker)
+            params["crumb"] = self._crumb
+
+            response = await self._client.get(url, params=params)
+            response.raise_for_status()
+            return response
 
     async def aclose(self) -> None:
         """
@@ -131,6 +197,6 @@ class YFSession:
             f"https://finance.yahoo.com/quote/{ticker}",
         ):
             await self._client.get(seed)
-        resp = await self._client.get(self._config.crumb_url)
-        resp.raise_for_status()
-        self._crumb = resp.text.strip().strip('"')
+        response = await self._client.get(self._config.crumb_url)
+        response.raise_for_status()
+        self._crumb = response.text.strip().strip('"')

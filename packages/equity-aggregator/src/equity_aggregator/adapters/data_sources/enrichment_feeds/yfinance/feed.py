@@ -22,27 +22,73 @@ from .session import YFSession
 logger = logging.getLogger(__name__)
 
 
+def _filter_equities(quotes: list[dict]) -> list[dict]:
+    """
+    Filter out any quotes lacking a symbol or longname.
+
+    Args:
+        quotes (list[dict]): Raw list of quote dicts from Yahoo Finance.
+
+    Returns:
+        list[dict]: Only those quotes that have both 'symbol' and 'longname'.
+    """
+    return [q for q in quotes if q.get("symbol") and q.get("longname")]
+
+
+def _choose_symbol(
+    viable: list[dict],
+    *,
+    name_key: str,
+    expected_name: str,
+    expected_symbol: str,
+    min_score: int,
+) -> str | None:
+    """
+    Select the best symbol from a list of filtered quotes.
+
+    1. If there is exactly one candidate, return it.
+    2. If multiple candidates share the same name_key value, return the first.
+    3. Otherwise perform fuzzy matching with pick_best_symbol.
+
+    Args:
+        viable (list[dict]): Filtered list of quote dicts.
+        name_key (str): Field name to use for equity name comparison ('longname' or 'shortname').
+        expected_name (str): The expected equity name.
+        expected_symbol (str): The expected equity ticker symbol.
+        min_score (int): Minimum combined fuzzy score to accept a match.
+
+    Returns:
+        str | None: The chosen symbol, or None if no candidate meets the threshold.
+    """
+    if len(viable) == 1:
+        return viable[0]["symbol"]
+
+    names = {q[name_key] for q in viable}
+    if len(names) == 1:
+        return viable[0]["symbol"]
+
+    return pick_best_symbol(
+        viable,
+        name_key=name_key,
+        expected_name=expected_name,
+        expected_symbol=expected_symbol,
+        min_score=min_score,
+    )
+
+
 @asynccontextmanager
 async def open_yfinance_feed(
     *,
     config: FeedConfig | None = None,
 ) -> AsyncIterator["YFinanceFeed"]:
     """
-    Asynchronous context manager for creating and managing a YFinanceFeed instance.
-
-    This function initialises a YFSession and yields a YFinanceFeed object for use
-    within an async context. The session is automatically closed when the context
-    exits, ensuring proper resource cleanup.
+    Context manager to create and close a YFinanceFeed instance.
 
     Args:
-        config (FeedConfig | None, optional): Optional configuration for Yahoo Finance
-            endpoints and modules. If not provided, the default FeedConfig is used.
+        config (FeedConfig | None, optional): Custom feed configuration; defaults to default FeedConfig.
 
     Yields:
-        YFinanceFeed: An instance of YFinanceFeed with an active session.
-
-    Returns:
-        AsyncIterator[YFinanceFeed]: An async iterator yielding a YFinanceFeed object.
+        YFinanceFeed: An initialized feed with an active session.
     """
     config = config or FeedConfig()
     session = YFSession(config)
@@ -54,42 +100,27 @@ async def open_yfinance_feed(
 
 class YFinanceFeed:
     """
-    Asynchronous Yahoo Finance equity data fetcher with caching support.
+    Asynchronous Yahoo Finance feed with caching and fuzzy lookup.
 
-    Provides methods to retrieve detailed equity information from Yahoo Finance
-    using symbol, name, ISIN, or CUSIP. Results are cached for efficiency.
-
-    Args:
-        session (YFSession): The Yahoo Finance session instance.
-        config (FeedConfig | None, optional): Optional configuration for Yahoo
-            Finance endpoints and modules. If not provided, uses session config.
+    Provides fetch_equity() to retrieve enriched equity data by symbol, name, ISIN or CUSIP.
 
     Attributes:
-        model (YFinanceFeedData): Validation model for Yahoo Finance fetched data.
-
-    Returns:
-        None
+        _session (YFSession): HTTP session for Yahoo Finance.
+        _config (FeedConfig): Endpoints and modules configuration.
+        _min_score (int): Minimum fuzzy score threshold.
     """
 
     __slots__ = ("_session", "_config")
-
     model = YFinanceFeedData
+    _min_score = 150
 
-    def __init__(
-        self,
-        session: YFSession,
-        config: FeedConfig | None = None,
-    ) -> None:
+    def __init__(self, session: YFSession, config: FeedConfig | None = None) -> None:
         """
-        Initialise a YFinanceFeed instance.
+        Initialise with an active YFSession and optional custom FeedConfig.
 
         Args:
-            session (YFSession): The Yahoo Finance session instance.
-            config (FeedConfig | None, optional): Optional configuration for Yahoo
-                Finance endpoints and modules. If not provided, uses session config.
-
-        Returns:
-            None
+            session (YFSession): The Yahoo Finance HTTP session.
+            config (FeedConfig | None, optional): Feed configuration; defaults to session.config.
         """
         self._session = session
         self._config = config or session.config
@@ -103,26 +134,27 @@ class YFinanceFeed:
         cusip: str | None = None,
     ) -> dict:
         """
-        Fetch equity data for a given symbol from Yahoo Finance, using cache if
-        available.
+        Retrieve equity data by symbol, using cache, identifiers, or fuzzy lookup.
 
-        If the data for the specified symbol is present in the cache, it is returned
-        immediately. Otherwise, fetches the data from Yahoo Finance, stores it in the
-        cache, and returns the result.
+        Steps:
+        1. Return cached entry if present.
+        2. Try ISIN then CUSIP exact search via _try_identifier.
+        3. Fallback to fuzzy name/symbol search via _try_name_symbol.
+        4. Warn and return empty dict if no data found.
 
         Args:
-            symbol (str): The ticker symbol of the equity to fetch.
-            name (str): The name of the equity.
-            isin (str | None, optional): The ISIN of the equity. Defaults to None.
-            cusip (str | None, optional): The CUSIP of the equity. Defaults to None.
+            symbol (str): Requested ticker symbol.
+            name (str): Expected company name.
+            isin (str | None): Optional ISIN identifier.
+            cusip (str | None): Optional CUSIP identifier.
 
         Returns:
-            dict: A dictionary containing the fetched equity data, or None if not found.
+            dict: Enriched equity data, or empty dict if not found.
         """
-        cached = load_cache_entry("yfinance_equities", symbol)
-        if cached:
+        # 1) cache lookup
+        if record := load_cache_entry("yfinance_equities", symbol):
             logger.debug("Loading symbol %s from cache", symbol)
-            return cached
+            return record
 
         logger.debug(
             "Fetching Yahoo Finance data for symbol=%s, name=%s, isin=%s, cusip=%s",
@@ -132,181 +164,168 @@ class YFinanceFeed:
             cusip,
         )
 
-        yf_record = await self._retrieve_yf_equity_data(
-            symbol=symbol,
-            name=name,
-            isin=isin,
-            cusip=cusip,
+        # 2) try identifiers
+        for identifier in (isin, cusip):
+            if not identifier:
+                continue
+            if result := await self._try_identifier(identifier, name, symbol):
+                return self._log_and_cache_record(symbol, result)
+
+        # 3) fallback to name/symbol fuzzy
+        if result := await self._try_name_symbol(name or symbol, name, symbol):
+            return self._log_and_cache_record(symbol, result)
+
+        # 4) nothing found
+        logger.warning(
+            "No data found for name=%r (symbol=%s). "
+            "Tried ISIN=%r, CUSIP=%r, and name/symbol lookup.",
+            name,
+            symbol,
+            isin,
+            cusip,
         )
+        return {}
 
-        if yf_record:
-            logger.debug("Saving Yahoo Finance data to cache for symbol %s", symbol)
-            save_cache_entry("yfinance_equities", symbol, yf_record)
-        else:
-            logger.warning(
-                "No data found for symbol %s (name=%s, isin=%s, cusip=%s)",
-                symbol,
-                name,
-                isin,
-                cusip,
-            )
-        return yf_record
-
-    async def _retrieve_yf_equity_data(
-        self,
-        name: str,
-        symbol: str,
-        isin: str | None = None,
-        cusip: str | None = None,
-    ) -> dict:
-        """
-        Asynchronously fetch detailed equity data from Yahoo Finance using ISIN,
-        CUSIP, name, and symbol.
-
-        Attempts to retrieve equity information in the following order:
-            1. If ISIN is provided, search for equity using ISIN and return best match.
-            2. If CUSIP is provided (and ISIN didn't yield results), search using CUSIP.
-            3. If neither identifier yields results, perform fuzzy search using provided
-                name and symbol.
-            4. If no data found by any method, log warning and return empty dictionary.
-
-        Args:
-            name (str): The name of the equity.
-            symbol (str): The ticker symbol of the equity.
-            isin (str | None, optional): The ISIN of the equity. Defaults to None.
-            cusip (str | None, optional): The CUSIP of the equity. Defaults to None.
-
-        Returns:
-            dict: Dictionary containing equity data if found, else empty dictionary.
-        """
-        search_methods: list[tuple[str | None, dict | None]] = [
-            (isin, None),
-            (cusip, None),
-            (None, None),  # placeholder for fuzzy search
-        ]
-
-        result: dict = {}
-
-        for identifier, _ in search_methods:
-            if identifier:
-                result = await self._find_by_identifier(identifier, name, symbol)
-            else:
-                result = await self._find_via_name_symbol(name, symbol)
-
-            if result:
-                log_discovered_symbol(result, symbol)
-                break
-
-        if not result:
-            logger.warning(
-                "Yahoo Finance returned no data for symbol=%s, name=%s",
-                symbol,
-                name,
-            )
-
-        return result
-
-    async def _find_by_identifier(
+    async def _try_identifier(
         self,
         identifier: str,
         expected_name: str,
         expected_symbol: str,
     ) -> dict | None:
         """
-        Look up equity data using an identifier (ISIN or CUSIP) with fuzzy validation.
+        Search Yahoo Finance by ISIN or CUSIP identifier and fetch full info.
 
-        Searches Yahoo Finance for equities matching the given identifier, then selects
-        best candidate using fuzzy matching against the expected name and symbol. If a
-        suitable match is found, detailed equity information is returned.
+        1. Query API with identifier.
+        2. Filter quotes to those with symbol+longname.
+        3. Choose best symbol via _choose_symbol.
+        4. Fetch detailed data if match found.
 
         Args:
-            identifier (str): The identifier value to search for (ISIN or CUSIP).
-            expected_name (str): The expected equity name for fuzzy matching.
-            expected_symbol (str): The expected equity symbol for fuzzy matching.
+            identifier (str): ISIN or CUSIP string.
+            expected_name (str): Expected company name.
+            expected_symbol (str): Expected ticker symbol.
 
         Returns:
-            dict | None: Detailed equity data if a match is found, otherwise None.
+            dict | None: Fetched equity data or None if no valid candidate.
         """
+        logger.debug(
+            "Searching Yahoo Finance by identifier=%s "
+            "(expected symbol=%s, expected_name=%s)",
+            identifier,
+            expected_symbol,
+            expected_name,
+        )
         quotes = await search_quotes(self._session, identifier)
-
-        viable = [
-            quote for quote in quotes if quote.get("symbol") and quote.get("longname")
-        ]
-
+        viable = _filter_equities(quotes)
         if not viable:
-            logger.debug("No viable quotes found for identifier %s", identifier)
-            return None
-
-        if len(viable) == 1:
-            chosen = viable[0]["symbol"]
             logger.debug(
-                "Single viable candidate found for identifier %s: %s",
+                "No viable identifier results for identifier=%s (expected symbol=%s)",
                 identifier,
-                chosen,
+                expected_symbol,
             )
-        else:
-            chosen = pick_best_symbol(
-                viable,
-                name_key="longname",
-                expected_name=expected_name,
-                expected_symbol=expected_symbol,
-                min_score=150,
-            )
-            if not chosen:
-                logger.debug(
-                    "No suitable candidate found fuzzy matching for identifier %s",
-                    identifier,
-                )
-                return None
-
-        return await get_info(self._session, chosen, modules=self._config.modules)
-
-    async def _find_via_name_symbol(
-        self,
-        name: str,
-        symbol: str,
-    ) -> dict | None:
-        """
-        Asynchronously search for equity by fuzzy matching the provided name and symbol.
-
-        Queries Yahoo Finance for potential equity quotes using given name or symbol.
-        Selects the best match based on a combined fuzzy score of both the name and
-        symbol, using a higher threshold to ensure accuracy. If a suitable match is
-        found, detailed information about the equity is retrieved.
-
-        Args:
-            name (str): The expected name of the equity to search for.
-            symbol (str): The expected ticker symbol of the equity to search for.
-
-        Returns:
-            dict | None: Information about the matched equity if found, otherwise None.
-        """
-        quotes = await search_quotes(self._session, name or symbol)
-
-        if not quotes:
-            logger.debug("No quotes found for name=%s or symbol=%s", name, symbol)
             return None
 
-        chosen = pick_best_symbol(
-            quotes,
-            name_key="shortname",
-            expected_name=name,
-            expected_symbol=symbol,
-            min_score=150,
+        chosen = _choose_symbol(
+            viable,
+            name_key="longname",
+            expected_name=expected_name,
+            expected_symbol=expected_symbol,
+            min_score=self._min_score,
         )
         if not chosen:
             logger.debug(
-                "No suitable candidate found fuzzy matching for name=%s, symbol=%s",
-                name,
-                symbol,
+                "Identifier fuzzy-match failed for identifier=%s (threshold=%d)",
+                identifier,
+                self._min_score,
             )
             return None
 
-        logger.info(
-            "Discovered %s symbol to %s using fuzzy-matching",
-            symbol,
+        logger.debug(
+            "Identifier resolved identifier=%s → symbol=%s",
+            identifier,
+            chosen,
+        )
+        return await get_info(
+            self._session,
+            chosen,
+            modules=self._config.modules,
+        )
+
+    async def _try_name_symbol(
+        self,
+        query: str,
+        expected_name: str,
+        expected_symbol: str,
+    ) -> dict | None:
+        """
+        Perform fuzzy search by company name or symbol and fetch full info.
+
+        1. Query API with name or symbol.
+        2. Filter quotes to those with symbol+longname.
+        3. Choose best symbol via _choose_symbol (using 'shortname').
+        4. Fetch detailed data if match found.
+
+        Args:
+            query (str): Company name or ticker symbol to search.
+            expected_name (str): Expected company name.
+            expected_symbol (str): Expected ticker symbol.
+
+        Returns:
+            dict | None: Fetched equity data or None if no valid candidate.
+        """
+        logger.debug(
+            "Searching Yahoo Finance by name/symbol=%s (expected symbol=%s)",
+            query,
+            expected_symbol,
+        )
+        quotes = await search_quotes(self._session, query)
+        viable = _filter_equities(quotes)
+        if not viable:
+            logger.warning(
+                "No viable name/symbol results for %r (expected symbol=%r)",
+                query,
+                expected_symbol,
+            )
+            return None
+
+        chosen = _choose_symbol(
+            viable,
+            name_key="shortname",
+            expected_name=expected_name,
+            expected_symbol=expected_symbol,
+            min_score=self._min_score,
+        )
+        if not chosen:
+            logger.debug(
+                "Name/symbol fuzzy-match failed for %s (threshold=%d)",
+                query,
+                self._min_score,
+            )
+            return None
+
+        logger.debug(
+            "Name/symbol resolved query=%s → symbol=%s",
+            query,
             chosen,
         )
 
-        logger.debug("Fuzzy(name=%r, symbol=%r) → %s", name, symbol, chosen)
-        return await get_info(self._session, chosen, modules=self._config.modules)
+        return await get_info(
+            self._session,
+            chosen,
+            modules=self._config.modules,
+        )
+
+    def _log_and_cache_record(self, requested_symbol: str, record: dict) -> dict:
+        """
+        Log discovery, save to cache, and return the fetched record.
+
+        Args:
+            requested_symbol (str): The symbol originally requested.
+            record (dict): The fetched equity data.
+
+        Returns:
+            dict: The same record, after logging and caching.
+        """
+        log_discovered_symbol(record, requested_symbol)
+        save_cache_entry("yfinance_equities", requested_symbol, record)
+        return record

@@ -1,4 +1,4 @@
-# pipeline/test_merge.py
+# pipeline/test__merge.py
 
 from decimal import Decimal
 
@@ -262,6 +262,26 @@ def test_merge_last_price_all_identical_values() -> None:
     assert actual.last_price == Decimal("7.77")
 
 
+def test_identifiers_accept_valid() -> None:
+    """
+    ARRANGE: identifiers as valid values
+    ACT:     construct RawEquity
+    ASSERT:  share_class_figi is set as expected
+    """
+    payload = {
+        "name": "ACME CORP",
+        "symbol": "ACME",
+        "isin": "US0378331005",
+        "cusip": "037833100",
+        "cik": "0000320193",
+        "share_class_figi": "BBG001S5N8V8",
+    }
+
+    actual = RawEquity(**payload)
+
+    assert actual.share_class_figi == "BBG001S5N8V8"
+
+
 def test_merge_isin_majority_wins() -> None:
     """
     ARRANGE: three duplicates, ISIN appears twice vs once
@@ -376,9 +396,11 @@ def test_merge_isin_case_insensitive_majority() -> None:
     assert actual.isin == "US1234567890"
 
 
-def test_merge_cusip_logic_mirrors_isin() -> None:
+def test_merge_cusip_logic() -> None:
     """
-    Simple mirror check for CUSIP
+    ARRANGE: two distinct CUSIPs with one repeating
+    ACT:     merge
+    ASSERT:  majority CUSIP wins
     """
     raw_equities = [
         RawEquity(
@@ -404,6 +426,54 @@ def test_merge_cusip_logic_mirrors_isin() -> None:
     actual = merge(raw_equities)
 
     assert actual.cusip == "037833100"
+
+
+def test_merge_cik_logic() -> None:
+    """
+    ARRANGE: two distinct CIKs with one repeating
+    ACT:     merge
+    ASSERT:  majority CIK wins
+    """
+    raw_equities = [
+        RawEquity(
+            name="X",
+            symbol="X",
+            share_class_figi="FIGI00000001",
+            cik="0000320193",
+        ),
+        RawEquity(
+            name="X",
+            symbol="X",
+            share_class_figi="FIGI00000001",
+            cik="0000789019",
+        ),
+        RawEquity(
+            name="X",
+            symbol="X",
+            share_class_figi="FIGI00000001",
+            cik="0000320193",
+        ),
+    ]
+
+    actual = merge(raw_equities)
+
+    assert actual.cik == "0000320193"
+
+
+def test_cik_invalid_pattern() -> None:
+    """
+    ARRANGE: CIK with non-digit characters
+    ACT:     construct RawEquity
+    ASSERT:  raises ValueError
+    """
+    payload = {
+        "name": "ACME CORP",
+        "symbol": "ACME",
+        "cik": "000032019X",
+    }
+
+    with pytest.raises(ValueError):
+        RawEquity(**payload)
 
 
 def test_merge_mics_union_preserves_first_seen_order() -> None:

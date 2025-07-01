@@ -36,6 +36,7 @@ def test_all_fields_valid() -> None:
         "name": "ACME CORP",
         "symbol": "ACME",
         "isin": "US0378331005",
+        "cik": "0000320193",
         "cusip": "037833100",
         "share_class_figi": "BBG001S5N8V8",
         "mics": ["XNAS", "XLON"],
@@ -277,6 +278,7 @@ def test_identifiers_accept_none() -> None:
         "symbol": "ACME",
         "isin": None,
         "cusip": None,
+        "cik": None,
         "share_class_figi": None,
     }
 
@@ -296,6 +298,7 @@ def test_identifiers_accept_valid() -> None:
         "symbol": "ACME",
         "isin": "US0378331005",
         "cusip": "037833100",
+        "cik": "0000320193",
         "share_class_figi": "BBG001S5N8V8",
     }
 
@@ -529,6 +532,22 @@ def test_cusip_rejects_invalid_format() -> None:
         "name": "ACME CORP",
         "symbol": "ACME",
         "cusip": "BAD!",
+    }
+
+    with pytest.raises(ValidationError):
+        RawEquity(**payload)
+
+
+def test_cik_rejects_invalid_format() -> None:
+    """
+    ARRANGE: invalid CIK format
+    ACT:     construct RawEquity
+    ASSERT:  raises ValidationError
+    """
+    payload = {
+        "name": "ACME CORP",
+        "symbol": "ACME",
+        "cik": "BAD!",
     }
 
     with pytest.raises(ValidationError):

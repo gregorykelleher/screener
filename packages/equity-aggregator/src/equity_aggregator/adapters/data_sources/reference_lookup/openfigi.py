@@ -44,7 +44,7 @@ async def fetch_equity_identification(
 ) -> list[Triplet]:
     """
     Fetches equity identification triplets (name, symbol, shareClassFIGI) for each
-    RawEquity in the input sequence, preserving input order and length. Utilizes a
+    RawEquity in the input sequence, preserving input order and length. Utilises a
     cache to avoid redundant lookups. Missing FIGIs are represented as (None, None,
     None).
 

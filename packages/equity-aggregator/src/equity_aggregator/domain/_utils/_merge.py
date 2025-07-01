@@ -20,7 +20,7 @@ def merge(group: Sequence[RawEquity]) -> RawEquity:
     For each field, a representative value is computed as follows:
       - name: Clustered by fuzzy similarity; selecting most frequent, earliest spelling.
       - symbol: Most frequent symbol; ties broken by first occurrence.
-      - isin, cusip, share_class_figi: Most freq non-null value; ties broken by order.
+      - isin, cusip, cik, share_class_figi: Most frequent value; ties broken by order.
       - mics: Union of all non-null lists, order-preserving and duplicates removed.
       - currency: Most frequent non-null value; ties broken by first occurrence.
       - last_price: Median of all non-null values.
@@ -48,6 +48,7 @@ def merge(group: Sequence[RawEquity]) -> RawEquity:
         symbol=_merge_symbol(group),
         isin=_merge_id(group, "isin"),
         cusip=_merge_id(group, "cusip"),
+        cik=_merge_id(group, "cik"),
         share_class_figi=share_class_figi_value,
         mics=_merge_mics(group),
         currency=_merge_currency(group),
@@ -183,15 +184,15 @@ def _merge_market_cap(duplicate_group: Sequence[RawEquity]) -> Decimal | None:
 def _merge_id(duplicate_group: Sequence[RawEquity], field: str) -> str | None:
     """
     Selects the most frequent non-null value for a specified identifier field
-    ("isin", "cusip", or "share_class_figi") from a group of RawEquity objects.
+    ("isin", "cusip", "cik" or "share_class_figi") from a group of RawEquity objects.
 
     In case of a tie, returns the earliest occurrence in the original group order.
     Returns None if all values are null.
 
     Args:
         duplicate_group (Sequence[RawEquity]): A sequence of RawEquity objects to merge.
-        field (str): The name of the identifier field to merge ("isin", "cusip", or
-            "share_class_figi").
+        field (str): The name of the identifier field to merge ("isin", "cusip", "cik"
+        or "share_class_figi").
 
     Returns:
         str | None: Most frequent non-null identifier value, or None if all are null.

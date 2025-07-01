@@ -62,7 +62,16 @@ def _build_usd_converter(rates: dict[str, Decimal]) -> RawEquityConverter:
         if _should_skip_conversion(equity):
             return equity
 
-        rate = _get_rate_for_currency(equity.currency, rates)
+        try:
+            rate = _get_rate_for_currency(equity.currency, rates)
+        except ValueError as exception:
+            logger.warning(
+                "Unable to convert symbol %s: %s",
+                equity.symbol,
+                exception,
+            )
+            return None
+
         update_values = {"currency": "USD", **_build_field_updates(equity, rate)}
 
         return equity.model_copy(update=update_values)
@@ -114,8 +123,7 @@ def _get_rate_for_currency(currency: str, rates: dict[str, Decimal]) -> Decimal:
     """
     rate = rates.get(currency)
     if rate is None:
-        logger.warning("No FX rate for currency %s", currency)
-        raise ValueError(f"Missing FX rate for currency: {currency}")
+        raise ValueError(f"Missing FX rate for currency {currency}")
     return rate
 
 

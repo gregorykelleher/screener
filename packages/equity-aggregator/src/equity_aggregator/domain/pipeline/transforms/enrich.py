@@ -18,7 +18,7 @@ feed_factories: FeedRegistry = [
     (open_yfinance_feed, YFinanceFeedData),
 ]
 
-ValidatorFunc = Callable[[dict[str, object]], RawEquity | None]
+type ValidatorFunc = Callable[[dict[str, object], RawEquity], RawEquity]
 
 logger = logging.getLogger(__name__)
 
@@ -125,18 +125,28 @@ async def _enrich_with_feed(
     # fetch the raw data, with timeout and exception handling
     fetched_raw_data = await _safe_fetch(source, fetcher, feed_name)
 
-    # if no data was fetched, return the original source
-    if not fetched_raw_data:
-        logger.warning("No raw equities for %s found.", feed_name)
+    # if no data was fetched, fall back to source
+    if fetched_raw_data is None:
+        logger.warning(
+            "No %s feed data for symbol=%s, name=%s "
+            "(isin=%s, cusip=%s, cik=%s, share_class_figi=%s). "
+            "Falling back to original.",
+            feed_name,
+            source.symbol,
+            source.name,
+            source.isin or "<none>",
+            source.cusip or "<none>",
+            source.cik or "<none>",
+            source.share_class_figi or "<none>",
+        )
         return source
 
     # validate the fetched data against the feed model
     validate_fn = _make_validator(feed_model)
-    validated = validate_fn(fetched_raw_data)
+    validated = validate_fn(fetched_raw_data, source)
 
-    # always convert enriched equities to USD before returning
-    convert_to_usd = await get_usd_converter()
-    return convert_to_usd(validated)
+    # always convert the validated feed‐record to USD or else fall back to source
+    return await _convert_to_usd_or_fallback(validated, source, feed_name)
 
 
 async def _safe_fetch(
@@ -144,7 +154,7 @@ async def _safe_fetch(
     fetcher: FetchFunc,
     feed_name: str,
     *,
-    wait_timeout: float = 15.0,
+    wait_timeout: float = 30.0,
 ) -> dict[str, object] | None:
     """
     Safely fetch raw data from the feed for the given RawEquity.
@@ -179,21 +189,33 @@ def _make_validator(
     feed_model: type,
 ) -> ValidatorFunc:
     """
-    Creates a validator function for a given feed model to validate and coerce records.
+    Create a validator function for a given feed model to validate and coerce records.
 
     Args:
-        feed_model (type): The Pydantic model class used to validate and coerce input
-            records. The model should define the expected schema for the feed data.
+        feed_model (type): The Pydantic model class used to validate and coerce
+            input records. The model should define the expected schema for the feed
+            data.
 
     Returns:
-        ValidatorFunc: A function that takes a record dictionary, validates and coerces
-            it using the feed model, and returns a RawEquity instance if successful.
-            Returns None if validation fails, logging a warning with the feed name and
-            error details.
+        ValidatorFunc: A function that takes a record dictionary and a RawEquity
+            source, validates and coerces the record using the feed model, and
+            returns a RawEquity instance if successful. If validation fails, logs
+            a warning and returns the original source.
     """
     feed_name = feed_model.__name__.removesuffix("FeedData")
 
-    def validate(record: dict[str, object]) -> RawEquity | None:
+    def validate(record: dict[str, object], source: RawEquity) -> RawEquity:
+        """
+        Validate and coerce a record using the feed model, returning a RawEquity.
+
+        Args:
+            record (dict[str, object]): The raw record to validate and coerce.
+            source (RawEquity): The original RawEquity to return on failure.
+
+        Returns:
+            RawEquity: The validated RawEquity, or the original source if
+                validation fails.
+        """
         try:
             # validate the record against the feed model, coercing types as needed
             coerced = feed_model.model_validate(record).model_dump()
@@ -203,7 +225,7 @@ def _make_validator(
 
         except Exception as error:
             logger.warning("Skipping invalid record from %s: %s", feed_name, error)
-            return None
+            return source
 
     return validate
 
@@ -253,3 +275,38 @@ def _replace_none_with_enriched(
 
     # return a copy of source with just those missing fields filled in
     return source.model_copy(update=to_update)
+
+
+async def _convert_to_usd_or_fallback(
+    validated: RawEquity,
+    source: RawEquity,
+    feed_name: str,
+) -> RawEquity:
+    """
+    Attempt to convert a validated RawEquity instance to USD. If conversion fails
+    due to a missing FX rate (ValueError), log a warning and return the original
+    source RawEquity.
+
+    Args:
+        validated (RawEquity): The RawEquity instance to convert to USD.
+        source (RawEquity): The original RawEquity to return on conversion failure.
+        feed_name (str): The name of the enrichment feed for logging context.
+
+    Returns:
+        RawEquity: The USD-converted RawEquity if successful, otherwise the original
+        source RawEquity.
+    """
+    converter = await get_usd_converter()
+    try:
+        converted = converter(validated)
+        if converted is None:
+            raise ValueError("USD conversion failed")
+        return converted
+    except Exception as exception:
+        logger.warning(
+            "Skipping enrichment for %s (symbol=%s): %s",
+            feed_name,
+            source.symbol,
+            exception,
+        )
+        return source

@@ -266,8 +266,8 @@ def _extract_records(page_response_json: dict[str, object]) -> list[EquityRecord
         page_response_json (dict[str, object]): Parsed JSON response from a LSE page.
 
     Returns:
-        list[EquityRecord]: A list of normalized equity records, each as a dictionary
-            with standardized keys matching the eurONext schema.
+        list[EquityRecord]: A list of normalised equity records, each as a dictionary
+            with standardised keys matching the eurONext schema.
     """
     rows, _ = _parse_equities(page_response_json)
     records: list[EquityRecord] = []

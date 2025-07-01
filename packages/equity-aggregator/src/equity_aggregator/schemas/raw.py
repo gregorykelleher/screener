@@ -10,6 +10,7 @@ from pydantic import (
 )
 
 from .types import (
+    CIKStr,
     CurrencyStr,
     CUSIPStr,
     FIGIStr,
@@ -37,7 +38,7 @@ class RawEquity(BaseModel):
     Fields:
       - name: name of the equity
       - symbol: equity symbol
-      - isin, cusip, share_class_figi: equity identifiers
+      - isin, cusip, cik, share_class_figi: equity identifiers
       - mics: list of Market Identifier Codes (MICs)
       - currency: currency code (ISO-4217)
       - last_price: last known price of the equity
@@ -59,6 +60,7 @@ class RawEquity(BaseModel):
     # identifiers, optional
     isin: Annotated[ISINStr | None, BeforeValidator(validate_id)] = None
     cusip: Annotated[CUSIPStr | None, BeforeValidator(validate_id)] = None
+    cik: Annotated[CIKStr | None, BeforeValidator(validate_id)] = None
     share_class_figi: Annotated[FIGIStr | None, BeforeValidator(validate_id)] = None
 
     # financial data, optional

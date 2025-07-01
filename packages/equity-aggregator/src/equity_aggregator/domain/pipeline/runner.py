@@ -4,7 +4,6 @@ import logging
 from collections.abc import AsyncIterable
 from typing import TypeVar
 
-# from equity_aggregator.domain.pipeline.old_resolve import resolve
 from equity_aggregator.domain.pipeline.resolve import resolve
 from equity_aggregator.schemas import RawEquity
 
@@ -56,7 +55,7 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
         convert,
         identify,
         deduplicate,
-        # enrich,
+        enrich,
         # canonicalise,
     )
 
@@ -65,8 +64,8 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
         stream = stage(stream)
 
     # TODO: take only the first 10 equities for now
-    stream = take(stream, 10)
-    stream = enrich(stream)
+    # stream = take(stream, 10)
+    # stream = enrich(stream)
 
     # materialise the stream
     return [equity async for equity in stream]

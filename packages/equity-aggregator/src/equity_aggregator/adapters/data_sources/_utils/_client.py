@@ -1,10 +1,6 @@
 # _utils/_client.py
 
-from collections.abc import Callable
-
 from httpx import AsyncClient, AsyncHTTPTransport, Limits, Timeout
-
-ClientFactory = Callable[..., AsyncClient]
 
 
 def make_client(**overrides: object) -> AsyncClient:
@@ -29,8 +25,8 @@ def make_client(**overrides: object) -> AsyncClient:
 
     # Set default limits for connections and keepalive
     limits = Limits(
-        max_connections=128,
-        max_keepalive_connections=64,
+        max_connections=100,
+        max_keepalive_connections=0,
         keepalive_expiry=1.5,
     )
 

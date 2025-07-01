@@ -64,7 +64,7 @@ class LseFeedData(BaseModel):
             # tidm → maps to RawEquity.symbol
             "symbol": raw.get("tidm"),
             "isin": raw.get("isin"),
-            # no CUSIP or FIGI in LSE feed, so intentionally omitted from model
+            # no CUSIP, CIK or FIGI in LSE feed, so omitting from model
             # default to XLON if mic not provided
             "mics": raw.get("mics") or ["XLON"],
             "currency": raw.get("currency"),

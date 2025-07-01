@@ -94,6 +94,7 @@ def test_has_missing_fields_false_when_all_fields_present() -> None:
         symbol="XYZ",
         isin="ISIN00000001",
         cusip="037833100",
+        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -193,6 +194,7 @@ def test__enrich_with_feed_skips_when_no_missing() -> None:
         symbol="FULL",
         isin="ISIN00000004",
         cusip="037833100",
+        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -221,6 +223,7 @@ def test_safe_fetch_timeout_returns_none() -> None:
         symbol="TST",
         isin="ISIN00000004",
         cusip="037833100",
+        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -248,6 +251,7 @@ def test_safe_fetch_exception_returns_none() -> None:
         symbol="TST",
         isin="ISIN00000004",
         cusip="037833100",
+        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -272,8 +276,9 @@ def test_safe_fetch_success_returns_dict() -> None:
         name: str,
         isin: str | None,
         cusip: str | None,
+        cik: str | None,
     ) -> dict[str, object]:
-        _ = (symbol, name, isin, cusip)
+        _ = (symbol, name, isin, cusip, cik)
         return {"foo": "bar"}
 
     source = RawEquity(
@@ -281,6 +286,7 @@ def test_safe_fetch_success_returns_dict() -> None:
         symbol="A",
         isin="ISIN00000004",
         cusip="037833100",
+        cik="0000320193",
         mics=["XLON"],
         currency="USD",
         last_price=Decimal("1"),
@@ -341,6 +347,7 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
         symbol="SRC2",
         isin=None,
         cusip=None,
+        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -352,6 +359,7 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
         symbol="SRC2",
         isin=None,
         cusip=None,
+        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -360,7 +368,14 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
 
     merged = _replace_none_with_enriched(source, enriched)
 
-    assert (merged.isin, merged.cusip, merged.last_price, merged.market_cap) == (
+    assert (
+        merged.isin,
+        merged.cusip,
+        merged.cik,
+        merged.last_price,
+        merged.market_cap,
+    ) == (
+        None,
         None,
         None,
         None,
@@ -425,6 +440,7 @@ def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
         symbol="E",
         isin=None,
         cusip=None,
+        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -498,6 +514,7 @@ def test_enrich_with_feed_completes_success_path() -> None:
         name: str,
         isin: str | None,
         cusip: str | None,
+        cik: str | None,
     ) -> dict[str, object]:
         _ = (symbol, name, isin, cusip)
         return {
@@ -505,6 +522,7 @@ def test_enrich_with_feed_completes_success_path() -> None:
             "symbol": symbol,
             "isin": isin,
             "cusip": cusip,
+            "cik": cik,
             "mics": ["XLON"],
             "currency": "USD",  # already USD ⇒ converter is no-op
             "last_price": Decimal("123"),
@@ -515,6 +533,8 @@ def test_enrich_with_feed_completes_success_path() -> None:
         name="OK",
         symbol="OK",
         isin="ISIN00000006",
+        cusip="037833100",
+        cik="0000320193",
         mics=["XLON"],
         currency="USD",
         last_price=None,

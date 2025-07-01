@@ -37,6 +37,19 @@ CUSIPStr = Annotated[
     ),
 ]
 
+# Valid CIK must be exactly 10 digits.
+# Only digits allowed; no letters.
+CIKStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=10,
+        max_length=10,
+        strict=True,
+        pattern=r"^[0-9]{10}$",
+    ),
+]
+
 # Valid FIGI must be exactly 12 characters and consist of uppercase letters and digits.
 FIGIStr = Annotated[
     str,

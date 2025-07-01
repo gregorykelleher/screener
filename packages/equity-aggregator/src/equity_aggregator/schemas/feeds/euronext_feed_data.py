@@ -46,7 +46,7 @@ class EuronextFeedData(BaseModel):
             "name": self.get("name"),
             "symbol": self.get("symbol"),
             "isin": self.get("isin"),
-            # no CUSIP or FIGI in Euronext feed, so intentionally omitted from model
+            # no CUSIP, CIK or FIGI in Euronext feed, so omitting from model
             "mics": self.get("mics"),
             "currency": self.get("currency"),
             "last_price": self.get("last_price"),

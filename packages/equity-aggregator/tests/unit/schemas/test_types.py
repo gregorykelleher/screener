@@ -6,6 +6,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from equity_aggregator.schemas.types import (
+    CIKStr,
     CurrencyStr,
     CUSIPStr,
     FIGIStr,
@@ -237,3 +238,13 @@ def test_nonnegdecimal_invalid_string() -> None:
 
     with pytest.raises(ValidationError):
         TypeAdapter(NonNegDecimal).validate_python("not_a_number")
+
+
+def test_cik_valid() -> None:
+    """
+    ARRANGE: valid CIK string (10 digits, zero-padded)
+    ACT:     validate CIKStr
+    ASSERT:  value is preserved
+    """
+    value = TypeAdapter(CIKStr).validate_python("0000320193")
+    assert value == "0000320193"

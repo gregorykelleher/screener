@@ -51,7 +51,7 @@ class XetraFeedData(BaseModel):
             # wkn → maps to RawEquity.symbol
             "symbol": self.get("wkn"),
             "isin": self.get("isin"),
-            # no CUSIP or FIGI in Xetra feed, so intentionally omitted from model
+            # no CUSIP, CIK or FIGI in Xetra feed, so omitting from model
             # default to XETR if mic not provided
             "mics": [self.get("mic")] if self.get("mic") else ["XETR"],
             "currency": self.get("currency"),

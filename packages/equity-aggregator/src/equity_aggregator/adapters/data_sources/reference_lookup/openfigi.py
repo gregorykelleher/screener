@@ -14,20 +14,23 @@ from equity_aggregator.schemas import RawEquity
 
 logger = logging.getLogger(__name__)
 
-# a triplet is a tuple of (name, symbol, shareClassFIGI)
-Triplet = tuple[str | None, str | None, str | None]
+# an identification record is a tuple of (name, symbol, shareClassFIGI)
+IndentificationRecord = tuple[str | None, str | None, str | None]
 
-# a function that fetches triplets for a sequence of RawEquity objects
-FetchTriplets = Callable[[Sequence[RawEquity]], Awaitable[list[Triplet]]]
+# a function that fetches identification records for a sequence of RawEquity objects
+FetchIdentificationRecords = Callable[
+    [Sequence[RawEquity]],
+    Awaitable[list[IndentificationRecord]],
+]
 
-# a producer function that produces triplets for a chunk of RawEquity objects
+# a producer function produces identification records for a chunk of RawEquity objects
 Producer = Callable[
     [int, Sequence[RawEquity], asyncio.Queue["_INDEXED | None"]],
     Awaitable[None],
 ]
 
-# an indexed triplet is a tuple of (index, triplet)
-_INDEXED = tuple[int, Triplet]
+# an indexed identification record is a tuple of (index, identification record)
+_INDEXED = tuple[int, IndentificationRecord]
 
 # OpenFIGI limits
 _REQUESTS_PER_WINDOW = 25
@@ -41,9 +44,9 @@ async def fetch_equity_identification(
     raw_equities: Sequence[RawEquity],
     *,
     cache_key: str = "openfigi",
-) -> list[Triplet]:
+) -> list[IndentificationRecord]:
     """
-    Fetches equity identification triplets (name, symbol, shareClassFIGI) for each
+    Fetches equity identification records (name, symbol, shareClassFIGI) for each
     RawEquity in the input sequence, preserving input order and length. Utilises a
     cache to avoid redundant lookups. Missing FIGIs are represented as (None, None,
     None).
@@ -54,9 +57,9 @@ async def fetch_equity_identification(
             "openfigi".
 
     Returns:
-        list[Triplet]: List of (name, symbol, shareClassFIGI) triplets, aligned
-            1-for-1 with input. If a FIGI cannot be resolved, the corresponding
-            triplet is (None, None, None).
+        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI) records,
+        aligned 1-for-1 with input. If a FIGI cannot be resolved, the corresponding
+        record is (None, None, None).
     """
     if not raw_equities:
         return []
@@ -64,30 +67,33 @@ async def fetch_equity_identification(
     cached = load_cache(cache_key)
 
     if cached is not None:
-        logger.debug("Loaded %d OpenFIGI triplets from cache.", len(cached))
+        logger.debug("Loaded %d OpenFIGI records from cache.", len(cached))
         _log_missing_figis(raw_equities, [figi for _, _, figi in cached])
         return cached
 
-    equity_triplets = await _identify_equity_triplets(raw_equities)
+    equity_id_records = await _identify_equity_indentification_records(raw_equities)
 
-    _log_missing_figis(raw_equities, [figi for _, _, figi in equity_triplets])
-    save_cache(cache_key, equity_triplets)
+    _log_missing_figis(raw_equities, [figi for _, _, figi in equity_id_records])
+    save_cache(cache_key, equity_id_records)
 
-    logger.debug("Saved %d OpenFIGI triplets to cache.", len(equity_triplets))
-    return equity_triplets
+    logger.debug("Saved %d OpenFIGI records to cache.", len(equity_id_records))
+    return equity_id_records
 
 
-async def _identify_equity_triplets(equities: Sequence[RawEquity]) -> list[Triplet]:
+async def _identify_equity_indentification_records(
+    equities: Sequence[RawEquity],
+) -> list[IndentificationRecord]:
     """
     Asynchronously resolves identification for a sequence of RawEquity objects.
     This function processes the given equities in chunks, distributing the workload
     across multiple asynchronous tasks. It uses a producer-consumer pattern with an
     asyncio queue to efficiently handle the identification resolution process.
+
     Args:
         equities (Sequence[RawEquity]): A sequence of RawEquity instances to resolve.
     Returns:
-        list[Triplet]: A list of Triplet objects containing resolved identification
-            information for each input equity.
+        list[IndentificationRecord]: A list of IndentificationRecord objects containing
+            resolved identification information for each input equity.
     """
 
     queue: asyncio.Queue[_INDEXED | None] = asyncio.Queue()
@@ -152,21 +158,21 @@ async def _produce_chunk(
     batch: Sequence[RawEquity],
     queue: asyncio.Queue[_INDEXED | None],
     *,
-    fetch: FetchTriplets | None = None,
+    fetch: FetchIdentificationRecords | None = None,
 ) -> None:
     """
     Producer coroutine that resolves a chunk of RawEquity objects and pushes
-    (index, triplet) results to the queue. Always pushes a sentinel (None) at
-    the end to mark completion, regardless of success or failure.
+    (index, identification records) results to the queue. Always pushes a sentinel
+    (None) at the end to mark completion, regardless of success or failure.
 
     Args:
         start_index (int): The starting index of this batch in the full sequence.
         batch (Sequence[RawEquity]): The chunk of RawEquity objects to resolve.
-        queue (asyncio.Queue[_INDEXED | None]): Queue to push (index, triplet)
-            results and a sentinel (None) when done.
-        fetch (FetchTriplets, optional):
-            Function to fetch triplets for the batch. If None, uses the default
-            _fetch_and_extract function.
+        queue (asyncio.Queue[_INDEXED | None]): Queue to push (index, identification
+            records) results and a sentinel (None) when done.
+        fetch (FetchIdentificationRecords | None, optional):
+            Function to fetch identification records for the batch. If None, uses the
+            default_fetch_and_extract function.
 
     Returns:
         None
@@ -175,13 +181,13 @@ async def _produce_chunk(
         fetch = _fetch_and_extract
 
     try:
-        triplets = await fetch(batch)
-        for index, triplet in enumerate(triplets):
-            await queue.put((start_index + index, triplet))
+        identification_records = await fetch(batch)
+        for index, record in enumerate(identification_records):
+            await queue.put((start_index + index, record))
 
     except Exception:
         logger.exception("OpenFIGI batch starting at %d failed.", start_index)
-        placeholder: Triplet = (None, None, None)
+        placeholder: IndentificationRecord = (None, None, None)
         for index in range(len(batch)):
             await queue.put((start_index + index, placeholder))
 
@@ -194,22 +200,22 @@ async def _consume_queue(
     *,
     expected_items: int,
     expected_sentinels: int,
-) -> list[Triplet]:
+) -> list[IndentificationRecord]:
     """
     Consumes items from the queue until all sentinels are received, reconstructing
-    an ordered list of triplets matching the original input order.
+    an ordered list of identification records matching the original input order.
 
     Args:
         queue (asyncio.Queue[_INDEXED | None]): Queue from which to consume
-            (index, triplet) results and sentinel (None) values.
-        expected_items (int): Total number of triplet items expected.
+            (index, record) results and sentinel (None) values.
+        expected_items (int): Total number of record items expected.
         expected_sentinels (int): Number of sentinel (None) values to wait for,
             corresponding to the number of producer tasks.
 
     Returns:
-        list[Triplet]: List of triplets ordered by their original indices.
+        list[IdentificationRecord]: List of records ordered by their original indices.
     """
-    result: list[Triplet | None] = [None] * expected_items
+    result: list[IndentificationRecord | None] = [None] * expected_items
     completed = items = 0
 
     while completed < expected_sentinels:
@@ -217,8 +223,8 @@ async def _consume_queue(
         if item is None:
             completed += 1
             continue
-        index, triplet = item
-        result[index] = triplet
+        index, record = item
+        result[index] = record
         items += 1
 
     if items != expected_items:
@@ -227,23 +233,23 @@ async def _consume_queue(
     return list(result)
 
 
-async def _fetch_and_extract(batch: Sequence[RawEquity]) -> list[Triplet]:
+async def _fetch_and_extract(batch: Sequence[RawEquity]) -> list[IndentificationRecord]:
     """
     Executes a blocking OpenFigiClient.map call in a thread to avoid event loop
     starvation. Converts the batch of RawEquity objects into a DataFrame, sends
-    the mapping request, and extracts (name, symbol, shareClassFIGI) triplets
-    for each input, preserving order.
+    the mapping request, and extracts (name, symbol, shareClassFIGI) identification
+    records for each input, preserving order.
 
     Args:
         batch (Sequence[RawEquity]): A batch of RawEquity objects to resolve.
 
     Returns:
-        list[Triplet]: List of (name, symbol, shareClassFIGI) triplets, aligned
-            1-for-1 with the input batch.
+        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI)
+            identification records, aligned 1-for-1 with the input batch.
     """
     df = _build_query_dataframe(batch)
     raw: pd.DataFrame = await asyncio.to_thread(_blocking_map_call, df)
-    return _extract_triplets(raw, batch_size=len(batch))
+    return _extract_identification_records(raw, batch_size=len(batch))
 
 
 def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
@@ -269,14 +275,14 @@ def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
     return client.map(df)
 
 
-def _extract_triplets(
+def _extract_identification_records(
     response: pd.DataFrame,
     *,
     batch_size: int,
-) -> list[Triplet]:
+) -> list[IndentificationRecord]:
     """
-    Extracts (name, symbol, shareClassFIGI) triplets from an OpenFIGI response
-    DataFrame, preserving the input batch order.
+    Extracts (name, symbol, shareClassFIGI) identification records from an OpenFIGI
+    response DataFrame, preserving the input batch order.
 
     Args:
         response (pd.DataFrame): DataFrame returned by the OpenFIGI API, containing
@@ -285,12 +291,12 @@ def _extract_triplets(
             used to ensure output alignment and fill missing results.
 
     Returns:
-        list[Triplet]: List of (name, symbol, shareClassFIGI) triplets, ordered
-            to match the input batch. If a mapping is missing, (None, None, None)
-            is returned for that position.
+        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI)
+            identification records, ordered to match the input batch. If a mapping is
+            missing, (None, None, None) is returned for that position.
     """
 
-    def _triplet(row: dict) -> Triplet:
+    def _identification_records(row: dict) -> IndentificationRecord:
         figi = row.get("shareClassFIGI")
         figi = figi if isinstance(figi, str) and _VALID_FIGI(figi) else None
 
@@ -302,12 +308,12 @@ def _extract_triplets(
 
         return (name, symbol, figi)
 
-    mapping: dict[int, Triplet] = {
-        int(row["query_number"]): _triplet(row)
+    mapping: dict[int, IndentificationRecord] = {
+        int(row["query_number"]): _identification_records(row)
         for row in reversed(response.to_dict(orient="records"))
     }
 
-    placeholder: Triplet = (None, None, None)
+    placeholder: IndentificationRecord = (None, None, None)
     return [mapping.get(index, placeholder) for index in range(batch_size)]
 
 

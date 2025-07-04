@@ -1,6 +1,7 @@
 # authoritative_feeds/euronext.py
 
 import asyncio
+from collections.abc import Sequence
 import logging
 import re
 
@@ -279,8 +280,8 @@ async def _stream_mic_records(
         # deserialise JSON payload
         result = response.json()
 
-        # parse each row in the response and yield it
-        for record in map(_parse_row, result.get("aaData", [])):
+        # parse each row in the response and yield valid records
+        for record in filter(None, map(_parse_row, result.get("aaData", []))):
             yield record
 
         # total rows on the server
@@ -314,35 +315,108 @@ def _build_payload(start: int, draw: int) -> dict[str, int]:
     }
 
 
-def _parse_row(row: list[str]) -> EquityRecord:
+def _parse_row(row: list[str] | None) -> EquityRecord | None:
     """
-    Parses a single HTML table row and extracts structured equity data fields.
+    Parse a single Euronext HTML table row into a structured equity record.
 
     Args:
-        row (list[str]): A list of HTML strings representing columns of a table row,
-            where each element contains HTML markup for a specific equity attribute.
+        row (list[str] | None): List of HTML strings representing columns of a table
+            row. Each element contains HTML markup for a specific equity attribute.
+            The expected order is: [unused, name, isin, symbol, mics, price/currency].
 
     Returns:
-        EquityRecord: A dictionary containing the parsed equity fields:
-            - name (str): The extracted equity name.
-            - symbol (str): The equity symbol.
-            - isin (str): The ISIN code.
-            - mics (list[str]): List of MIC codes.
-            - currency (str): The currency code.
-            - last_price (str): The last traded price as a string.
+        EquityRecord | None: Dictionary with parsed equity fields, or None if parsing
+            fails due to missing required fields.
     """
-    name_match = re.search(r">(.*?)<", row[1])
-    mic_match = re.search(r">(.*?)<", row[4])
-    price_match = re.search(r">([A-Z]{3})\s*<span[^>]*>([\d\.,]+)</span>", row[5])
+    # Ensure row has exactly 6 elements
+    cells = (row or [])[:6]
 
-    mics = [code.strip() for code in mic_match.group(1).split(",")] if mic_match else []
-    currency, last_price = price_match.groups() if price_match else ("", "")
+    # Pad missing cells if less than 6 cells
+    cells += [""] * (6 - len(cells))
+
+    name = _extract_text(_safe_cell(cells, 1))
+    isin = _safe_cell(cells, 2)
+    symbol = _safe_cell(cells, 3)
+    mics = _extract_mics(_safe_cell(cells, 4))
+
+    # Extract price and currency from the price cell HTML
+    currency, last_price = extract_currency_and_last_price(_safe_cell(cells, 5))
+
+    if not name or not symbol:
+        logger.warning("Skipping invalid Euronext record: missing name or symbol")
+        return None
 
     return {
-        "name": name_match.group(1).strip() if name_match else row[1].strip(),
-        "symbol": row[3].strip(),
-        "isin": row[2].strip(),
+        "name": name,
+        "symbol": symbol,
+        "isin": isin,
         "mics": mics,
         "currency": currency,
         "last_price": last_price,
     }
+
+
+def _safe_cell(cells: Sequence[str], index: int) -> str:
+    """
+    Safely retrieve and strip a string from a list of cells at the given index.
+
+    Args:
+        cells (Sequence[str]): List or sequence of cell strings.
+        index (int): Index of the cell to retrieve.
+
+    Returns:
+        str: The stripped cell string, or an empty string if out of range or not a
+            string.
+    """
+    if 0 <= index < len(cells) and isinstance(cells[index], str):
+        return cells[index].strip()
+    return ""
+
+
+def _extract_text(html: str) -> str:
+    """
+    Extract the inner text from an HTML tag string.
+
+    Args:
+        html (str): HTML string, e.g. "<tag>Text</tag>".
+
+    Returns:
+        str: The extracted inner text, or the original string if no match is found.
+    """
+    match = re.search(r">(.*?)<", html)
+    return match.group(1).strip() if match else html
+
+
+def _extract_mics(html: str) -> list[str]:
+    """
+    Extract a list of MIC codes from an HTML string.
+
+    Args:
+        html (str): HTML string containing comma-separated MIC codes, e.g.
+            "<div>MIC1, MIC2</div>".
+
+    Returns:
+        list[str]: List of MIC codes, stripped of whitespace.
+    """
+    match = re.search(r">(.*?)<", html)
+    raw = match.group(1) if match else html
+    return [mic.strip() for mic in raw.split(",") if mic.strip()]
+
+
+def extract_currency_and_last_price(html: str) -> tuple[str, str]:
+    """
+    Extract currency code and last price value from HTML string containing price info.
+
+    Args:
+        html (str): HTML string, e.g. "...>USD<span>123.45</span>...".
+
+    Returns:
+        tuple[str, str]: (currency_code, last_price) or ("", "") if not found.
+    """
+    match = re.search(
+        r">([A-Z]{3})\s*<span[^>]*>([\d\.,]+)</span>",
+        html,
+    )
+    if match:
+        return match.group(1), match.group(2)
+    return "", ""

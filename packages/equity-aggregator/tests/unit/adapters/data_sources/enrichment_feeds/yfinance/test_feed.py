@@ -43,6 +43,31 @@ def test_pick_best_symbol_returns_expected() -> None:
     assert actual == "BBB"
 
 
+async def test_find_by_identifier_no_viable_quotes_returns_none() -> None:
+    """
+    ARRANGE: search returns quotes missing required fields
+    ACT:     call _find_by_identifier
+    ASSERT:  returns None when no viable quotes found
+    """
+    search_payload = {
+        "quotes": [
+            {"symbol": "", "longname": ""},
+            {"symbol": None, "longname": "NameOnly"},
+            {"symbol": "SymOnly", "longname": None},
+        ],
+    }
+    handler = handler_factory(
+        {"finance/search": httpx.Response(200, json=search_payload)},
+    )
+    session = make_session(handler)
+    feed = YFinanceFeed(session)
+
+    actual = await feed._find_by_identifier("ID", "Name", "SYM")
+    await close(session._client)
+
+    assert actual is None
+
+
 async def test_find_by_identifier_single_viable_returns_info() -> None:
     """
     ARRANGE: identifier search yields a single viable quote

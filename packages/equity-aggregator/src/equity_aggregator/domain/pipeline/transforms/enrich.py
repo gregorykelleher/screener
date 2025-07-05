@@ -6,6 +6,11 @@ from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable
 from contextlib import AsyncExitStack
 
 from equity_aggregator.adapters import open_yfinance_feed
+
+# TODO: improve this import
+from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.errors import (
+    FeedError,
+)
 from equity_aggregator.domain._utils import get_usd_converter, merge
 from equity_aggregator.schemas import RawEquity, YFinanceFeedData
 
@@ -56,7 +61,7 @@ async def enrich(raw_equities: AsyncIterable[RawEquity]) -> AsyncIterable[RawEqu
     for completed in asyncio.as_completed(enrich_tasks):
         yield await completed
 
-    logger.debug(
+    logger.info(
         "Enrichment finished for %d equities using enrichment feeds: %s",
         len(enrich_tasks),
         ", ".join(model.__name__.removesuffix("FeedData") for _, model in feeds),
@@ -71,7 +76,7 @@ async def _enrich_equity(
     Concurrently enrich a RawEquity instance using all configured enrichment feeds.
 
     Each feed fetches and validates data for the given equity. Results are merged
-    with the original, preferring non-None fields from the source.
+    with the source, preferring non-None fields from the source.
 
     Args:
         source (RawEquity): The RawEquity object to enrich (assumed USD-denominated).
@@ -120,25 +125,11 @@ async def _enrich_with_feed(
     # derive a concise feed name for logging (e.g. "YFinance" from "YFinanceFeedData")
     feed_name = feed_model.__name__.removesuffix("FeedData")
 
-    logger.info("Fetching raw equities from %s feed...", feed_name)
-
     # fetch the raw data, with timeout and exception handling
     fetched_raw_data = await _safe_fetch(source, fetcher, feed_name)
 
     # if no data was fetched, fall back to source
-    if fetched_raw_data is None:
-        logger.warning(
-            "No %s feed data for symbol=%s, name=%s "
-            "(isin=%s, cusip=%s, cik=%s, share_class_figi=%s). "
-            "Falling back to original.",
-            feed_name,
-            source.symbol,
-            source.name,
-            source.isin or "<none>",
-            source.cusip or "<none>",
-            source.cik or "<none>",
-            source.share_class_figi or "<none>",
-        )
+    if not fetched_raw_data:
         return source
 
     # validate the fetched data against the feed model
@@ -177,11 +168,32 @@ async def _safe_fetch(
             ),
             timeout=wait_timeout,
         )
+
+    except FeedError as error:
+        logger.warning(
+            "No %s feed data for symbol=%s, name=%s "
+            "(isin=%s, cusip=%s, cik=%s, share_class_figi=%s). %s",
+            feed_name,
+            source.symbol,
+            source.name,
+            source.isin or "<none>",
+            source.cusip or "<none>",
+            source.cik or "<none>",
+            source.share_class_figi or "<none>",
+            error,
+        )
+        return None
+
     except TimeoutError:
         logger.error("Timed out fetching from %s.", feed_name)
         return None
-    except Exception as exc:
-        logger.error("Error fetching from %s: %s", feed_name, exc)
+
+    except Exception as error:
+        logger.error(
+            "Error fetching from %s: %s",
+            feed_name,
+            _describe_httpx_error(error),
+        )
         return None
 
 
@@ -224,7 +236,19 @@ def _make_validator(
             return RawEquity.model_validate(coerced)
 
         except Exception as error:
-            logger.warning("Skipping invalid record from %s: %s", feed_name, error)
+            if hasattr(error, "errors"):
+                fields = {err["loc"][0] for err in error.errors()}
+                summary = f"invalid {', '.join(sorted(fields))}"
+            else:
+                summary = str(error)
+
+            logger.warning(
+                "No %s feed data for %s (symbol=%s): %s",
+                feed_name,
+                source.name,
+                source.symbol,
+                summary,
+            )
             return source
 
     return validate
@@ -304,9 +328,42 @@ async def _convert_to_usd_or_fallback(
         return converted
     except Exception as exception:
         logger.warning(
-            "Skipping enrichment for %s (symbol=%s): %s",
+            "No %s feed data for %s (symbol=%s): %s",
             feed_name,
+            source.name,
             source.symbol,
             exception,
         )
         return source
+
+
+# TODO: make this a proper util for everything to use
+def _describe_httpx_error(error: Exception) -> str:
+    """
+    Converts common httpx and httpcore exceptions into concise, human-readable messages.
+
+    This function is intended to simplify error reporting for HTTP requests by mapping
+    specific exceptions from the httpx and httpcore libraries to clear, user-friendly
+    descriptions. It handles HTTP status errors and transport protocol errors, and falls
+    back to the string representation for other exceptions.
+
+    Args:
+        error (Exception): The exception instance to describe. Typically an exception
+            raised by httpx or httpcore during HTTP requests.
+
+    Returns:
+        str: A concise, human-friendly description of the exception.
+    """
+    import httpcore
+    import httpx
+
+    if isinstance(error, httpx.HTTPStatusError):
+        code = error.response.status_code
+        phrase = error.response.reason_phrase
+        target = error.request.url.path
+        return f"Received HTTP {code} {phrase} when requesting {target or '/'}"
+
+    if isinstance(error, httpcore.LocalProtocolError):
+        return f"Transport error: {error}"
+
+    return str(error)

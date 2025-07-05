@@ -30,8 +30,6 @@ async def search_quotes(
     Returns:
         list[dict]: List of quote dictionaries for equities matching the query.
     """
-    logger.debug("Searching Yahoo Finance for query: %s", query)
-
     try:
         response = await session.get(
             session.config.search_url,
@@ -40,12 +38,12 @@ async def search_quotes(
         response.raise_for_status()
         raw_data = response.json().get("quotes", [])
 
-    except httpx.HTTPError as exc:
-        logger.error("HTTP error during search for %s: %s", query, exc)
+    except httpx.HTTPError as error:
+        logger.error("HTTP error during search for %s: %s", query, error)
         return []
 
-    except Exception as exc:
-        logger.error("Unexpected error during search for %s: %s", query, exc)
+    except Exception as error:
+        logger.error("Unexpected error during search for %s: %s", query, error)
         return []
 
     # filter out non-equity quotes
@@ -92,7 +90,6 @@ async def get_info(
     raw = response.json().get("quoteSummary", {}).get("result", [])
 
     if not raw:
-        logger.debug("No data found for ticker: %s", ticker)
         return None
 
     return _flatten_module_dicts(modules, raw[0] if raw else {})
@@ -174,52 +171,12 @@ def pick_best_symbol(
     # compute the best score and symbol from the scored list
     best_score, best_symbol, best_name = max(scored, key=lambda t: t[0])
 
-    logger.debug(
-        "Best fuzzy candidate name=%s symbol=%s (score=%d) "
-        "for expected name=%s (symbol=%s)",
-        best_name,
-        best_symbol,
-        best_score,
-        expected_name,
-        expected_symbol,
-    )
-
     # if the best score is below the minimum threshold, return None
     if best_score < min_score:
-        logger.debug(
-            "Best fuzzy score candidate %s (score=%d) falls below minimum threshold %d",
-            best_symbol,
-            best_score,
-            min_score,
-        )
         return None
 
     # otherwise, return the best symbol found
     return best_symbol
-
-
-def log_discovered_symbol(
-    result: dict,
-    requested_symbol: str,
-) -> None:
-    """
-    Log the discovered Yahoo Finance symbol with respect to the requested symbol.
-
-    Args:
-        result (dict): The dictionary containing discovered equity data, expected
-            to include a "symbol" key.
-        requested_symbol (str): The symbol originally requested by the user.
-
-    Returns:
-        None
-    """
-    discovered = result.get("symbol")
-    if discovered:
-        logger.debug(
-            "Discovered Yahoo Finance symbol %s for requested symbol %s",
-            discovered,
-            requested_symbol,
-        )
 
 
 def _score_quote(

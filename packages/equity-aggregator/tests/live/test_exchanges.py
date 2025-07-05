@@ -42,13 +42,13 @@ async def retrieve_feed_rows(
 
     try:
         rows = await fetch_func(page_size=50, concurrency=4)
-    except httpx.HTTPStatusError as exc:
-        status = exc.response.status_code
+    except httpx.HTTPStatusError as error:
+        status = error.response.status_code
         if server_error_min <= status < server_error_max:
             pytest.xfail(f"{name} 5xx: {status}")
         raise
-    except httpx.HTTPError as exc:
-        pytest.xfail(f"{name} network error: {exc!r}")
+    except httpx.HTTPError as error:
+        pytest.xfail(f"{name} network error: {error!r}")
 
     return name, rows
 

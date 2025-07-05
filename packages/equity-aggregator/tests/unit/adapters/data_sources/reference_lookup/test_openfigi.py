@@ -12,12 +12,12 @@ from equity_aggregator.adapters.data_sources._cache._cache import (
     save_cache,
 )
 from equity_aggregator.adapters.data_sources.reference_lookup.openfigi import (
-    Triplet,
+    IndentificationRecord,
     _blocking_map_call,
     _build_query_dataframe,
     _consume_queue,
     _enumerate_chunks,
-    _extract_triplets,
+    _extract_identification_records,
     _fan_out,
     _log_missing_figis,
     _produce_chunk,
@@ -149,7 +149,11 @@ def test_extract_triplets_duplicate_keeps_first_row() -> None:
             {"query_number": 0, "shareClassFIGI": "ZZZZZZZZ9999", "ticker": "BBB"},
         ],
     )
-    assert _extract_triplets(df, batch_size=1)[0] == (None, "AAA", "ABCDEFGH1234")
+    assert _extract_identification_records(df, batch_size=1)[0] == (
+        None,
+        "AAA",
+        "ABCDEFGH1234",
+    )
 
 
 def test_extract_triplets_duplicate_first_invalid_figi() -> None:
@@ -164,7 +168,7 @@ def test_extract_triplets_duplicate_first_invalid_figi() -> None:
             {"query_number": 0, "shareClassFIGI": "ABCDEFGH1234", "ticker": "BBB"},
         ],
     )
-    assert _extract_triplets(df, batch_size=1)[0] == (None, "AAA", None)
+    assert _extract_identification_records(df, batch_size=1)[0] == (None, "AAA", None)
 
 
 def test_extract_triplets_missing_name_and_security_name() -> None:
@@ -178,7 +182,11 @@ def test_extract_triplets_missing_name_and_security_name() -> None:
             {"query_number": 0, "ticker": "FOO", "shareClassFIGI": "ABCDEFGH1234"},
         ],
     )
-    assert _extract_triplets(df, batch_size=1)[0] == (None, "FOO", "ABCDEFGH1234")
+    assert _extract_identification_records(df, batch_size=1)[0] == (
+        None,
+        "FOO",
+        "ABCDEFGH1234",
+    )
 
 
 def test_extract_triplets_row_outside_batch_range() -> None:
@@ -190,7 +198,7 @@ def test_extract_triplets_row_outside_batch_range() -> None:
     df = pd.DataFrame(
         [{"query_number": 5, "shareClassFIGI": "ABCDEFGH1234"}],
     )
-    assert _extract_triplets(df, batch_size=3)[2] == (None, None, None)
+    assert _extract_identification_records(df, batch_size=3)[2] == (None, None, None)
 
 
 def test_extract_triplets_empty_dataframe() -> None:
@@ -199,7 +207,7 @@ def test_extract_triplets_empty_dataframe() -> None:
     ACT:     call _extract_triplets
     ASSERT:  returns empty list
     """
-    assert _extract_triplets(pd.DataFrame(), batch_size=0) == []
+    assert _extract_identification_records(pd.DataFrame(), batch_size=0) == []
 
 
 def test_log_missing_figis_returns_none() -> None:
@@ -224,8 +232,8 @@ def test_blocking_map_call_returns_dataframe_or_none() -> None:
     )
     try:
         actual = _blocking_map_call(df)
-    except Exception as exc:  # offline, bad key, etc.
-        pytest.skip(f"OpenFIGI unavailable: {exc}")
+    except Exception as error:  # offline, bad key, etc.
+        pytest.skip(f"OpenFIGI unavailable: {error}")
     else:
         assert actual is None or isinstance(actual, pd.DataFrame)
 
@@ -297,12 +305,12 @@ async def test_fan_out_hits_sleep_branch() -> None:
     """
     equities = [RawEquity(name=str(index), symbol=str(index)) for index in range(26)]
     chunks = _enumerate_chunks(equities, 1)
-    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+    queue: asyncio.Queue[None | tuple[int, IndentificationRecord]] = asyncio.Queue()
 
     async def dummy_chunk(
         start: int,
         batch: Sequence[RawEquity],
-        queue: asyncio.Queue[None | tuple[int, Triplet]],
+        queue: asyncio.Queue[None | tuple[int, IndentificationRecord]],
     ) -> None:
         await queue.put((start, (None, None, None)))
         await queue.put(None)
@@ -326,7 +334,7 @@ async def test_produce_chunk_exception_path() -> None:
     async def boom(_batch: object) -> None:
         raise RuntimeError
 
-    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+    queue: asyncio.Queue[None | tuple[int, IndentificationRecord]] = asyncio.Queue()
 
     await _produce_chunk(0, [RawEquity(name="X", symbol="X")], queue, fetch=boom)
 
@@ -341,7 +349,7 @@ async def test_consume_queue_reports_shortfall() -> None:
     ACT:     call _consume_queue
     ASSERT:  returned list is [None] (placeholder for the missing item)
     """
-    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+    queue: asyncio.Queue[None | tuple[int, IndentificationRecord]] = asyncio.Queue()
     await queue.put(None)  # sentinel, but zero items
 
     result = await _consume_queue(queue, expected_items=1, expected_sentinels=1)
@@ -356,12 +364,12 @@ async def test_produce_chunk_success_pushes_triplet() -> None:
     ASSERT:  first queued item equals expected triplet.
     """
 
-    expected: Triplet = ("Alpha Co", "ALP", "ABCDEFGH1234")
+    expected: IndentificationRecord = ("Alpha Co", "ALP", "ABCDEFGH1234")
 
-    async def stub_fetch(_batch: Sequence[RawEquity]) -> list[Triplet]:
+    async def stub_fetch(_batch: Sequence[RawEquity]) -> list[IndentificationRecord]:
         return [expected]
 
-    queue: asyncio.Queue[None | tuple[int, Triplet]] = asyncio.Queue()
+    queue: asyncio.Queue[None | tuple[int, IndentificationRecord]] = asyncio.Queue()
 
     await _produce_chunk(
         0,

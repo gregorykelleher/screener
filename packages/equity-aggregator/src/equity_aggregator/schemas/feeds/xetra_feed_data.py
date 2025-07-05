@@ -4,7 +4,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from .validators import required
 
+
+@required("name", "symbol")
 class XetraFeedData(BaseModel):
     """
     Represents a single Xetra feed record, transforming and normalising incoming fields

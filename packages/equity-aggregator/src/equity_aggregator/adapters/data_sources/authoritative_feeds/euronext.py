@@ -1,9 +1,9 @@
 # authoritative_feeds/euronext.py
 
 import asyncio
-from collections.abc import Sequence
 import logging
 import re
+from collections.abc import Sequence
 
 from httpx import AsyncClient
 

@@ -5,7 +5,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from .validators import required
 
+
+@required("name", "symbol")
 class LseFeedData(BaseModel):
     """
     Represents a single LSE feed record, transforming and normalising incoming fields

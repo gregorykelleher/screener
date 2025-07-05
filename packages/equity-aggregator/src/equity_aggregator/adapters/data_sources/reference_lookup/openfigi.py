@@ -397,7 +397,7 @@ def _log_missing_figis(
     """
     for equity, figi in zip(equities, figis, strict=False):
         if figi is None:
-            logger.debug(
+            logger.warning(
                 "No share_class_figi for %s (isin=%s, cusip=%s)",
                 equity.symbol,
                 equity.isin or "None",

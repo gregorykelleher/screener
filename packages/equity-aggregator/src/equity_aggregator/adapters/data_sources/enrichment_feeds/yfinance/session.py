@@ -28,7 +28,7 @@ class YFSession:
         None
     """
 
-    __slots__ = ("_client", "_config", "_crumb")
+    __slots__ = ("_client", "_config", "_crumb", "_crumb_lock")
 
     # shared semaphore to cap concurrent streams to maximum limits for HTTP/2
     _stream_semaphore: asyncio.Semaphore = asyncio.Semaphore(100)
@@ -41,6 +41,7 @@ class YFSession:
         self._config = config
         self._client = client or make_client()
         self._crumb: str | None = None
+        self._crumb_lock = asyncio.Lock()
 
     @property
     def config(self) -> FeedConfig:
@@ -129,8 +130,8 @@ class YFSession:
             response.raise_for_status()
             return response
 
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code != httpx.codes.UNAUTHORIZED:
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code != httpx.codes.UNAUTHORIZED:
                 raise
 
             ticker = self._extract_ticker(url)
@@ -183,20 +184,33 @@ class YFSession:
 
     async def _bootstrap_and_fetch_crumb(self, ticker: str) -> None:
         """
-        Bootstrap session cookies and fetch the Yahoo Finance crumb token.
+        Bootstrap and fetch the Yahoo Finance crumb token once per session.
+
+        This method visits key Yahoo Finance domains to initialise session cookies,
+        then retrieves the anti-CSRF crumb token required for authenticated API
+        requests. The crumb is cached for future use. Thread safety is ensured
+        using an async lock.
 
         Args:
-            ticker (str): The ticker symbol for which to initialise the session.
+            ticker (str): The ticker symbol used to initialise the session.
 
         Returns:
             None
         """
-        for seed in (
-            "https://fc.yahoo.com",
-            "https://finance.yahoo.com",
-            f"https://finance.yahoo.com/quote/{ticker}",
-        ):
-            await self._client.get(seed)
-        response = await self._client.get(self._config.crumb_url)
-        response.raise_for_status()
-        self._crumb = response.text.strip().strip('"')
+        if self._crumb is not None:
+            return
+
+        async with self._crumb_lock:
+            if self._crumb is not None:
+                return
+
+            for seed in (
+                "https://fc.yahoo.com",
+                "https://finance.yahoo.com",
+                f"https://finance.yahoo.com/quote/{ticker}",
+            ):
+                await self._client.get(seed)
+
+            response = await self._client.get(self._config.crumb_url)
+            response.raise_for_status()
+            self._crumb = response.text.strip().strip('"')

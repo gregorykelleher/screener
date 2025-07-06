@@ -14,6 +14,7 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import
     _deduplicate_records,
     _parse_row,
     _produce_mic,
+    _safe_cell,
     _stream_mic_records,
     fetch_equity_records,
 )
@@ -137,7 +138,7 @@ def test_parse_row_single_mic_no_comma() -> None:
     ACT: parse row
     ASSERT: mics list contains single element
     """
-    row = ["", "", "", "", "<div>XPAR</div>", ""]
+    row = ["", "Sample Co.", "ISIN1111", "SAM", "<div>XPAR</div>", ""]
 
     record = _parse_row(row)
 
@@ -150,7 +151,14 @@ def test_parse_row_price_with_commas() -> None:
     ACT: parse row
     ASSERT: last_price includes commas
     """
-    row = ["", "", "", "", "", "<div>EUR <span>1,234.56</span></div>"]
+    row = [
+        "",
+        "Widgets Ltd",
+        "ISIN2222",
+        "WID",
+        "",
+        "<div>EUR <span>1,234.56</span></div>",
+    ]
 
     record = _parse_row(row)
 
@@ -163,7 +171,7 @@ def test_parse_row_malformed_html() -> None:
     ACT: parse row
     ASSERT: fallback to raw text
     """
-    row = ["", "<a>Broken", "", "", "NoDiv", "NoPrice"]
+    row = ["", "<a>Broken", "", "BROK", "NoDiv", "NoPrice"]
 
     record = _parse_row(row)
 
@@ -176,21 +184,21 @@ def test_parse_row_integer_price() -> None:
     ACT: parse row
     ASSERT: last_price equals "100"
     """
-    row = ["", "", "I", "S", "", "<div>EUR <span>100</span></div>"]
+    row = ["", "Integer Inc", "ISIN3333", "S", "", "<div>EUR <span>100</span></div>"]
 
     record = _parse_row(row)
 
     assert record["last_price"] == "100"
 
 
-def test_parse_row_raises_on_short_row() -> None:
+def test_parse_row_short_row_returns_none() -> None:
     """
     ARRANGE: aaData row with too few columns
     ACT: parse row
-    ASSERT: IndexError is raised
+    ASSERT: function returns None (insufficient mandatory fields)
     """
-    with pytest.raises(IndexError):
-        _parse_row(["only", "three", "cols"])
+    record = _parse_row(["only", "three", "cols"])
+    assert record is None
 
 
 async def test_deduplicate_records_filters_duplicates() -> None:
@@ -311,7 +319,7 @@ def test_parse_row_symbol_trimming() -> None:
     ACT: parse row
     ASSERT: symbol is stripped of whitespace
     """
-    row = ["", "", "I", "  PAD  ", "", ""]
+    row = ["", "Pad Co", "ISIN4444", "  PAD  ", "", ""]
 
     record = _parse_row(row)
 
@@ -458,7 +466,7 @@ def test_parse_row_missing_span() -> None:
     ACT: parse row
     ASSERT: currency and last_price fall back to empty strings
     """
-    row = ["", "", "", "", "", "<div>EUR </div>"]
+    row = ["", "NoPrice PLC", "ISIN5555", "NOP", "", "<div>EUR </div>"]
     record = _parse_row(row)
 
     assert (record["currency"], record["last_price"]) == ("", "")
@@ -470,7 +478,7 @@ def test_parse_row_mixed_case_mics() -> None:
     ACT: parse row
     ASSERT: mics are trimmed but case preserved
     """
-    row = ["", "", "", "", "<div>xPar , xBru</div>", ""]
+    row = ["", "MixedCase", "ISIN6666", "MIX", "<div>xPar , xBru</div>", ""]
     record = _parse_row(row)
 
     assert record["mics"] == ["xPar", "xBru"]
@@ -606,3 +614,27 @@ async def test_stream_mic_records_paginates() -> None:
     await drain()
 
     assert starts[-1] == _PAGE_SIZE
+
+
+def test_safe_cell_out_of_range_returns_empty() -> None:
+    """
+    ARRANGE: cells list shorter than requested index
+    ACT:     call _safe_cell with an out-of-range index
+    ASSERT:  empty string is returned
+    """
+    cells = ["A", "B"]
+    actual = _safe_cell(cells, 5)
+
+    assert actual == ""
+
+
+def test_safe_cell_non_string_returns_empty() -> None:
+    """
+    ARRANGE: cells list where targeted element is not a string
+    ACT:     call _safe_cell with index pointing at a non-string value
+    ASSERT:  empty string is returned
+    """
+    cells = ["A", None, "C"]
+    actual = _safe_cell(cells, 1)
+
+    assert actual == ""

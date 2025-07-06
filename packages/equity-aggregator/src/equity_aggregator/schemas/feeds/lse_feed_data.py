@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from .validators import required
+from .feed_validators import required
 
 
 @required("name", "symbol")

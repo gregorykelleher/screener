@@ -50,7 +50,7 @@ async def search_quotes(
     return [quote for quote in raw_data if quote.get("quoteType") == "EQUITY"]
 
 
-async def get_info(
+async def get_quote_summary(
     session: YFSession,
     ticker: str,
     modules: Iterable[str] | None = None,
@@ -76,7 +76,7 @@ async def get_info(
 
     modules = tuple(modules or session.config.modules)
 
-    url = session.config.quote_base + ticker
+    url = session.config.quote_summary_url + ticker
 
     response = await session.get(
         url,
@@ -84,15 +84,52 @@ async def get_info(
             "modules": ",".join(modules),
             "corsDomain": "finance.yahoo.com",
             "formatted": "false",
+            "symbol": ticker,
+            "lang": "en-US",
+            "region": "US",
         },
     )
     response.raise_for_status()
     raw = response.json().get("quoteSummary", {}).get("result", [])
 
-    if not raw:
-        return None
+    if raw:
+        return _flatten_module_dicts(modules, raw[0])
 
-    return _flatten_module_dicts(modules, raw[0] if raw else {})
+    return await _get_quote_summary_fallback(session, ticker)
+
+
+async def _get_quote_summary_fallback(
+    session: YFSession,
+    ticker: str,
+) -> dict[str, object] | None:
+    """
+    Fallback: fetch basic quote data from Yahoo Finance's v7 /finance/quote endpoint.
+
+    This coroutine is used if the main quoteSummary endpoint returns no data. It
+    retrieves a basic set of quote fields for the given ticker symbol from the
+    fallback endpoint.
+
+    Args:
+        session (YFSession): The Yahoo Finance session for making HTTP requests.
+        ticker (str): The stock symbol to fetch (e.g., "AAPL").
+
+    Returns:
+        dict[str, object] | None: The first quote dictionary from the response if
+        available, otherwise None.
+    """
+    resp = await session.get(
+        session.config.quote_summary_fallback_url,
+        params={
+            "corsDomain": "finance.yahoo.com",
+            "formatted": "false",
+            "symbols": ticker,
+            "lang": "en-US",
+            "region": "US",
+        },
+    )
+    resp.raise_for_status()
+    results = resp.json().get("quoteResponse", {}).get("result", [])
+    return results[0] if results else None
 
 
 def _flatten_module_dicts(

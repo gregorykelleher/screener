@@ -64,7 +64,7 @@ def test_override_keeps_other_defaults() -> None:
     config = FeedConfig(modules=("price",))
 
     assert (
-        config.quote_base
+        config.quote_summary_url
         == "https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
     )
 

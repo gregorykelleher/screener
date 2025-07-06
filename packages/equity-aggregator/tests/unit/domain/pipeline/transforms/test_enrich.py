@@ -8,6 +8,7 @@ import pytest
 
 from equity_aggregator.domain.pipeline.transforms.enrich import (
     ValidatorFunc,
+    _convert_to_usd_or_fallback,
     _enrich_with_feed,
     _has_missing_fields,
     _make_validator,
@@ -32,7 +33,7 @@ class GoodFeedData:
 
 class BadFeedData:
     @staticmethod
-    def model_validate(record: dict[str, object]) -> object:
+    def model_validate(record: dict[str, object]) -> "BadFeedData":
         raise ValueError("invalid")
 
 
@@ -47,6 +48,17 @@ class PartialFeedData:
                 return d
 
         return _Inner()
+
+
+class ErrorFeedData:
+    @staticmethod
+    def model_validate(record: dict[str, object]) -> "ErrorFeedData":
+        class _ValidationError(Exception):
+            def errors(self) -> list[dict[str, tuple[str]]]:
+                # mimic both currency and market_cap are invalid
+                return [{"loc": ("currency",)}, {"loc": ("market_cap",)}]
+
+        raise _ValidationError("validation failed")
 
 
 def _create_validator(
@@ -223,7 +235,6 @@ def test_safe_fetch_timeout_returns_none() -> None:
         symbol="TST",
         isin="ISIN00000004",
         cusip="037833100",
-        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -251,7 +262,6 @@ def test_safe_fetch_exception_returns_none() -> None:
         symbol="TST",
         isin="ISIN00000004",
         cusip="037833100",
-        cik="0000320193",
         share_class_figi="BBG000BLNNH6",
         mics=["XLON"],
         currency="USD",
@@ -276,9 +286,8 @@ def test_safe_fetch_success_returns_dict() -> None:
         name: str,
         isin: str | None,
         cusip: str | None,
-        cik: str | None,
     ) -> dict[str, object]:
-        _ = (symbol, name, isin, cusip, cik)
+        _ = (symbol, name, isin, cusip)
         return {"foo": "bar"}
 
     source = RawEquity(
@@ -286,7 +295,6 @@ def test_safe_fetch_success_returns_dict() -> None:
         symbol="A",
         isin="ISIN00000004",
         cusip="037833100",
-        cik="0000320193",
         mics=["XLON"],
         currency="USD",
         last_price=Decimal("1"),
@@ -347,7 +355,6 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
         symbol="SRC2",
         isin=None,
         cusip=None,
-        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -359,7 +366,6 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
         symbol="SRC2",
         isin=None,
         cusip=None,
-        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -371,11 +377,9 @@ def test_replace_none_with_enriched_leaves_none_when_enriched_also_none() -> Non
     assert (
         merged.isin,
         merged.cusip,
-        merged.cik,
         merged.last_price,
         merged.market_cap,
     ) == (
-        None,
         None,
         None,
         None,
@@ -400,8 +404,9 @@ def test_make_validator_returns_raw_equity() -> None:
         "last_price": Decimal("3"),
         "market_cap": Decimal("30"),
     }
-
-    assert isinstance(validator(raw_record), RawEquity)
+    source = RawEquity.model_validate(raw_record)
+    validator = _create_validator(GoodFeedData)
+    assert isinstance(validator(raw_record, source), RawEquity)
 
 
 def test_make_validator_returns_none_on_error() -> None:
@@ -422,7 +427,10 @@ def test_make_validator_returns_none_on_error() -> None:
         "market_cap": Decimal("30"),
     }
 
-    assert validator(raw_record) is None
+    source = RawEquity.model_validate(raw_record)
+    validator = _create_validator(BadFeedData)
+
+    assert validator(raw_record, source) is source
 
 
 def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
@@ -440,7 +448,6 @@ def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
         symbol="E",
         isin=None,
         cusip=None,
-        cik=None,
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -450,28 +457,6 @@ def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
     actual = asyncio.run(_enrich_with_feed(source, (empty_fetcher, GoodFeedData)))
 
     assert actual is source
-
-
-def test_make_validator_returns_none_for_partial_missing() -> None:
-    """
-    ARRANGE: a validator from PartialFeedData that has missing fields
-    ACT:     validate a record
-    ASSERT:  returns None since RawEquity.model_validate will fail
-    """
-
-    raw = {
-        "name": "X",
-        "symbol": "X",
-        "isin": "I",
-        "mics": ["XLON"],
-        "currency": "USD",
-        "last_price": Decimal("2"),
-        "market_cap": Decimal("20"),
-    }
-
-    validator = _make_validator(PartialFeedData)
-
-    assert validator(raw) is None
 
 
 def test_safe_fetch_times_out_and_returns_none() -> None:
@@ -514,7 +499,6 @@ def test_enrich_with_feed_completes_success_path() -> None:
         name: str,
         isin: str | None,
         cusip: str | None,
-        cik: str | None,
     ) -> dict[str, object]:
         _ = (symbol, name, isin, cusip)
         return {
@@ -522,7 +506,6 @@ def test_enrich_with_feed_completes_success_path() -> None:
             "symbol": symbol,
             "isin": isin,
             "cusip": cusip,
-            "cik": cik,
             "mics": ["XLON"],
             "currency": "USD",  # already USD ⇒ converter is no-op
             "last_price": Decimal("123"),
@@ -534,7 +517,6 @@ def test_enrich_with_feed_completes_success_path() -> None:
         symbol="OK",
         isin="ISIN00000006",
         cusip="037833100",
-        cik="0000320193",
         mics=["XLON"],
         currency="USD",
         last_price=None,
@@ -547,3 +529,101 @@ def test_enrich_with_feed_completes_success_path() -> None:
         Decimal("123"),
         Decimal("4567"),
     )
+
+
+def test_safe_fetch_lookup_error_returns_none() -> None:
+    """
+    ARRANGE: a fetcher that raises LookupError
+    ACT:     call _safe_fetch
+    ASSERT:  returns None  (the call routes through _log_no_feed_data)
+    """
+
+    async def not_found_fetcher(
+        symbol: str,
+        name: str,
+        isin: str | None,
+        cusip: str | None,
+    ) -> dict[str, object]:
+        raise LookupError("no data")
+
+    src = RawEquity(
+        name="NF",
+        symbol="NF",
+        isin="ISIN00000007",
+        mics=["XLON"],
+        currency="USD",
+        last_price=Decimal("0"),
+        market_cap=Decimal("0"),
+    )
+
+    actual = asyncio.run(
+        _safe_fetch(src, not_found_fetcher, "NotFoundFeed", wait_timeout=1.0),
+    )
+
+    assert actual is None
+
+
+def test_make_validator_handles_error_feed() -> None:
+    """
+    ARRANGE: validator from ErrorFeedData that raises with .errors()
+    ACT:     validate a record to trigger the exception
+    ASSERT:  returns the original RawEquity (handles hasattr(error, "errors"))
+    """
+    validator = _make_validator(ErrorFeedData)
+
+    raw_record = {
+        "name": "X",
+        "symbol": "X",
+        "isin": "ISIN00000008",
+        "mics": ["XLON"],
+        "currency": "USD",
+        "last_price": Decimal("9"),
+        "market_cap": Decimal("90"),
+    }
+    source = RawEquity.model_validate(raw_record)
+
+    actual = validator(raw_record, source)
+
+    assert actual is source
+
+
+def test_convert_to_usd_or_fallback_handles_converter_returning_none() -> None:
+    """
+    ARRANGE: a validated equity whose `model_copy` is overridden to return None,
+             making the USD-converter return None.
+    ACT:     call _convert_to_usd_or_fallback
+    ASSERT:  falls back to the original source object
+    """
+
+    class _NoCopyRawEquity(RawEquity):
+        def model_copy(
+            self,
+            *,
+            update: dict[str, object] | None = None,
+            deep: bool = False,
+        ) -> None:
+            return None
+
+    validated = _NoCopyRawEquity(
+        name="NONE",
+        symbol="NONE",
+        isin="ISIN00000010",
+        mics=["XLON"],
+        currency="EUR",
+        last_price=Decimal("10"),
+        market_cap=None,
+    )
+
+    source = RawEquity(
+        name="NONE",
+        symbol="NONE",
+        isin="ISIN00000010",
+        mics=["XLON"],
+        currency="USD",
+        last_price=Decimal("1"),
+        market_cap=Decimal("10"),
+    )
+
+    actual = asyncio.run(_convert_to_usd_or_fallback(validated, source, "FxFeed"))
+
+    assert actual is source

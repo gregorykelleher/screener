@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from .validators import required
+from .feed_validators import required
 
 
 @required("name", "symbol")
@@ -46,8 +46,8 @@ class YFinanceFeedData(BaseModel):
                 RawEquity schema.
         """
         return {
-            # longName → maps to RawEquity.name
-            "name": self.get("longName"),
+            # longName/shortName → maps to RawEquity.name (camel-case for Quote Summary)
+            "name": self.get("longName") or self.get("shortName"),
             # underlyingSymbol → maps to RawEquity.symbol
             "symbol": self.get("underlyingSymbol") or self.get("symbol"),
             # no ISIN, CUSIP, CIK, FIGI or MICS in YFinance feed, so omitting from model

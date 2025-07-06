@@ -15,6 +15,7 @@ from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.api impor
 )
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.feed import (
     YFinanceFeed,
+    _choose_symbol,
 )
 
 from ._utils import close, handler_factory, make_session
@@ -43,11 +44,32 @@ def test_pick_best_symbol_returns_expected() -> None:
     assert actual == "BBB"
 
 
-async def test_find_by_identifier_no_viable_quotes_returns_none() -> None:
+def test_choose_symbol_identical_names_returns_first() -> None:
+    """
+    ARRANGE: two viable quotes share the same longname but differ in symbol
+    ACT:     call _choose_symbol directly
+    ASSERT:  first symbol in list is returned
+    """
+    viable = [
+        {"symbol": "FIRST", "longname": "Same Co"},
+        {"symbol": "SECOND", "longname": "Same Co"},
+    ]
+
+    actual = _choose_symbol(
+        viable,
+        expected_name="Same Co",
+        expected_symbol="FIRST",
+        min_score=150,
+    )
+
+    assert actual == "FIRST"
+
+
+async def test_try_identifier_no_viable_quotes() -> None:
     """
     ARRANGE: search returns quotes missing required fields
-    ACT:     call _find_by_identifier
-    ASSERT:  returns None when no viable quotes found
+    ACT:     call _try_identifier
+    ASSERT:  raises LookupError (branch where 'No viable candidates' is raised)
     """
     search_payload = {
         "quotes": [
@@ -62,19 +84,19 @@ async def test_find_by_identifier_no_viable_quotes_returns_none() -> None:
     session = make_session(handler)
     feed = YFinanceFeed(session)
 
-    actual = await feed._find_by_identifier("ID", "Name", "SYM")
+    with pytest.raises(LookupError) as error:
+        await feed._try_identifier("ID", "Name", "SYM")
     await close(session._client)
 
-    assert actual is None
+    assert "Quote Search endpoint returned nothing." in str(error.value)
 
 
-async def test_find_by_identifier_single_viable_returns_info() -> None:
+async def test_try_identifier_single_viable_returns_info() -> None:
     """
     ARRANGE: identifier search yields a single viable quote
-    ACT: call _find_by_identifier
-    ASSERT: flattened info dict is returned
+    ACT:     call _try_identifier
+    ASSERT:  flattened info dict is returned
     """
-
     search_payload = {
         "quotes": [
             {"symbol": "AAPL", "longname": "Apple Inc", "quoteType": "EQUITY"},
@@ -95,10 +117,37 @@ async def test_find_by_identifier_single_viable_returns_info() -> None:
     session = make_session(handler_factory(patterns))
     feed = YFinanceFeed(session)
 
-    actual = await feed._find_by_identifier("id", "Apple Inc", "AAPL")
+    actual = await feed._try_identifier("id", "Apple Inc", "AAPL")
     await close(session._client)
 
     assert actual["regularMarketPrice"] == expected_regular_market_price
+
+
+async def test_identifier_quote_summary_missing_raises() -> None:
+    """
+    ARRANGE: viable quote found but quoteSummary endpoint returns None
+    ACT:     call _try_identifier
+    ASSERT:  raises LookupError (covers 'info is None' branch)
+    """
+    search_payload = {
+        "quotes": [
+            {"symbol": "NOSUM", "longname": "No Summary Ltd", "quoteType": "EQUITY"},
+        ],
+    }
+    patterns = {
+        "finance/search": httpx.Response(200, json=search_payload),
+        "getcrumb": httpx.Response(200, text='"crumb"'),
+        "quoteSummary": httpx.Response(200, json={"quoteSummary": {"result": None}}),
+    }
+
+    session = make_session(handler_factory(patterns))
+    feed = YFinanceFeed(session)
+
+    with pytest.raises(LookupError) as error:
+        await feed._try_identifier("XYZ", "No Summary Ltd", "NOSUM")
+    await close(session._client)
+
+    assert "Quote Summary endpoint returned nothing." in str(error.value)
 
 
 async def test_fetch_equity_uses_cache_after_first_call() -> None:
@@ -149,51 +198,78 @@ def test_fetch_equity_returns_cached_without_network() -> None:
     assert actual == cached_record
 
 
-async def test_find_via_name_symbol_low_score_returns_none() -> None:
+async def test_try_name_or_symbol_low_score() -> None:
     """
-    ARRANGE: Yahoo search returns mismatching quote
-    ACT:     call _find_via_name_symbol
-    ASSERT:  None is returned when fuzzy score < threshold
+    ARRANGE: Yahoo search returns multiple mismatching quotes
+    ACT:     call _try_name_or_symbol
+    ASSERT:  raises LookupError
     """
     search_payload = {
         "quotes": [
-            {"symbol": "BAD", "shortname": "Wrong Co", "quoteType": "EQUITY"},
+            {"symbol": "BAD1", "shortname": "Wrong Co One", "quoteType": "EQUITY"},
+            {"symbol": "BAD2", "shortname": "Wrong Co Two", "quoteType": "EQUITY"},
         ],
     }
 
-    handler = handler_factory(
-        {"finance/search": httpx.Response(200, json=search_payload)},
+    session = make_session(
+        handler_factory({"finance/search": httpx.Response(200, json=search_payload)}),
     )
-    session = make_session(handler)
     feed = YFinanceFeed(session)
 
-    actual = await feed._find_via_name_symbol("Right Name", "RGT")
+    with pytest.raises(LookupError) as error:
+        await feed._try_name_or_symbol("Right Name", "Right Name", "RGT")
     await close(session._client)
 
-    assert actual is None
+    assert "No candidate matched" in str(error.value)
 
 
-async def test_fetch_equity_no_data_returns_none_and_skips_cache() -> None:
+async def test_try_name_or_symbol_unviable_quotes() -> None:
     """
-    ARRANGE: Yahoo returns no viable quotes → _retrieve yields None
+    ARRANGE: search returns quotes that are present but not viable (missing names)
+    ACT:     call _try_name_or_symbol
+    ASSERT:  raises LookupError (branch where `if not viable:` triggers 'continue')
+    """
+    search_payload = {
+        "quotes": [
+            {"symbol": "SYM", "longname": None, "shortname": None},
+            {"symbol": "SYM2", "longname": "", "shortname": ""},
+        ],
+    }
+
+    session = make_session(
+        handler_factory({"finance/search": httpx.Response(200, json=search_payload)}),
+    )
+    feed = YFinanceFeed(session)
+
+    with pytest.raises(LookupError):
+        await feed._try_name_or_symbol("Some Co", "Some Co", "SYM")
+    await close(session._client)
+
+    assert True
+
+
+async def test_fetch_equity_no_data_raises_and_skips_cache() -> None:
+    """
+    ARRANGE: Yahoo returns no viable quotes
     ACT:     call fetch_equity
-    ASSERT:  result is None (branch where `if yf_record:` is *false*)
+    ASSERT:  raises LookupError and cache remains empty
     """
     session = make_session(  # search endpoint returns empty quotes list
         handler_factory({"finance/search": httpx.Response(200, json={"quotes": []})}),
     )
     feed = YFinanceFeed(session)
 
-    actual = await feed.fetch_equity(symbol="MISS", name="Missing Inc")
+    with pytest.raises(LookupError):
+        await feed.fetch_equity(symbol="MISS", name="Missing Inc")
     await close(session._client)
 
-    assert actual is None and load_cache_entry("yfinance_equities", "MISS") is None
+    assert load_cache_entry("yfinance_equities", "MISS") is None
 
 
-async def test_find_by_identifier_multiple_viable_selects_best() -> None:
+async def test_try_identifier_multiple_viable_selects_best() -> None:
     """
     ARRANGE: identifier search yields two viable quotes
-    ACT:     call _find_by_identifier
+    ACT:     call _try_identifier
     ASSERT:  branch where len(viable) > 1 and a best symbol is chosen executes
     """
     search_payload = {
@@ -216,19 +292,18 @@ async def test_find_by_identifier_multiple_viable_selects_best() -> None:
 
     expected_metric = 7
 
-    info = await feed._find_by_identifier("010101", "Best Plc", "BEST")
+    info = await feed._try_identifier("010101", "Best Plc", "BEST")
     await close(session._client)
 
     assert info["metric"] == expected_metric
 
 
-async def test_find_by_identifier_multiple_viable_none_selected_returns_none() -> None:
+async def test_try_identifier_multiple_viable_none_selected() -> None:
     """
-    ARRANGE: override _pick_best_symbol to return None
-    ACT:     call _find_by_identifier
-    ASSERT:  early-return branch when `chosen` is None executes
+    ARRANGE: identifier search yields two viable quotes but none pass fuzzy score
+    ACT:     call _try_identifier
+    ASSERT:  raises LookupError
     """
-
     search_payload = {
         "quotes": [
             {"symbol": "AAA", "longname": "Alpha", "quoteType": "EQUITY"},
@@ -240,78 +315,83 @@ async def test_find_by_identifier_multiple_viable_none_selected_returns_none() -
     )
     feed = YFinanceFeed(session)
 
-    actual = await feed._find_by_identifier("ID123", "Gamma Ltd", "GMM")
+    with pytest.raises(LookupError) as error:
+        await feed._try_identifier("ID123", "Gamma Ltd", "GMM")
     await close(session._client)
 
-    assert actual is None
+    assert "Low Fuzzy Score" in str(error.value)
 
 
-async def test_find_via_name_symbol_no_quotes_returns_none() -> None:
+async def test_try_name_or_symbol_no_quotes() -> None:
     """
     ARRANGE: search returns zero quotes
-    ACT:     call _find_via_name_symbol
-    ASSERT:  branch where `if not quotes:` hits and None is returned
+    ACT:     call _try_name_or_symbol
+    ASSERT:  raises LookupError
     """
     session = make_session(
         handler_factory({"finance/search": httpx.Response(200, json={"quotes": []})}),
     )
     feed = YFinanceFeed(session)
 
-    actual = await feed._find_via_name_symbol("Nobody Co", "NONE")
+    with pytest.raises(LookupError) as error:
+        await feed._try_name_or_symbol("Nobody Co", "Nobody Co", "NONE")
     await close(session._client)
 
-    assert actual is None
+    assert "No candidate matched" in str(error.value)
 
 
 async def test_fetch_equity_hits_cache_write_branch() -> None:
     """
-    ARRANGE: subclass whose _retrieve_yf_equity_data always returns a record
+    ARRANGE: subclass whose _try_identifier always succeeds
     ACT:     call fetch_equity
-    ASSERT:  record is persisted to cache (covers lines 142-144)
+    ASSERT:  record is persisted to cache
     """
 
     class _AlwaysSucceedsFeed(YFinanceFeed):
-        async def _retrieve_yf_equity_data(self, **_: object) -> dict:
+        async def _try_identifier(self, *_: object, **__: object) -> dict:
             return {"symbol": "COV", "metric": 99}
+
+        async def _try_name_or_symbol(self, *_: object, **__: object) -> None:
+            raise AssertionError("Should not be reached")
 
     # network never reached, but a session is still required
     session = make_session(lambda _: httpx.Response(204))
 
     feed = _AlwaysSucceedsFeed(session)
-    record = await feed.fetch_equity(symbol="COV", name="Covered Corp")
+    record = await feed.fetch_equity(symbol="COV", name="Covered Corp", isin="ID123")
     await close(session._client)
 
     assert load_cache_entry("yfinance_equities", "COV") == record
 
 
-async def test_retrieve_yf_equity_data_breaks_after_first_success() -> None:
+async def test_retrieve_first_identifier_hit_via_fetch_equity() -> None:
     """
     ARRANGE: first identifier search succeeds via overridden method
-    ACT:     call _retrieve_yf_equity_data
-    ASSERT:  success returned immediately (covers lines 196-197)
+    ACT:     call fetch_equity
+    ASSERT:  success returned immediately
     """
 
     class _FirstHitFeed(YFinanceFeed):
-        async def _find_by_identifier(self, *_: object, **__: object) -> dict:
+        async def _try_identifier(self, *_: object, **__: object) -> dict:
             return {"symbol": "WIN"}
 
-        async def _find_via_name_symbol(self, *_: object, **__: object) -> None:
+        async def _try_name_or_symbol(self, *_: object, **__: object) -> None:
             raise AssertionError("Should not be reached")
 
     session = make_session(lambda _: httpx.Response(204))
 
     feed = _FirstHitFeed(session)
-    result = await feed._retrieve_yf_equity_data("Winner Co", "WIN", isin="ISIN123")
+    actual = await feed.fetch_equity(symbol="WIN", name="Winner Co", isin="ISIN123")
     await close(session._client)
 
-    assert result == {"symbol": "WIN"}
+    assert actual == {"symbol": "WIN"}
 
 
-async def test_find_via_name_symbol_match_returns_info() -> None:
+async def test_try_name_or_symbol_match_returns_info() -> None:
     """
     ARRANGE: search returns a quote whose shortname/symbol match inputs closely
-    ACT:     call _find_via_name_symbol
-    ASSERT:  info dict from quoteSummary is returned (covers `chosen` branch)
+    ACT:     call _try_name_or_symbol
+    ASSERT:  info dict from quoteSummary is returned
     """
     search_payload = {
         "quotes": [
@@ -336,7 +416,109 @@ async def test_find_via_name_symbol_match_returns_info() -> None:
 
     expected_answer = 123
 
-    info = await feed._find_via_name_symbol("Good Co", "GOOD")
+    actual = await feed._try_name_or_symbol("Good Co", "Good Co", "GOOD")
+    await close(session._client)
+
+    assert actual["answer"] == expected_answer
+
+
+async def test_try_identifier_unviable_quotes_raises() -> None:
+    """
+    ARRANGE: search returns quotes that have a symbol but no long-name or short-name
+    ACT:     call _try_identifier
+    ASSERT:  LookupError message is 'No viable candidates found.'
+    """
+    search_payload = {
+        "quotes": [
+            {
+                "symbol": "AAA",
+                "longname": None,
+                "shortname": None,
+                "quoteType": "EQUITY",
+            },
+        ],
+    }
+    session = make_session(
+        handler_factory({"finance/search": httpx.Response(200, json=search_payload)}),
+    )
+    feed = YFinanceFeed(session)
+
+    with pytest.raises(LookupError) as error:
+        await feed._try_identifier("AAA-ID", "Alpha Co", "AAA")
+    await close(session._client)
+
+    assert "No viable candidates found." in str(error.value)
+
+
+async def test_fetch_equity_identifier_none_then_name_hit() -> None:
+    """
+    ARRANGE: _try_identifier returns None, _try_name_or_symbol succeeds
+    ACT:     call fetch_equity
+    ASSERT:  the record from _try_name_or_symbol is returned
+    """
+
+    class _PartialHitFeed(YFinanceFeed):
+        async def _try_identifier(self, *_: object, **__: object) -> dict | None:
+            return None
+
+        async def _try_name_or_symbol(self, *_: object, **__: object) -> dict:
+            return {"symbol": "FLB", "metric": 88}
+
+    session = make_session(lambda _: httpx.Response(204))  # network never reached
+    feed = _PartialHitFeed(session)
+
+    excepted_metric = 88
+
+    record = await feed.fetch_equity(symbol="FLB", name="Fallback Plc", isin="ISIN888")
+    await close(session._client)
+
+    assert record["metric"] == excepted_metric
+
+
+async def test_try_name_or_symbol_continue_then_success() -> None:
+    """
+    ARRANGE: first search yields unviable quotes, second yields viable quote and summary
+    ACT:     call _try_name_or_symbol
+    ASSERT:  returns expected info dict
+    """
+    unviable = {
+        "quotes": [
+            {
+                "symbol": "BAD",
+                "longname": None,
+                "shortname": None,
+                "quoteType": "EQUITY",
+            },
+        ],
+    }
+    viable = {
+        "quotes": [{"symbol": "GOOD", "shortname": "Good Plc", "quoteType": "EQUITY"}],
+    }
+    summary = {"quoteSummary": {"result": [{"price": {"answer": 999}}]}}
+
+    responses = iter([unviable, viable])
+
+    expected_answer = 999
+
+    # Handler cycles through unviable then viable search, and returns summary
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        response_map = {
+            "finance/search": lambda: httpx.Response(200, json=next(responses)),
+            "getcrumb": lambda: httpx.Response(200, text='"crumb"'),
+            "quoteSummary": lambda: httpx.Response(200, json=summary),
+        }
+        for key, resp_func in response_map.items():
+            if key in path:
+                return resp_func()
+        return httpx.Response(404)
+
+    session = make_session(handler)
+    info = await YFinanceFeed(session)._try_name_or_symbol(
+        "Good Plc",
+        "Good Plc",
+        "GOOD",
+    )
     await close(session._client)
 
     assert info["answer"] == expected_answer

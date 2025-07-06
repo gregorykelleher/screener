@@ -23,9 +23,6 @@ class YFSession:
         config (FeedConfig): Yahoo Finance feed configuration.
         client (httpx.AsyncClient | None, optional): Optional HTTP client. If not
             provided, a new client is created.
-
-    Returns:
-        None
     """
 
     __slots__ = ("_client", "_config", "_crumb", "_crumb_lock")
@@ -98,7 +95,7 @@ class YFSession:
             dict[str, str]: The updated dictionary of request parameters, potentially
                 including the crumb.
         """
-        if self._crumb and url.startswith(self._config.quote_base):
+        if self._crumb and url.startswith(self._config.quote_summary_url):
             params["crumb"] = self._crumb
         return params
 
@@ -137,6 +134,7 @@ class YFSession:
             ticker = self._extract_ticker(url)
 
             await self._bootstrap_and_fetch_crumb(ticker)
+
             params["crumb"] = self._crumb
 
             response = await self._client.get(url, params=params)
@@ -165,7 +163,7 @@ class YFSession:
         Returns:
             bool: True if crumb is needed, False otherwise.
         """
-        return self._crumb is None and url.startswith(self._config.quote_base)
+        return self._crumb is None and url.startswith(self._config.quote_summary_url)
 
     def _extract_ticker(self, url: str) -> str:
         """
@@ -177,7 +175,7 @@ class YFSession:
         Returns:
             str: The extracted ticker symbol.
         """
-        remainder = url[len(self._config.quote_base) :]
+        remainder = url[len(self._config.quote_summary_url) :]
         first_segment = remainder.split("/", 1)[0]
 
         return first_segment.split("?", 1)[0].split("#", 1)[0]

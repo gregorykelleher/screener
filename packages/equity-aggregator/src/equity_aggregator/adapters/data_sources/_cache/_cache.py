@@ -244,4 +244,5 @@ def save_cache_entry(db_name: str, key: str, value: object) -> None:
         Logs a message indicating the cache entry was saved.
     """
     _save(db_name, key, value)
-    logger.debug("Saved cache entry %r in %s.db", key, db_name)
+    # TODO: figure out what to do here
+    # logger.debug("Saved cache entry %r in %s.db", key, db_name)

@@ -3,6 +3,7 @@
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from itertools import filterfalse
 
 from equity_aggregator.adapters.data_sources._cache import (
     load_cache_entry,
@@ -11,17 +12,11 @@ from equity_aggregator.adapters.data_sources._cache import (
 from equity_aggregator.schemas import YFinanceFeedData
 
 from .api import (
-    get_info,
+    get_quote_summary,
     pick_best_symbol,
     search_quotes,
 )
 from .config import FeedConfig
-from .errors import (
-    EmptySummaryError,
-    LowFuzzyScoreError,
-    NoEquityDataError,
-    NoQuotesError,
-)
 from .session import YFSession
 
 logger = logging.getLogger(__name__)
@@ -65,7 +60,11 @@ class YFinanceFeed:
     """
 
     __slots__ = ("_session", "_config")
+
+    # Data model associated with the Yahoo Finance feed
     model = YFinanceFeedData
+
+    # Minimum fuzzy matching score
     _min_score = 150
 
     def __init__(self, session: YFSession, config: FeedConfig | None = None) -> None:
@@ -87,18 +86,27 @@ class YFinanceFeed:
         name: str,
         isin: str | None = None,
         cusip: str | None = None,
-    ) -> dict:
+    ) -> dict | None:
         """
-        Retrieve equity data by symbol, using cache, identifiers, or fuzzy lookup.
+        Fetch enriched equity data using symbol, name, ISIN, or CUSIP.
 
-        Steps, in order:
-        1. Return cached entry if present.
-        2. Try exact lookup via ISIN, then CUSIP.
-        3. Fallback to fuzzy name/symbol search.
-        4. Return empty dict if nothing found.
+        The method performs the following steps:
+          1. Checks for a cached entry for the given symbol and returns it if found.
+          2. Attempts an exact lookup using ISIN and CUSIP, if provided.
+          3. Falls back to a fuzzy search using the name or symbol.
+          4. Raises LookupError if no data is found from any source.
+
+        Args:
+            symbol (str): Ticker symbol of the equity.
+            name (str): Full name of the equity.
+            isin (str | None): ISIN identifier, if available.
+            cusip (str | None): CUSIP identifier, if available.
 
         Returns:
-            dict: Enriched equity data, or empty dict if not found.
+            dict | None: Enriched equity data if found, otherwise None.
+
+        Raises:
+            LookupError: If no matching equity data is found.
         """
         if record := load_cache_entry("yfinance_equities", symbol):
             return record
@@ -111,22 +119,18 @@ class YFinanceFeed:
         ]
 
         # fallback to fuzzy search
-        lookups.append((self._try_name_symbol, name or symbol))
+        lookups.append((self._try_name_or_symbol, name or symbol))
 
-        result: dict | None = {}
         for fn, arg in lookups:
-            result = await fn(arg, name, symbol)
-            if result:
-                break
-        else:
-            # no break → nothing found
-            result = {}
+            try:
+                data = await fn(arg, name, symbol)
+            except LookupError:
+                continue
+            if data:
+                save_cache_entry("yfinance_equities", symbol, data)
+                return data
 
-        if result:
-            save_cache_entry("yfinance_equities", symbol, result)
-            return result
-
-        raise EmptySummaryError(symbol or name)
+        raise LookupError("Quote Summary endpoint returned nothing.")
 
     async def _try_identifier(
         self,
@@ -135,110 +139,126 @@ class YFinanceFeed:
         expected_symbol: str,
     ) -> dict | None:
         """
-        Search Yahoo Finance by ISIN or CUSIP identifier and fetch full info.
+        Attempt to fetch equity data from Yahoo Finance using an ISIN or CUSIP.
 
-        1. Query API with identifier.
-        2. Filter quotes to those with symbol+longname.
-        3. Choose best symbol via _choose_symbol.
-        4. Fetch detailed data if match found.
+        This method:
+          1. Searches Yahoo Finance for quotes matching the identifier.
+          2. Filters results to those with both a symbol and a name.
+          3. Selects the best candidate using fuzzy matching.
+          4. Retrieves detailed quote summary data for the chosen symbol.
 
         Args:
-            identifier (str): ISIN or CUSIP string.
-            expected_name (str): Expected company name.
-            expected_symbol (str): Expected ticker symbol.
+            identifier (str): The ISIN or CUSIP to search for.
+            expected_name (str): The expected company or equity name.
+            expected_symbol (str): The expected ticker symbol.
 
         Returns:
-            dict | None: Fetched equity data or None if no valid candidate.
+            dict | None: Detailed equity data if a suitable match is found, else None.
+
+        Raises:
+            LookupError: If no valid candidate is found or quote summary is unavailable.
         """
         quotes = await search_quotes(self._session, identifier)
 
         if not quotes:
-            raise NoQuotesError(identifier)
+            raise LookupError("Quote Search endpoint returned nothing.")
 
         viable = _filter_equities(quotes)
 
         if not viable:
-            raise NoEquityDataError(identifier)
+            raise LookupError("No viable candidates found.")
 
         chosen = _choose_symbol(
             viable,
-            name_key="longname",
             expected_name=expected_name,
             expected_symbol=expected_symbol,
             min_score=self._min_score,
         )
 
         if not chosen:
-            raise LowFuzzyScoreError(identifier)
+            raise LookupError("Low Fuzzy Score.")
 
-        info = await get_info(
+        info = await get_quote_summary(
             self._session,
             chosen,
             modules=self._config.modules,
         )
 
         if info is None:
-            raise EmptySummaryError(chosen)
+            raise LookupError("Quote Summary endpoint returned nothing.")
 
         return info
 
-    async def _try_name_symbol(
+    async def _try_name_or_symbol(
         self,
         query: str,
         expected_name: str,
         expected_symbol: str,
     ) -> dict | None:
         """
-        Perform fuzzy search by company name or symbol and fetch full info.
+        Attempt to retrieve a quote summary for an equity using a name or symbol query.
 
-        1. Query API with name or symbol.
-        2. Filter quotes to those with symbol+longname.
-        3. Choose best symbol via _choose_symbol (using 'longname').
-        4. Fetch detailed data if match found.
+        This method searches Yahoo Finance using the provided query string and the
+        expected symbol. For each search term, it:
+          1. Retrieves quote candidates.
+          2. Filters out entries lacking a name or symbol.
+          3. Selects the best match using fuzzy logic.
+          4. Fetches and returns the detailed quote summary for the chosen symbol.
 
         Args:
-            query (str): Company name or ticker symbol to search.
-            expected_name (str): Expected company name.
-            expected_symbol (str): Expected ticker symbol.
+            query (str): Primary search string, typically a company name or symbol.
+            expected_name (str): Expected equity name for fuzzy matching.
+            expected_symbol (str): Expected ticker symbol for fuzzy matching.
 
         Returns:
-            dict | None: Fetched equity data or None if no valid candidate.
+            dict | None: Quote summary dictionary if a suitable match is found,
+            otherwise None.
+
+        Raises:
+            LookupError: If no suitable candidate is found after all queries.
         """
-        quotes = await search_quotes(self._session, query)
-        viable = _filter_equities(quotes)
 
-        if not quotes:
-            raise NoQuotesError()
+        searches = tuple(dict.fromkeys((query, expected_symbol)))
 
-        if not viable:
-            raise NoEquityDataError()
+        for term in searches:
+            # search for quotes
+            quotes = await search_quotes(self._session, term)
+            if not quotes:
+                continue
 
-        chosen = _choose_symbol(
-            viable,
-            name_key="longname",
-            expected_name=expected_name,
-            expected_symbol=expected_symbol,
-            min_score=self._min_score,
-        )
+            # filter out any without name or symbol
+            viable = _filter_equities(quotes)
+            if not viable:
+                continue
 
-        if not chosen:
-            raise LowFuzzyScoreError()
+            # pick best symbol via fuzzy matching
+            symbol = _choose_symbol(
+                viable,
+                expected_name=expected_name,
+                expected_symbol=expected_symbol,
+                min_score=self._min_score,
+            )
+            if not symbol:
+                continue
 
-        info = await get_info(
-            self._session,
-            chosen,
-            modules=self._config.modules,
-        )
+            # fetch and return the quote summary
+            return await get_quote_summary(
+                self._session,
+                symbol,
+                modules=self._config.modules,
+            )
 
-        if info is None:
-            raise EmptySummaryError()
-
-        return info
+        # Nothing matched
+        raise LookupError("No candidate matched.")
 
 
 def _filter_equities(quotes: list[dict]) -> list[dict]:
     """
     Filter out any quotes lacking a longname or symbol.
+
+    Note:
+        The Yahoo Finance search quote query endpoint returns 'longname' and 'shortname'
+        fields in lowercase.
 
     Args:
         quotes (list[dict]): Raw list of quote dicts from Yahoo Finance.
@@ -246,46 +266,85 @@ def _filter_equities(quotes: list[dict]) -> list[dict]:
     Returns:
         list[dict]: Only those quotes that have both 'longname' and 'symbol'.
     """
-    return [quote for quote in quotes if quote.get("longname") and quote.get("symbol")]
+    return [
+        quote
+        for quote in quotes
+        if (quote.get("longname") or quote.get("shortname")) and quote.get("symbol")
+    ]
 
 
 def _choose_symbol(
     viable: list[dict],
     *,
-    name_key: str,
     expected_name: str,
     expected_symbol: str,
     min_score: int,
 ) -> str | None:
     """
-    Select the best symbol from a list of filtered quotes.
+    Select the most appropriate symbol from a list of viable Yahoo Finance quote dicts.
 
-    1. If there is exactly one candidate, return it.
-    2. If multiple candidates share the same name_key value, return the first.
-    3. Otherwise perform fuzzy matching with pick_best_symbol.
+    If only one candidate is present, its symbol is returned. If multiple candidates
+    exist, the function attempts to select the best match by comparing the expected
+    name and symbol to the 'longname' and 'shortname' fields of each candidate. If
+    all candidates share the same name, the first such symbol is returned. Otherwise,
+    fuzzy matching is performed using pick_best_symbol, which considers the expected
+    name, expected symbol, and a minimum score threshold.
 
     Args:
-        viable (list[dict]): Filtered list of quote dicts.
-        name_key (str): Field name to use for equity name comparison ('longname').
-        expected_name (str): The expected equity name.
-        expected_symbol (str): The expected equity ticker symbol.
-        min_score (int): Minimum combined fuzzy score to accept a match.
+        viable (list[dict]): List of filtered Yahoo Finance quote dictionaries.
+        expected_name (str): Expected company or equity name for fuzzy matching.
+        expected_symbol (str): Expected ticker symbol for fuzzy matching.
+        min_score (int): Minimum fuzzy score required to accept a match.
 
     Returns:
-        str | None: The chosen symbol, or None if no candidate meets the threshold.
+        str | None: The selected symbol if a suitable candidate is found, else None.
     """
+
+    # if there’s only one candidate, return its symbol immediately
     if len(viable) == 1:
         return viable[0]["symbol"]
 
-    names = {quote.get(name_key) for quote in viable if quote.get(name_key)}
+    def select_best_symbol(name_key: str) -> str | None:
+        """
+        Selects the best symbol from a list of candidates based on provided name key.
 
-    if len(names) == 1:
-        return viable[0]["symbol"]
+        Examines the specified name field (e.g., 'longname' or 'shortname')
+        across all viable candidates. If all candidate names are identical, it returns
+        the corresponding symbol. Otherwise, it applies fuzzy matching against the
+        expected name or symbol to determine the best match.
 
-    return pick_best_symbol(
-        viable,
-        name_key=name_key,
-        expected_name=expected_name,
-        expected_symbol=expected_symbol,
-        min_score=min_score,
+        Args:
+            name_key (str): The key in each candidate dict to use for name comparison
+                (e.g., 'longname' or 'shortname').
+
+        Returns:
+            str | None: Selected symbol if suitable candidate is found, otherwise None.
+        """
+
+        # gather all names under the given key
+        candidate_names = [quote[name_key] for quote in viable if quote.get(name_key)]
+
+        if not candidate_names:
+            return None
+
+        # all names identical → pick first matching symbol
+        if len({*candidate_names}) == 1:
+            return next(quote["symbol"] for quote in viable if quote.get(name_key))
+
+        # otherwise perform fuzzy matching
+        return pick_best_symbol(
+            viable,
+            name_key=name_key,
+            expected_name=expected_name,
+            expected_symbol=expected_symbol,
+            min_score=min_score,
+        )
+
+    # try 'longname' then 'shortname', return first non-None result
+    return next(
+        filterfalse(
+            lambda x: x is None,
+            map(select_best_symbol, ("longname", "shortname")),
+        ),
+        None,
     )

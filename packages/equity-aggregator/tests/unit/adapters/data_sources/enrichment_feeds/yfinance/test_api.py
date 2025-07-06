@@ -8,8 +8,7 @@ import pytest
 
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.api import (
     _flatten_module_dicts,
-    get_info,
-    log_discovered_symbol,
+    get_quote_summary,
     pick_best_symbol,
     search_quotes,
 )
@@ -191,10 +190,10 @@ async def test_get_info_flattens_modules() -> None:
         },
     )
 
-    info = await get_info(session, "AAPL", modules=("price",))
+    actual = await get_quote_summary(session, "AAPL", modules=("price",))
     await close(session._client)
 
-    assert info == {"answer": 123}
+    assert actual == {"answer": 123}
 
 
 async def test_get_info_returns_none_when_no_data() -> None:
@@ -208,13 +207,17 @@ async def test_get_info_returns_none_when_no_data() -> None:
         {
             "getcrumb": httpx.Response(200, text='"c"'),
             "quoteSummary": httpx.Response(200, json=quote_payload),
+            "finance/quote": httpx.Response(
+                200,
+                json={"quoteResponse": {"result": []}},
+            ),
         },
     )
 
-    info = await get_info(session, "EMPTY", modules=("price",))
+    actual = await get_quote_summary(session, "EMPTY", modules=("price",))
     await close(session._client)
 
-    assert info is None
+    assert actual is None
 
 
 def test_pick_best_symbol_empty_list_returns_none() -> None:
@@ -233,10 +236,28 @@ def test_pick_best_symbol_empty_list_returns_none() -> None:
     assert actual is None
 
 
-def test_log_discovered_symbol_ignores_missing_symbol() -> None:
+async def test_get_info_fallback_returns_first_result() -> None:
     """
-    ARRANGE: result dict without a 'symbol' key
-    ACT:     call log_discovered_symbol
-    ASSERT:  returns None and raises nothing (covers `discovered` falsy branch)
+    ARRANGE: quoteSummary returns no data, fallback returns one element.
+    ACT:     call get_quote_summary
+    ASSERT:  first element from fallback is returned
     """
-    assert log_discovered_symbol({}, "REQ") is None
+    empty_quote_summary = {"quoteSummary": {"result": []}}
+    fallback_payload = {
+        "quoteResponse": {
+            "result": [{"answer": 999}],
+        },
+    }
+
+    session = _make_session(
+        {
+            "getcrumb": httpx.Response(200, text='"c"'),
+            "quoteSummary": httpx.Response(200, json=empty_quote_summary),
+            "finance/quote": httpx.Response(200, json=fallback_payload),
+        },
+    )
+
+    actual = await get_quote_summary(session, "XYZ")
+    await close(session._client)
+
+    assert actual == {"answer": 999}

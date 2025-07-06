@@ -29,7 +29,14 @@ class FeedConfig:
     search_url: str = "https://query1.finance.yahoo.com/v1/finance/search"
 
     # quote summary URL for fetching equity data
-    quote_base: str = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
+    quote_summary_url: str = (
+        "https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
+    )
+
+    # quote summary URL fallback endpoint for fetching equity data
+    quote_summary_fallback_url: str = (
+        "https://query1.finance.yahoo.com/v7/finance/quote"
+    )
 
     # crumb URL for session validation
     crumb_url: str = "https://query1.finance.yahoo.com/v1/test/getcrumb"

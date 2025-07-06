@@ -6,11 +6,6 @@ from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable
 from contextlib import AsyncExitStack
 
 from equity_aggregator.adapters import open_yfinance_feed
-
-# TODO: improve this import
-from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.errors import (
-    FeedError,
-)
 from equity_aggregator.domain._utils import get_usd_converter, merge
 from equity_aggregator.schemas import RawEquity, YFinanceFeedData
 
@@ -148,18 +143,28 @@ async def _safe_fetch(
     wait_timeout: float = 30.0,
 ) -> dict[str, object] | None:
     """
-    Safely fetch raw data from the feed for the given RawEquity.
+    Safely fetch raw data for a RawEquity from an enrichment feed, handling
+    timeouts and errors.
+
+    Note:
+        The CIK (Central Index Key) is intentionally omitted as an identifier
+        for enrichment feeds, as it lacks broad support.
 
     Args:
-        fetcher (FetchFunc): The async fetch function for the enrichment feed.
         source (RawEquity): The RawEquity instance to fetch data for.
+        fetcher (FetchFunc): The async fetch function for the enrichment feed.
+        feed_name (str): The name of the enrichment feed for logging context.
+        wait_timeout (float, optional): Maximum time to wait for the fetch, in
+            seconds. Defaults to 30.0.
 
     Returns:
         dict[str, object] | None: The fetched data as a dictionary, or None if an
         exception occurs or the data is empty.
     """
+    data: dict[str, object] | None = None
+
     try:
-        return await asyncio.wait_for(
+        data = await asyncio.wait_for(
             fetcher(
                 symbol=source.symbol,
                 name=source.name,
@@ -169,32 +174,28 @@ async def _safe_fetch(
             timeout=wait_timeout,
         )
 
-    except FeedError as error:
-        logger.warning(
-            "No %s feed data for symbol=%s, name=%s "
-            "(isin=%s, cusip=%s, cik=%s, share_class_figi=%s). %s",
+    except LookupError as error:
+        _log_no_feed_data(
             feed_name,
-            source.symbol,
-            source.name,
-            source.isin or "<none>",
-            source.cusip or "<none>",
-            source.cik or "<none>",
-            source.share_class_figi or "<none>",
+            source,
             error,
         )
-        return None
 
     except TimeoutError:
-        logger.error("Timed out fetching from %s.", feed_name)
-        return None
+        logger.error(
+            "Timed out after %.0f s while fetching from %s.",
+            wait_timeout,
+            feed_name,
+        )
 
     except Exception as error:
         logger.error(
             "Error fetching from %s: %s",
             feed_name,
-            _describe_httpx_error(error),
+            error,
         )
-        return None
+
+    return data
 
 
 def _make_validator(
@@ -242,13 +243,11 @@ def _make_validator(
             else:
                 summary = str(error)
 
-            logger.warning(
-                "No %s feed data for %s (symbol=%s): %s",
-                feed_name,
-                source.name,
-                source.symbol,
-                summary,
-            )
+                _log_no_feed_data(
+                    feed_name,
+                    source,
+                    summary,
+                )
             return source
 
     return validate
@@ -321,49 +320,54 @@ async def _convert_to_usd_or_fallback(
         source RawEquity.
     """
     converter = await get_usd_converter()
+
     try:
         converted = converter(validated)
+
         if converted is None:
             raise ValueError("USD conversion failed")
         return converted
-    except Exception as exception:
-        logger.warning(
-            "No %s feed data for %s (symbol=%s): %s",
+
+    except Exception as error:
+        _log_no_feed_data(
             feed_name,
-            source.name,
-            source.symbol,
-            exception,
+            source,
+            error,
         )
         return source
 
 
-# TODO: make this a proper util for everything to use
-def _describe_httpx_error(error: Exception) -> str:
+def _log_no_feed_data(
+    feed_name: str,
+    source: RawEquity,
+    error: object,
+    *,
+    level: int = logging.WARNING,
+) -> None:
     """
-    Converts common httpx and httpcore exceptions into concise, human-readable messages.
-
-    This function is intended to simplify error reporting for HTTP requests by mapping
-    specific exceptions from the httpx and httpcore libraries to clear, user-friendly
-    descriptions. It handles HTTP status errors and transport protocol errors, and falls
-    back to the string representation for other exceptions.
+    Logs a standardised warning or error message indicating missing feed data for a
+        given equity symbol.
 
     Args:
-        error (Exception): The exception instance to describe. Typically an exception
-            raised by httpx or httpcore during HTTP requests.
+        feed_name (str): The name of the feed for which data is missing.
+        source (RawEquity): Equity object containing symbol and identifier information.
+        error (object): Additional error information or context to include in the log.
+        level (int, optional): Logging level (e.g., logging.WARNING). Defaults to
+            logging.WARNING.
 
     Returns:
-        str: A concise, human-friendly description of the exception.
+        None
     """
-    import httpcore
-    import httpx
-
-    if isinstance(error, httpx.HTTPStatusError):
-        code = error.response.status_code
-        phrase = error.response.reason_phrase
-        target = error.request.url.path
-        return f"Received HTTP {code} {phrase} when requesting {target or '/'}"
-
-    if isinstance(error, httpcore.LocalProtocolError):
-        return f"Transport error: {error}"
-
-    return str(error)
+    logger.log(
+        level,
+        "No %s feed data for symbol=%s, name=%s "
+        "(isin=%s, cusip=%s, cik=%s, share_class_figi=%s). %s",
+        feed_name,
+        source.symbol,
+        source.name,
+        source.isin or "<none>",
+        source.cusip or "<none>",
+        source.cik or "<none>",
+        source.share_class_figi or "<none>",
+        error,
+    )

@@ -68,7 +68,7 @@ title = "Equity Aggregator Test Coverage"
 
 
 [tool.ruff]
-cache-dir = "data/cache/ruff"
+cache-dir = "data/ruff"
 line-length = 88
 
 [tool.ruff.lint]

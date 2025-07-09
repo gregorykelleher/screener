@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache import save_cache
+from equity_aggregator import save_cache
 from equity_aggregator.domain.pipeline.transforms import convert
 from equity_aggregator.schemas import RawEquity
 

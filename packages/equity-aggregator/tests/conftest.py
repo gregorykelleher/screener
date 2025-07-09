@@ -1,13 +1,64 @@
 # tests/conftest.py
 
 import os
-import shutil
 import typing
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 import respx
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """
+    Configures pytest to create a temporary folder within .pytest_cache for test data.
+
+    This function is automatically called by pytest before running tests. It creates a
+    directory named 'data_store' inside the .pytest_cache folder and sets the
+    environment variable '_DATA_STORE_DIR' to the absolute path of this directory.
+    This allows tests to access a temporary, isolated data store location.
+
+    Args:
+        config (pytest.Config): The pytest configuration object.
+
+    Returns:
+        None
+    """
+    root = Path(config.cache.makedir("data_store").strpath)
+
+    os.environ["_DATA_STORE_DIR"] = root.as_posix()
+
+
+@pytest.fixture
+def data_store_dir() -> Path:
+    """
+    Fixture that provides the path to the temporary data-store directory for test
+    inspection.
+
+    Returns:
+        Path: The path to the temporary data-store directory, as specified by the
+            '_DATA_STORE_DIR' environment variable.
+    """
+    return Path(os.environ["_DATA_STORE_DIR"])
+
+
+@pytest.fixture(autouse=True)
+def fresh_data_store() -> None:
+    """
+    Ensures each test starts with a clean SQLite data store file.
+
+    This fixture runs automatically before each test. It deletes the 'data_store.db'
+    file from the temporary data store directory if it exists, guaranteeing a pristine
+    state for every test.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    db_file = Path(os.environ["_DATA_STORE_DIR"]) / "data_store.db"
+    if db_file.exists():
+        db_file.unlink()
 
 
 @pytest.fixture
@@ -26,36 +77,3 @@ def respx_mock() -> typing.Generator[respx.MockRouter, None, None]:
     """
     with respx.mock(assert_all_called=False) as router:
         yield router
-
-
-@pytest.fixture(autouse=True)
-def clear_cache_dir() -> Iterator[None]:
-    """
-    Pytest fixture that resets the cache directory before each test.
-
-    Deletes the cache directory specified by the CACHE_DIR environment variable,
-    recreates it as an empty directory, and yields control to the test. This ensures
-    a clean cache state for every test run.
-
-    Args:
-        None
-
-    Yields:
-        None: Control is yielded to the test after resetting the cache directory.
-    """
-    cache_dir_str = os.environ.get("CACHE_DIR")
-
-    if not cache_dir_str:
-        pytest.exit(
-            "CACHE_DIR is not set: tests must be run via pytest-env so CACHE_DIR "
-            "points at a test-only folder.",
-        )
-
-    cache_dir = Path(cache_dir_str)
-
-    # Ensure the cache directory is empty before each test
-    if cache_dir.exists():
-        shutil.rmtree(cache_dir)
-
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    yield

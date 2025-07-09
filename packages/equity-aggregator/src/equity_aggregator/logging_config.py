@@ -17,7 +17,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "level": "DEBUG",
+            "level": "INFO",
             "formatter": "standard",
             "stream": "ext://sys.stdout",
         },
@@ -51,15 +51,16 @@ LOGGING = {
 
 def configure_logging() -> None:
     """
-    Configure logging for the application based on the LOG_CONFIG environment variable.
+    Configures logging for the application based on the LOG_CONFIG environment variable.
 
-    Copies the base LOGGING configuration and sets the console handler's log level
-    according to the environment:
-        - 'production': sets log level to WARNING.
-        - 'debug': sets log level to DEBUG.
-        - Defaults to INFO for 'development' or if LOG_CONFIG is unset.
+    This function copies the base LOGGING configuration and adjusts console handler's
+    log level according to the environment:
+        - 'production': sets console log level to WARNING.
+        - 'debug': sets console log level to DEBUG.
+        - 'development' or unset: sets console log level to INFO.
 
-    Applies the final configuration using logging.config.dictConfig.
+    The file handler is always set to DEBUG level. The logger 'equity_aggregator' is set
+    to DEBUG level.
 
     Args:
         None
@@ -71,16 +72,18 @@ def configure_logging() -> None:
 
     # Determine the log configuration (default to 'development')
     env = os.getenv("LOG_CONFIG", "development").lower()
-    level_map = {
+    console_level = {
         "production": "WARNING",
         "debug": "DEBUG",
         "development": "INFO",
-    }
-    log_level_selected = level_map.get(env, "INFO")
+    }.get(env, "INFO")
 
-    # set equity_aggregator logger, console and file handler to selected level
-    config["handlers"]["file"]["level"] = log_level_selected
-    config["handlers"]["console"]["level"] = log_level_selected
-    config["loggers"]["equity_aggregator"]["level"] = log_level_selected
+    config["loggers"]["equity_aggregator"]["level"] = "DEBUG"
+
+    # console handler always set to environment level
+    config["handlers"]["console"]["level"] = console_level
+
+    # file handler always set to DEBUG
+    config["handlers"]["file"]["level"] = "DEBUG"
 
     logging.config.dictConfig(config)

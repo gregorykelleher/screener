@@ -35,7 +35,7 @@ def main() -> None:
         return
     logger.info(f"Found {len(profiles)} equity profiles.")
     for p in profiles:
-        logger.info(
+        logger.debug(
             "{name=%s, symbol=%s, isin=%s, FIGI=%s, mics=%s, currency=%s, "
             "last_price=%s, market_cap=%s}",
             p.name,
@@ -49,7 +49,7 @@ def main() -> None:
         )
 
     duration = time.monotonic() - start
-    logging.info("Completed in %.2f seconds", duration)
+    logger.info("Completed in %.2f seconds", duration)
 
 
 if __name__ == "__main__":

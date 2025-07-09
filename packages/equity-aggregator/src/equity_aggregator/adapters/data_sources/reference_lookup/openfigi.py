@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable, Sequence
 import pandas as pd
 from openfigipy import OpenFigiClient
 
-from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
+from equity_aggregator import load_cache, save_cache
 from equity_aggregator.schemas import RawEquity
 
 logger = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from itertools import filterfalse
 
-from equity_aggregator.adapters.data_sources._cache import (
+from equity_aggregator import (
     load_cache_entry,
     save_cache_entry,
 )

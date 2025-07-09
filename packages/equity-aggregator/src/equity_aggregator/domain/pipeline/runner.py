@@ -4,6 +4,7 @@ import logging
 from collections.abc import AsyncIterable
 from typing import TypeVar
 
+from equity_aggregator import save_equities
 from equity_aggregator.domain.pipeline.resolve import resolve
 from equity_aggregator.schemas import RawEquity
 
@@ -68,4 +69,8 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
     # stream = enrich(stream)
 
     # materialise the stream
-    return [equity async for equity in stream]
+    equities = [equity async for equity in stream]
+
+    save_equities(equities)
+
+    return equities

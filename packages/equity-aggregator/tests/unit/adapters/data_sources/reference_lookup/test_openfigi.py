@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pandas as pd
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache._cache import (
+from equity_aggregator import (
     load_cache,
     save_cache,
 )

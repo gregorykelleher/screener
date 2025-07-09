@@ -8,7 +8,7 @@ import httpx
 import pytest
 from httpx import AsyncClient, MockTransport
 
-from equity_aggregator.adapters.data_sources._cache._cache import save_cache
+from equity_aggregator import save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.xetra import (
     _build_payload,
     _consume_queue,

@@ -5,7 +5,7 @@ from decimal import Decimal
 import httpx
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache import load_cache, save_cache
+from equity_aggregator import load_cache, save_cache
 from equity_aggregator.adapters.data_sources.reference_lookup.exchange_rate_api import (
     _assert_success,
     _build_url,

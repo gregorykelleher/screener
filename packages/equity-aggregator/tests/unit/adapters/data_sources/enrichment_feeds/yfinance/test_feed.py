@@ -6,7 +6,7 @@ import asyncio
 import httpx
 import pytest
 
-from equity_aggregator.adapters.data_sources._cache._cache import (
+from equity_aggregator import (
     load_cache_entry,
     save_cache_entry,
 )

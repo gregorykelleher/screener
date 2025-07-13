@@ -68,12 +68,10 @@ async def fetch_equity_identification(
 
     if cached is not None:
         logger.debug("Loaded %d OpenFIGI records from cache.", len(cached))
-        _log_missing_figis(raw_equities, [figi for _, _, figi in cached])
         return cached
 
     equity_id_records = await _identify_equity_indentification_records(raw_equities)
 
-    _log_missing_figis(raw_equities, [figi for _, _, figi in equity_id_records])
     save_cache(cache_key, equity_id_records)
 
     logger.debug("Saved %d OpenFIGI records to cache.", len(equity_id_records))
@@ -373,33 +371,3 @@ def _to_query_record(equity: RawEquity) -> dict[str, str]:
     else:
         id_type, id_value = "TICKER", equity.symbol
     return {"idType": id_type, "idValue": id_value, "marketSecDes": "Equity"}
-
-
-def _log_missing_figis(
-    equities: Sequence[RawEquity],
-    figis: Sequence[str | None],
-) -> None:
-    """
-    Logs debug messages for equities that are missing a corresponding FIGI.
-
-    Iterates over provided sequences of equities and their associated FIGIs. For each
-    equity where the FIGI is None, logs a debug message including the equity's symbol,
-    ISIN, and CUSIP.
-
-    Args:
-        equities (Sequence[RawEquity]): A sequence of RawEquity objects to check for
-            missing FIGIs.
-        figis (Sequence[str | None]): A sequence of FIGI strings or None, corresponding
-            to each equity.
-
-    Returns:
-        None
-    """
-    for equity, figi in zip(equities, figis, strict=False):
-        if figi is None:
-            logger.warning(
-                "No share_class_figi for %s (isin=%s, cusip=%s)",
-                equity.symbol,
-                equity.isin or "None",
-                equity.cusip or "None",
-            )

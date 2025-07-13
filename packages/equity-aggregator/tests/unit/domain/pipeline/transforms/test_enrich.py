@@ -214,7 +214,7 @@ def test__enrich_with_feed_skips_when_no_missing() -> None:
         market_cap=Decimal("40"),
     )
 
-    actual = asyncio.run(_enrich_with_feed(full, (should_not_be_called, object)))
+    actual = asyncio.run(_enrich_with_feed(full, should_not_be_called, object))
 
     assert actual is full
 
@@ -454,7 +454,7 @@ def test_enrich_with_feed_falls_back_on_empty_dict() -> None:
         market_cap=None,
     )
 
-    actual = asyncio.run(_enrich_with_feed(source, (empty_fetcher, GoodFeedData)))
+    actual = asyncio.run(_enrich_with_feed(source, empty_fetcher, GoodFeedData))
 
     assert actual is source
 
@@ -523,7 +523,7 @@ def test_enrich_with_feed_completes_success_path() -> None:
         market_cap=None,
     )
 
-    enriched = asyncio.run(_enrich_with_feed(source, (good_fetcher, GoodFeedData)))
+    enriched = asyncio.run(_enrich_with_feed(source, good_fetcher, GoodFeedData))
 
     assert (enriched.last_price, enriched.market_cap) == (
         Decimal("123"),

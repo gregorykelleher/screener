@@ -19,7 +19,6 @@ from equity_aggregator.adapters.data_sources.reference_lookup.openfigi import (
     _enumerate_chunks,
     _extract_identification_records,
     _fan_out,
-    _log_missing_figis,
     _produce_chunk,
     _to_query_record,
     fetch_equity_identification,
@@ -208,17 +207,6 @@ def test_extract_triplets_empty_dataframe() -> None:
     ASSERT:  returns empty list
     """
     assert _extract_identification_records(pd.DataFrame(), batch_size=0) == []
-
-
-def test_log_missing_figis_returns_none() -> None:
-    """
-    ARRANGE: one RawEquity with missing FIGI
-    ACT:     call _log_missing_figis
-    ASSERT:  returns None
-    """
-    equity = RawEquity(name="X", symbol="X")
-
-    assert _log_missing_figis([equity], [None]) is None
 
 
 def test_blocking_map_call_returns_dataframe_or_none() -> None:

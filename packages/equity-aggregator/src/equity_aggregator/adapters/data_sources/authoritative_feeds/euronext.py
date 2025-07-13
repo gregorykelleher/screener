@@ -122,9 +122,7 @@ def _deduplicate_records(extract_key: RecordUniqueKeyExtractor) -> UniqueRecordS
             yields only unique records, as determined by the extracted key.
     """
 
-    async def deduplicator(
-        records: RecordStream,
-    ) -> RecordStream:
+    async def deduplicator(records: RecordStream) -> RecordStream:
         """
         Deduplicate async iterator of dicts by a key extracted from each record.
 

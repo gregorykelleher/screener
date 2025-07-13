@@ -9,11 +9,13 @@ from typing import NamedTuple
 from equity_aggregator.adapters import (
     fetch_equity_records_euronext,
     fetch_equity_records_lse,
+    fetch_equity_records_sec,
     fetch_equity_records_xetra,
 )
 from equity_aggregator.schemas import (
     EuronextFeedData,
     LseFeedData,
+    SecFeedData,
     XetraFeedData,
 )
 
@@ -34,6 +36,7 @@ _AUTH_FEEDS: tuple[FeedPair] = [
     (fetch_equity_records_euronext, EuronextFeedData),
     (fetch_equity_records_xetra, XetraFeedData),
     (fetch_equity_records_lse, LseFeedData),
+    (fetch_equity_records_sec, SecFeedData),
 ]
 
 

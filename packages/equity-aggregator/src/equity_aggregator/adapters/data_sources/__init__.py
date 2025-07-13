@@ -3,6 +3,7 @@
 from .authoritative_feeds import (
     fetch_equity_records_euronext,
     fetch_equity_records_lse,
+    fetch_equity_records_sec,
     fetch_equity_records_xetra,
 )
 from .enrichment_feeds import (
@@ -17,6 +18,7 @@ __all__ = [
     # authoritative feeds
     "fetch_equity_records_euronext",
     "fetch_equity_records_lse",
+    "fetch_equity_records_sec",
     "fetch_equity_records_xetra",
     # enrichment feeds
     "open_yfinance_feed",

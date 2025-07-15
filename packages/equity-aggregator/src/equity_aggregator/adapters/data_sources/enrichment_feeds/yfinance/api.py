@@ -30,24 +30,15 @@ async def search_quotes(
     Returns:
         list[dict]: List of quote dictionaries for equities matching the query.
     """
-    try:
-        response = await session.get(
-            session.config.search_url,
-            params={"q": query},
-        )
-        response.raise_for_status()
-        raw_data = response.json().get("quotes", [])
+    response = await session.get(session.config.search_url, params={"q": query})
 
-    except httpx.HTTPError as error:
-        logger.error("HTTP error during search for %s: %s", query, error)
+    if response.status_code == httpx.codes.TOO_MANY_REQUESTS:
+        logger.warning("429 from search endpoint for %s", query)
         return []
 
-    except Exception as error:
-        logger.error("Unexpected error during search for %s: %s", query, error)
-        return []
-
-    # filter out non-equity quotes
-    return [quote for quote in raw_data if quote.get("quoteType") == "EQUITY"]
+    response.raise_for_status()  # other statuses are unexpected
+    raw_data = response.json().get("quotes", [])
+    return [q for q in raw_data if q.get("quoteType") == "EQUITY"]
 
 
 async def get_quote_summary(
@@ -89,13 +80,28 @@ async def get_quote_summary(
             "region": "US",
         },
     )
-    response.raise_for_status()
-    raw = response.json().get("quoteSummary", {}).get("result", [])
 
+    status = response.status_code
+
+    # 401/500/502 → fallback
+    if status in {
+        httpx.codes.UNAUTHORIZED,
+        httpx.codes.INTERNAL_SERVER_ERROR,
+        httpx.codes.BAD_GATEWAY,
+    }:
+        return await _get_quote_summary_fallback(session, ticker)
+
+    # 429 after back-off → treat as “no data” so the caller logs it cleanly
+    if status == httpx.codes.TOO_MANY_REQUESTS:
+        raise LookupError(f"HTTP 429 Too Many Requests for {ticker}")
+
+    # everything else: try to parse
+    raw = response.json().get("quoteSummary", {}).get("result", [])
     if raw:
         return _flatten_module_dicts(modules, raw[0])
 
-    return await _get_quote_summary_fallback(session, ticker)
+    # empty result
+    raise LookupError("Quote Summary endpoint returned nothing.")
 
 
 async def _get_quote_summary_fallback(

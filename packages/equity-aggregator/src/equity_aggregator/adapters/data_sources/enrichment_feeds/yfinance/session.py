@@ -1,7 +1,7 @@
-# yfinance/session.py
-
 import asyncio
-from collections.abc import Mapping
+import logging
+import random
+from collections.abc import Iterator, Mapping
 
 import httpx
 
@@ -9,137 +9,85 @@ from equity_aggregator.adapters.data_sources._utils import make_client
 
 from .config import FeedConfig
 
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+def create_new_yf_client() -> httpx.AsyncClient:
+    """
+    Create an AsyncClient for Yahoo Finance with strict connection limits.
+
+    This client enforces a single connection and enables HTTP/2, ensuring
+    compliance with Yahoo's stream restrictions.
+
+    Args:
+        None
+
+    Returns:
+        httpx.AsyncClient: Configured asynchronous HTTP client.
+    """
+    limits = httpx.Limits(
+        max_connections=8,
+        max_keepalive_connections=0,
+        keepalive_expiry=0.8,
+    )
+    transport = httpx.AsyncHTTPTransport(http2=False, retries=1, limits=limits)
+    return make_client(transport=transport)
+
 
 class YFSession:
     """
-    Async wrapper for httpx.AsyncClient that manages Yahoo Finance crumb tokens.
+    Asynchronous session for Yahoo Finance JSON endpoints.
 
-    Handles Yahoo Finance anti-CSRF crumb tokens required for authenticated API
-    calls. Bootstraps the session by visiting key Yahoo domains and fetches the
-    crumb token as needed. Automatically injects the crumb into requests to quote
-    endpoints.
+    This class manages HTTP requests to Yahoo Finance, handling authentication,
+    rate limits, and crumb renewal. It is lightweight and reusable, maintaining
+    only a client and session state. Concurrency is limited by a shared
+    semaphore to respect Yahoo's 5 HTTP/2 stream restriction.
 
     Args:
-        config (FeedConfig): Yahoo Finance feed configuration.
-        client (httpx.AsyncClient | None, optional): Optional HTTP client. If not
-            provided, a new client is created.
+        config (FeedConfig): Immutable feed configuration.
+        client (httpx.AsyncClient | None): Optional pre-configured HTTP client.
+
+    Returns:
+        None
     """
 
-    __slots__ = ("_client", "_config", "_crumb", "_crumb_lock")
+    __slots__: tuple[str, ...] = ("_client", "_config", "_crumb", "_crumb_lock")
 
-    # shared semaphore to cap concurrent streams to maximum limits for HTTP/2
-    _stream_semaphore: asyncio.Semaphore = asyncio.Semaphore(100)
+    # TODO: should be unnecessary now that http/1.1 is used
+    _stream_semaphore: asyncio.Semaphore = asyncio.Semaphore(5)
 
     def __init__(
         self,
         config: FeedConfig,
         client: httpx.AsyncClient | None = None,
     ) -> None:
-        self._config = config
-        self._client = client or make_client()
+        """
+        Initialise a new YFSession for Yahoo Finance JSON endpoints.
+
+        Args:
+            config (FeedConfig): Immutable feed configuration.
+            client (httpx.AsyncClient | None): Optional pre-configured HTTP client.
+
+        Returns:
+            None
+        """
+        self._config: FeedConfig = config
+        self._client: httpx.AsyncClient = client or create_new_yf_client()
         self._crumb: str | None = None
-        self._crumb_lock = asyncio.Lock()
+        self._crumb_lock: asyncio.Lock = asyncio.Lock()
 
     @property
     def config(self) -> FeedConfig:
         """
-        Gets the configuration for the feed.
+        Gets the immutable configuration associated with this session.
+
+        Args:
+            None
 
         Returns:
-            FeedConfig: The configuration object associated with this feed instance.
+            FeedConfig: The configuration object bound to this session instance.
         """
         return self._config
-
-    async def get(
-        self,
-        url: str,
-        *,
-        params: Mapping[str, str] | None = None,
-    ) -> httpx.Response:
-        """
-        Perform an asynchronous GET request with crumb handling and retry logic.
-
-        This method injects the Yahoo Finance crumb token if required, bootstraps
-        the session as needed, and retries once on HTTP 401 errors. It also
-        enforces a concurrency cap using a shared semaphore to avoid exceeding
-        HTTP/2 stream limits.
-
-        Args:
-            url (str): The URL to send the GET request to.
-            params (Mapping[str, str] | None, optional): Query parameters to include
-                in the request. Defaults to None.
-
-        Returns:
-            httpx.Response: The HTTP response object from the GET request.
-        """
-        async with self.__class__._stream_semaphore:
-            # merge requested parameters with anti-CSRF token (i.e. crumb)
-            merged_params = self._attach_crumb(url, dict(params or {}))
-
-            # perform the GET request with retry logic in case of crumb expiration
-            return await self._fetch_with_retry(url, merged_params)
-
-    def _attach_crumb(self, url: str, params: dict[str, str]) -> dict[str, str]:
-        """
-        Attach the authentication crumb to the request parameters if required.
-
-        This method checks if a crumb value is available and if the provided URL starts
-        with the configured quote base URL. If both conditions are met, it adds the
-        crumb to the request parameters dictionary.
-
-        Args:
-            url (str): The URL to which the request will be sent.
-            params (dict[str, str]): The dictionary of request parameters.
-
-        Returns:
-            dict[str, str]: The updated dictionary of request parameters, potentially
-                including the crumb.
-        """
-        if self._crumb and url.startswith(self._config.quote_summary_url):
-            params["crumb"] = self._crumb
-        return params
-
-    async def _fetch_with_retry(
-        self,
-        url: str,
-        params: dict[str, str],
-    ) -> httpx.Response:
-        """
-        Perform a GET request with crumb handling and retry on HTTP 401 errors.
-
-        Attempts to fetch the given URL with the provided parameters. If a 401
-        Unauthorized error is encountered, the method will re-bootstrap the session,
-        refresh the crumb token, and retry the request once.
-
-        Args:
-            url (str): The URL to send the GET request to.
-            params (dict[str, str]): Query parameters to include in the request.
-
-        Returns:
-            httpx.Response: The HTTP response object from the GET request.
-
-        Raises:
-            httpx.HTTPStatusError: If the request fails with a non-401 HTTP error,
-                or if the retry also fails.
-        """
-        try:
-            response = await self._client.get(url, params=params)
-            response.raise_for_status()
-            return response
-
-        except httpx.HTTPStatusError as error:
-            if error.response.status_code != httpx.codes.UNAUTHORIZED:
-                raise
-
-            ticker = self._extract_ticker(url)
-
-            await self._bootstrap_and_fetch_crumb(ticker)
-
-            params["crumb"] = self._crumb
-
-            response = await self._client.get(url, params=params)
-            response.raise_for_status()
-            return response
 
     async def aclose(self) -> None:
         """
@@ -153,44 +101,258 @@ class YFSession:
         """
         await self._client.aclose()
 
-    def _requires_crumb(self, url: str) -> bool:
+    async def get(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, str] | None = None,
+    ) -> httpx.Response:
         """
-        Determine if a crumb token is required for the given URL.
+        Perform a resilient asynchronous GET request to Yahoo Finance endpoints.
+
+        This method injects the crumb if required, renews it on a single 401
+        response, and applies exponential backoff on 429 responses. Concurrency
+        is limited to comply with Yahoo's HTTP/2 stream limits.
 
         Args:
-            url (str): The URL to check.
+            url (str): Absolute URL to request.
+            params (Mapping[str, str] | None): Optional query parameters.
 
         Returns:
-            bool: True if crumb is needed, False otherwise.
+            httpx.Response: The successful HTTP response.
         """
-        return self._crumb is None and url.startswith(self._config.quote_summary_url)
+        async with self.__class__._stream_semaphore:
+            merged_params: dict[str, str] = self._attach_crumb(url, dict(params or {}))
+            return await self._fetch_with_retry(url, merged_params)
+
+    async def _safe_get(
+        self,
+        url: str,
+        params: dict[str, str],
+        *,
+        retries: int = 3,
+    ) -> httpx.Response:
+        """
+        Perform a GET request with up to 3 retries on HTTP/2 protocol errors.
+
+        If a ProtocolError occurs, the HTTP client is reset and the request
+        retried. After 3 failed attempts, the last exception is raised.
+
+        Args:
+            url (str): The absolute URL to request.
+            params (dict[str, str]): Query parameters for the request.
+
+        Returns:
+            httpx.Response: The successful HTTP response.
+
+        Raises:
+            httpx.ProtocolError: If all retry attempts fail.
+        """
+        last_exc: Exception | None = None
+
+        for attempt in range(1, retries + 1):
+            try:
+                return await self._client.get(url, params=params)
+            except httpx.ProtocolError as exc:
+                last_exc = exc
+                logger.debug(
+                    (
+                        "HTTP/2 protocol error (%s) on %s - "
+                        "recreating client (attempt %d/3)"
+                    ),
+                    exc,
+                    url,
+                    attempt,
+                )
+                await self._reset_client()
+
+        assert last_exc is not None
+        raise last_exc
+
+    async def _fetch_with_retry(
+        self,
+        url: str,
+        params: Mapping[str, str],
+    ) -> httpx.Response:
+        """
+        Perform a single GET request, transparently handling 401 and 429 responses.
+
+        If a 401 (Unauthorized) is received, the crumb is renewed and the request
+        retried once. If a 429 (Too Many Requests) is received, exponential backoff
+        is applied and the request is retried up to the configured limit.
+
+        Args:
+            url (str): The absolute URL to request.
+            params (Mapping[str, str]): Query parameters after crumb injection.
+
+        Returns:
+            httpx.Response: The successful HTTP response.
+
+        Raises:
+            httpx.HTTPStatusError: If the final response is not successful.
+        """
+        # make mutable copy
+        params = dict(params)
+
+        response = await self._safe_get(url, params)
+
+        # handle 401 Unauthorized
+        if response.status_code == httpx.codes.UNAUTHORIZED:
+            response = await self._renew_crumb_once(url, params)
+
+        # handle 429 Too Many Requests, 500 Internal Server Error and 502 Bad Gateway
+        if response.status_code in {
+            httpx.codes.BAD_GATEWAY,
+            httpx.codes.TOO_MANY_REQUESTS,
+            httpx.codes.INTERNAL_SERVER_ERROR,
+        }:
+            response = await self._get_with_backoff(url, params, response)
+
+        return response
+
+    async def _reset_client(self) -> None:
+        """
+        Reset the HTTP client instance asynchronously.
+
+        Closes the current client and creates a new one. Also clears the crumb
+        to ensure session state is refreshed after protocol errors.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        self._crumb = None
+        await self._client.aclose()
+        self._client = create_new_yf_client()
+
+    async def _renew_crumb_once(
+        self,
+        url: str,
+        params: dict[str, str],
+    ) -> httpx.Response:
+        """
+        Refresh the crumb after a 401 Unauthorized and retry the request.
+
+        This method extracts the ticker from the URL, fetches a new crumb,
+        updates the query parameters, and replays the GET request.
+
+        Args:
+            url (str): The original request URL.
+            params (dict[str, str]): Mutable query parameters.
+
+        Returns:
+            httpx.Response: Response after retrying with a fresh crumb.
+        """
+        ticker: str = self._extract_ticker(url)
+
+        await self._bootstrap_and_fetch_crumb(ticker)
+
+        params["crumb"] = self._crumb
+
+        return await self._client.get(url, params=params)
+
+    async def _get_with_backoff(
+        self,
+        url: str,
+        params: dict[str, str],
+        response: httpx.Response,
+    ) -> httpx.Response:
+        """
+        Retry a GET request after receiving a 429 Too Many Requests response,
+        using exponential backoff.
+
+        Retries up to `max_attempts` times, waiting for delays generated by
+        `backoff_delays()`. Each retry uses `_safe_get`, which handles protocol
+        errors. If a non-429 response is received, it is returned immediately.
+
+        Args:
+            url (str): The absolute URL to request.
+            params (dict[str, str]): Query parameters for the request.
+            response (httpx.Response): The initial 429 response.
+
+        Returns:
+            httpx.Response: The successful HTTP response or the last response
+                after all retries.
+        """
+        max_attempts = 5
+
+        for attempt, delay in enumerate(backoff_delays(attempts=max_attempts), 1):
+            if response.status_code != httpx.codes.TOO_MANY_REQUESTS:
+                return response
+
+            logger.debug(
+                "429 %s - sleeping %.1fs (attempt %d/%d)",
+                url,
+                delay,
+                attempt,
+                max_attempts,
+            )
+            await asyncio.sleep(delay)
+
+            try:
+                response = await self._safe_get(url, params)
+            except httpx.ProtocolError:
+                raise
+
+        return response
+
+    def _attach_crumb(
+        self,
+        url: str,
+        params: dict[str, str],
+    ) -> dict[str, str]:
+        """
+        Inject the anti-CSRF crumb into query parameters if required.
+
+        The crumb is added only for quote-summary endpoint requests when available.
+        If the crumb is not set or the URL does not match, the original parameters
+        are returned unchanged.
+
+        Args:
+            url (str): Target request URL.
+            params (dict[str, str]): Query parameters to update.
+
+        Returns:
+            dict[str, str]: Updated query parameters with crumb if needed.
+        """
+        # needs_crumb = self._crumb is not None and url.startswith(
+        #     self._config.quote_summary_url,
+        # )
+
+        # if not needs_crumb:
+        #     return params
+
+        # return {**params, "crumb": self._crumb}
+        return params
 
     def _extract_ticker(self, url: str) -> str:
         """
-        Extract the ticker symbol from a Yahoo Finance quote URL.
+        Extract the ticker symbol from a Yahoo Finance quote-summary URL.
 
         Args:
-            url (str): The quote URL.
+            url (str): The quote-summary endpoint URL.
 
         Returns:
-            str: The extracted ticker symbol.
+            str: The ticker symbol found in the URL path.
         """
-        remainder = url[len(self._config.quote_summary_url) :]
-        first_segment = remainder.split("/", 1)[0]
+        remainder: str = url[len(self._config.quote_summary_url) :]
+
+        first_segment: str = remainder.split("/", 1)[0]
 
         return first_segment.split("?", 1)[0].split("#", 1)[0]
 
     async def _bootstrap_and_fetch_crumb(self, ticker: str) -> None:
         """
-        Bootstrap and fetch the Yahoo Finance crumb token once per session.
+        Initialise session cookies and retrieve the anti-CSRF crumb.
 
-        This method visits key Yahoo Finance domains to initialise session cookies,
-        then retrieves the anti-CSRF crumb token required for authenticated API
-        requests. The crumb is cached for future use. Thread safety is ensured
-        using an async lock.
+        This method primes the session by making requests to Yahoo Finance endpoints
+        using the provided ticker, then fetches the crumb required for authenticated
+        requests. The crumb is cached for future use and protected by a lock.
 
         Args:
-            ticker (str): The ticker symbol used to initialise the session.
+            ticker (str): Symbol used to prime the session.
 
         Returns:
             None
@@ -201,14 +363,42 @@ class YFSession:
         async with self._crumb_lock:
             if self._crumb is not None:
                 return
-
-            for seed in (
+            seeds: tuple[str, ...] = (
                 "https://fc.yahoo.com",
                 "https://finance.yahoo.com",
                 f"https://finance.yahoo.com/quote/{ticker}",
-            ):
+            )
+            for seed in seeds:
                 await self._client.get(seed)
 
-            response = await self._client.get(self._config.crumb_url)
-            response.raise_for_status()
-            self._crumb = response.text.strip().strip('"')
+            resp: httpx.Response = await self._client.get(self._config.crumb_url)
+            resp.raise_for_status()
+            self._crumb = resp.text.strip().strip('"')
+
+
+def backoff_delays(
+    *,
+    base: float = 5.0,
+    cap: float = 128.0,
+    jitter: float = 0.10,
+    attempts: int = 5,
+) -> Iterator[float]:
+    """
+    Yield an exponential backoff sequence with bounded jitter for retry delays.
+
+    Each delay is calculated as: delay * (1 ± jitter), doubling each time up to cap.
+
+    Args:
+        base (float): Initial delay in seconds.
+        cap (float): Maximum delay in seconds.
+        jitter (float): Fractional jitter (+/-) applied to each delay.
+        attempts (int): Number of delay values to yield.
+
+    Returns:
+        Iterator[float]: Sequence of delay values in seconds.
+    """
+    delay: float = base
+    for _ in range(attempts):
+        delta: float = delay * jitter * (2 * random.random() - 1)
+        yield max(0.0, min(delay + delta, cap))
+        delay = min(delay * 2, cap)

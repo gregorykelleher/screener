@@ -27,9 +27,9 @@ type ValidatorFunc = Callable[[dict[str, object], RawEquity], RawEquity]
 # List of enrichment feeds to use, each with its factory, model, and concurrency limit
 feed_specs: list[FeedSpec] = [
     (
-        open_yfinance_feed,
-        YFinanceFeedData,
-        10,
+        open_yfinance_feed,  # factory for creating YFinance feed context
+        YFinanceFeedData,  # data model for YFinance feed data
+        10,  # concurrency limit (max simultaneous YFinance requests)
     ),
 ]
 
@@ -189,7 +189,7 @@ async def _safe_fetch(
     fetcher: FetchFunc,
     feed_name: str,
     *,
-    wait_timeout: float = 30.0,
+    wait_timeout: float = 180.0,
 ) -> dict[str, object] | None:
     """
     Safely fetch raw data for a RawEquity from an enrichment feed, handling
@@ -204,7 +204,7 @@ async def _safe_fetch(
         fetcher (FetchFunc): The async fetch function for the enrichment feed.
         feed_name (str): The name of the enrichment feed for logging context.
         wait_timeout (float, optional): Maximum time to wait for the fetch, in
-            seconds. Defaults to 30.0.
+            seconds.
 
     Returns:
         dict[str, object] | None: The fetched data as a dictionary, or None if an

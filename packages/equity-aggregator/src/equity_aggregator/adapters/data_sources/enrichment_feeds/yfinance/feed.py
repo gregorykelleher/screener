@@ -13,11 +13,11 @@ from equity_aggregator.schemas import YFinanceFeedData
 
 from .api import (
     get_quote_summary,
-    pick_best_symbol,
     search_quotes,
 )
 from .config import FeedConfig
 from .session import YFSession
+from .utils import pick_best_symbol
 
 logger = logging.getLogger(__name__)
 

@@ -10,15 +10,15 @@ from equity_aggregator import (
     load_cache_entry,
     save_cache_entry,
 )
-from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.api import (
-    pick_best_symbol,
-)
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.feed import (
     YFinanceFeed,
     _choose_symbol,
 )
+from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.utils import (
+    pick_best_symbol,
+)
 
-from ._utils import close, handler_factory, make_session
+from ._helpers import close, handler_factory, make_session
 
 pytestmark = pytest.mark.unit
 
@@ -522,3 +522,35 @@ async def test_try_name_or_symbol_continue_then_success() -> None:
     await close(session._client)
 
     assert info["answer"] == expected_answer
+
+
+async def test_identifier_quote_summary_none_raises() -> None:
+    """
+    ARRANGE: quoteSummary endpoint 500 ➜ fallback 200 but empty result
+    ACT:     call _try_identifier
+    ASSERT:  LookupError message is 'Quote Summary endpoint returned nothing.'
+    """
+    search_payload = {
+        "quotes": [
+            {"symbol": "EMPTY", "longname": "Empty Plc", "quoteType": "EQUITY"},
+        ],
+    }
+
+    patterns = {
+        "finance/search": httpx.Response(200, json=search_payload),
+        "getcrumb": httpx.Response(200, text='"crumb"'),
+        "quoteSummary": httpx.Response(500),
+        "/v7/finance/quote": httpx.Response(
+            200,
+            json={"quoteResponse": {"result": []}},
+        ),
+    }
+
+    session = make_session(handler_factory(patterns))
+    feed = YFinanceFeed(session)
+
+    with pytest.raises(LookupError) as exc:
+        await feed._try_identifier("ID-EMPTY", "Empty Plc", "EMPTY")
+    await close(session._client)
+
+    assert "Quote Summary endpoint returned nothing." in str(exc.value)

@@ -1,5 +1,4 @@
-# yfinance/_utils.py
-
+# yfinance/_helpers.py
 
 from collections.abc import Callable, Mapping
 

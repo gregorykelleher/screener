@@ -74,3 +74,28 @@ class RawEquity(BaseModel):
         NonNegDecimal | None,
         BeforeValidator(validate_market_cap),
     ] = None
+
+    # fiftyTwoWeeksMin
+    # fiftyTwoWeeksMax
+    # industry
+    # sector
+    # p/e
+    # eps
+    # dividend yield/rate
+    # p/b
+    # market volume
+    # held % insiders/institutions
+    # short interest
+    # share float
+    # shares outstanding
+    # revenue per share
+    # margins (profit/gross/operating)
+    # analyst ratings
+    # free cash flow
+    # operating cash flow
+    # EBITDA
+    # return on equity
+    # return on assets
+    # performance 1 years (% change)
+    # revenue
+    # total debt

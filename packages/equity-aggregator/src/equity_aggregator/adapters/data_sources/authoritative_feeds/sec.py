@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 _SEC_SEARCH_URL = "https://www.sec.gov/files/company_tickers_exchange.json"
 
+_HEADERS = {
+    "User-Agent": "EquityAggregator gregory@gregorykelleher.com",
+}
+
 EXCHANGE_TO_MIC = {
     "Nasdaq": "XNAS",
     "NYSE": "XNYS",
@@ -53,7 +57,7 @@ async def fetch_equity_records(
         return
 
     # use provided client or create a bespoke sec client
-    client = client or make_client()
+    client = client or make_client(headers=_HEADERS)
 
     async with client:
         async for record in _stream_and_cache(client, cache_key=cache_key):

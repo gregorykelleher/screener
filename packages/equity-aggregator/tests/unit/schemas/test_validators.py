@@ -9,364 +9,253 @@ from equity_aggregator.schemas import validators
 pytestmark = pytest.mark.unit
 
 
-def test_validate_name_basic() -> None:
+def test_to_upper_basic() -> None:
     """
-    ARRANGE: simple name string
-    ACT:     validate_name
-    ASSERT:  returns uppercased, punctuation-stripped name
+    ARRANGE: simple lower-case string
+    ACT:     to_upper
+    ASSERT:  returns upper-cased string
     """
-    value = "Acme, Inc."
+    info = type("Info", (), {"field_name": "field"})()
+    value = "foo"
 
-    actual = validators.validate_name(value)
+    actual = validators.to_upper(value, info)
 
-    assert actual == "ACME INC"
+    assert actual == "FOO"
 
 
-def test_validate_name_whitespace_and_punct() -> None:
+def test_to_upper_whitespace_and_punct() -> None:
     """
-    ARRANGE: name with extra whitespace and punctuation
-    ACT:     validate_name
-    ASSERT:  returns cleaned, uppercased name
+    ARRANGE: string with whitespace and punctuation
+    ACT:     to_upper
+    ASSERT:  returns cleaned, upper-cased string
     """
+    info = type("Info", (), {"field_name": "field"})()
     value = "  Foo-Bar!  Ltd.  "
 
-    actual = validators.validate_name(value)
+    actual = validators.to_upper(value, info)
 
     assert actual == "FOO BAR LTD"
 
 
-def test_validate_name_none_raises() -> None:
+def test_to_upper_required_none_raises() -> None:
     """
-    ARRANGE: None as name
-    ACT:     validate_name
+    ARRANGE: None value with required=True
+    ACT:     to_upper
     ASSERT:  raises ValueError
     """
+    info = type("Info", (), {"field_name": "field"})()
+
     with pytest.raises(ValueError):
-        validators.validate_name(None)
+        validators.to_upper(None, info, required=True)
 
 
-def test_validate_symbol_basic() -> None:
+def test_to_upper_optional_none() -> None:
     """
-    ARRANGE: simple symbol
-    ACT:     validate_symbol
-    ASSERT:  returns uppercased symbol
-    """
-    value = "aapl"
-
-    actual = validators.validate_symbol(value)
-
-    assert actual == "AAPL"
-
-
-def test_validate_symbol_strips_and_upper() -> None:
-    """
-    ARRANGE: symbol with whitespace
-    ACT:     validate_symbol
-    ASSERT:  returns stripped, uppercased symbol
-    """
-    value = " msft "
-
-    actual = validators.validate_symbol(value)
-
-    assert actual == "MSFT"
-
-
-def test_validate_symbol_none_raises() -> None:
-    """
-    ARRANGE: None as symbol
-    ACT:     validate_symbol
-    ASSERT:  raises ValueError
-    """
-    with pytest.raises(ValueError):
-        validators.validate_symbol(None)
-
-
-def test_validate_id_str() -> None:
-    """
-    ARRANGE: string id with whitespace and lowercase
-    ACT:     validate_id
-    ASSERT:  returns stripped, uppercased id
-    """
-    value = " abcd1234 "
-
-    actual = validators.validate_id(value)
-
-    assert actual == "ABCD1234"
-
-
-def test_validate_id_non_str() -> None:
-    """
-    ARRANGE: non-string id (int)
-    ACT:     validate_id
-    ASSERT:  returns value as-is
-    """
-    non_string_id = 1234
-    value = non_string_id
-
-    actual = validators.validate_id(value)
-
-    assert actual == non_string_id
-
-
-def test_validate_mics_none() -> None:
-    """
-    ARRANGE: mics is None
-    ACT:     validate_mics
+    ARRANGE: None value with required=False
+    ACT:     to_upper
     ASSERT:  returns None
     """
+    info = type("Info", (), {"field_name": "field"})()
     value = None
 
-    actual = validators.validate_mics(value)
+    actual = validators.to_upper(value, info)
 
     assert actual is None
 
 
-def test_validate_mics_empty_list() -> None:
+def test_to_upper_blank_string_optional() -> None:
     """
-    ARRANGE: mics is empty list
-    ACT:     validate_mics
+    ARRANGE: blank string with required=False
+    ACT:     to_upper
     ASSERT:  returns None
     """
-    value = []
+    info = type("Info", (), {"field_name": "field"})()
+    value = "   "
 
-    actual = validators.validate_mics(value)
-
-    assert actual is None
-
-
-def test_validate_mics_valid_list() -> None:
-    """
-    ARRANGE: valid mics list with duplicates and whitespace
-    ACT:     validate_mics
-    ASSERT:  returns unique, uppercased, stripped mics
-    """
-    value = [" xlon ", "XNAS", "xlon", None]
-
-    actual = validators.validate_mics(value)
-
-    assert actual == ["XLON", "XNAS"]
-
-
-def test_validate_mics_invalid_length_raises() -> None:
-    """
-    ARRANGE: mics list with invalid length code
-    ACT:     validate_mics
-    ASSERT:  raises ValueError
-    """
-    value = ["XLONN"]
-
-    with pytest.raises(ValueError):
-        validators.validate_mics(value)
-
-
-def test_validate_currency_basic() -> None:
-    """
-    ARRANGE: valid currency string
-    ACT:     validate_currency
-    ASSERT:  returns uppercased currency
-    """
-    value = "usd"
-
-    actual = validators.validate_currency(value)
-
-    assert actual == "USD"
-
-
-def test_validate_currency_none() -> None:
-    """
-    ARRANGE: currency is None
-    ACT:     validate_currency
-    ASSERT:  returns None
-    """
-    value = None
-
-    actual = validators.validate_currency(value)
+    actual = validators.to_upper(value, info)
 
     assert actual is None
 
 
-def test_validate_currency_empty() -> None:
+def test_to_unsigned_decimal_valid() -> None:
     """
-    ARRANGE: currency is empty string
-    ACT:     validate_currency
-    ASSERT:  returns None
+    ARRANGE: US-style numeric string
+    ACT:     to_unsigned_decimal
+    ASSERT:  returns correct Decimal
     """
-    value = "  "
-
-    actual = validators.validate_currency(value)
-
-    assert actual is None
-
-
-def test_validate_last_price_valid() -> None:
-    """
-    ARRANGE: valid price string
-    ACT:     validate_last_price
-    ASSERT:  returns Decimal value
-    """
+    info = type("Info", (), {"field_name": "field"})()
     value = "123.45"
 
-    actual = validators.validate_last_price(value)
+    actual = validators.to_unsigned_decimal(value, info)
 
     assert actual == Decimal("123.45")
 
 
-def test_validate_last_price_none() -> None:
+def test_to_unsigned_decimal_eu_format() -> None:
     """
-    ARRANGE: last_price is None
-    ACT:     validate_last_price
-    ASSERT:  returns None
+    ARRANGE: EU-style numeric string
+    ACT:     to_unsigned_decimal
+    ASSERT:  returns correct Decimal
     """
-    value = None
-
-    actual = validators.validate_last_price(value)
-
-    assert actual is None
-
-
-def test_validate_last_price_invalid_raises() -> None:
-    """
-    ARRANGE: invalid price string
-    ACT:     validate_last_price
-    ASSERT:  raises ValueError
-    """
-    value = "not_a_number"
-
-    with pytest.raises(ValueError):
-        validators.validate_last_price(value)
-
-
-def test_validate_last_price_negative_raises() -> None:
-    """
-    ARRANGE: negative price string
-    ACT:     validate_last_price
-    ASSERT:  raises ValueError
-    """
-    value = "-10"
-
-    with pytest.raises(ValueError):
-        validators.validate_last_price(value)
-
-
-def test_validate_last_price_eu_format() -> None:
-    """
-    ARRANGE: price in European format
-    ACT:     validate_last_price
-    ASSERT:  returns Decimal value
-    """
+    info = type("Info", (), {"field_name": "field"})()
     value = "1.234,56"
 
-    actual = validators.validate_last_price(value)
+    actual = validators.to_unsigned_decimal(value, info)
 
     assert actual == Decimal("1234.56")
 
 
-def test_validate_market_cap_valid() -> None:
+def test_to_unsigned_decimal_decimal_input() -> None:
     """
-    ARRANGE: valid market cap string
-    ACT:     validate_market_cap
-    ASSERT:  returns Decimal value
+    ARRANGE: Decimal instance
+    ACT:     to_unsigned_decimal
+    ASSERT:  returns identical Decimal
     """
-    value = "1000000"
+    info = type("Info", (), {"field_name": "field"})()
+    value = Decimal("99.99")
 
-    actual = validators.validate_market_cap(value)
+    actual = validators.to_unsigned_decimal(value, info)
 
-    assert actual == Decimal("1000000")
+    assert actual == Decimal("99.99")
 
 
-def test_validate_market_cap_none() -> None:
+def test_to_unsigned_decimal_float_input() -> None:
     """
-    ARRANGE: market_cap is None
-    ACT:     validate_market_cap
+    ARRANGE: float value
+    ACT:     to_unsigned_decimal
+    ASSERT:  returns Decimal representation
+    """
+    info = type("Info", (), {"field_name": "field"})()
+    value = 123.45
+
+    actual = validators.to_unsigned_decimal(value, info)
+
+    assert actual == Decimal("123.45")
+
+
+def test_to_unsigned_decimal_none() -> None:
+    """
+    ARRANGE: None value
+    ACT:     to_unsigned_decimal
     ASSERT:  returns None
     """
+    info = type("Info", (), {"field_name": "field"})()
     value = None
 
-    actual = validators.validate_market_cap(value)
+    actual = validators.to_unsigned_decimal(value, info)
 
     assert actual is None
 
 
-def test_validate_market_cap_invalid_raises() -> None:
+def test_to_unsigned_decimal_negative_raises() -> None:
     """
-    ARRANGE: invalid market cap string
-    ACT:     validate_market_cap
+    ARRANGE: negative numeric string
+    ACT:     to_unsigned_decimal
     ASSERT:  raises ValueError
     """
+    info = type("Info", (), {"field_name": "field"})()
+    value = "-10"
+
+    with pytest.raises(ValueError):
+        validators.to_unsigned_decimal(value, info)
+
+
+def test_to_unsigned_decimal_invalid_raises() -> None:
+    """
+    ARRANGE: non-numeric string
+    ACT:     to_unsigned_decimal
+    ASSERT:  raises ValueError
+    """
+    info = type("Info", (), {"field_name": "field"})()
     value = "not_a_number"
 
     with pytest.raises(ValueError):
-        validators.validate_market_cap(value)
+        validators.to_unsigned_decimal(value, info)
 
 
-def test_validate_market_cap_negative_raises() -> None:
+def test_to_analyst_rating_valid_buy() -> None:
     """
-    ARRANGE: negative market cap string
-    ACT:     validate_market_cap
-    ASSERT:  raises ValueError
+    ARRANGE: valid analyst rating string
+    ACT:     to_analyst_rating
+    ASSERT:  returns canonical upper-cased rating
     """
-    value = "-1000"
+    info = type("Info", (), {"field_name": "analyst_rating"})()
+    value = "buy"
 
-    with pytest.raises(ValueError):
-        validators.validate_market_cap(value)
+    actual = validators.to_analyst_rating(value, info)
+
+    assert actual == "BUY"
 
 
-def test__normalise_mic_valid() -> None:
+def test_to_analyst_rating_invalid_value() -> None:
     """
-    ARRANGE: valid mic string with whitespace and lowercase
-    ACT:     _normalise_mic
-    ASSERT:  returns uppercased, stripped mic
-    """
-    value = " xlon "
-
-    actual = validators._normalise_mic(value)
-
-    assert actual == "XLON"
-
-
-def test__normalise_mic_none() -> None:
-    """
-    ARRANGE: mic is None
-    ACT:     _normalise_mic
+    ARRANGE: invalid analyst rating string
+    ACT:     to_analyst_rating
     ASSERT:  returns None
     """
-    value = None
+    info = type("Info", (), {"field_name": "analyst_rating"})()
+    value = "outperform"
 
-    actual = validators._normalise_mic(value)
+    actual = validators.to_analyst_rating(value, info)
 
     assert actual is None
 
 
-def test__normalise_numeric_text_valid() -> None:
+def test__parse_numeric_text_valid() -> None:
     """
-    ARRANGE: valid numeric string with plus sign
-    ACT:     _normalise_numeric_text
+    ARRANGE: numeric string with leading '+'
+    ACT:     _parse_numeric_text
     ASSERT:  returns cleaned numeric string
     """
     value = "+123.45"
 
-    actual = validators._normalise_numeric_text(value)
+    actual = validators._parse_numeric_text(value)
 
     assert actual == "123.45"
 
 
-def test__normalise_numeric_text_negative_raises() -> None:
+def test__parse_numeric_text_thousands_sep() -> None:
+    """
+    ARRANGE: numeric string with thousands separator
+    ACT:     _parse_numeric_text
+    ASSERT:  returns cleaned numeric string
+    """
+    value = "1.234,56"
+
+    actual = validators._parse_numeric_text(value)
+
+    assert actual == "1234.56"
+
+
+def test__parse_numeric_text_none() -> None:
+    """
+    ARRANGE: None value
+    ACT:     _parse_numeric_text
+    ASSERT:  returns None
+    """
+    value = None
+
+    actual = validators._parse_numeric_text(value)
+
+    assert actual is None
+
+
+def test__parse_numeric_text_negative_preserved() -> None:
     """
     ARRANGE: negative numeric string
-    ACT:     _normalise_numeric_text
-    ASSERT:  raises ValueError
+    ACT:     _parse_numeric_text
+    ASSERT:  value is preserved
     """
     value = "-123.45"
 
-    with pytest.raises(ValueError):
-        validators._normalise_numeric_text(value)
+    assert validators._parse_numeric_text(value) == "-123.45"
 
 
 def test__convert_separators_us_style() -> None:
     """
-    ARRANGE: US style number with comma as thousands separator
+    ARRANGE: US-style number with ',' thousands separator
     ACT:     _convert_separators
-    ASSERT:  returns string with no comma
+    ASSERT:  returns string without commas
     """
     value = "1,234.56"
 
@@ -377,9 +266,9 @@ def test__convert_separators_us_style() -> None:
 
 def test__convert_separators_eu_style() -> None:
     """
-    ARRANGE: EU style number with dot as thousands and comma as decimal
+    ARRANGE: EU-style number with '.' thousands and ',' decimal
     ACT:     _convert_separators
-    ASSERT:  returns string with dot as decimal
+    ASSERT:  returns dot-decimal string
     """
     value = "1.234,56"
 
@@ -392,7 +281,7 @@ def test__convert_separators_only_comma() -> None:
     """
     ARRANGE: number with only comma as decimal
     ACT:     _convert_separators
-    ASSERT:  returns string with dot as decimal
+    ASSERT:  returns dot-decimal string
     """
     value = "1234,56"
 
@@ -412,3 +301,29 @@ def test__convert_separators_no_sep() -> None:
     actual = validators._convert_separators(value)
 
     assert actual == "123456"
+
+
+def test__convert_separators_us_large() -> None:
+    """
+    ARRANGE: large US-style number with multiple commas
+    ACT:     _convert_separators
+    ASSERT:  returns string without commas
+    """
+    value = "1,234,567.89"
+
+    actual = validators._convert_separators(value)
+
+    assert actual == "1234567.89"
+
+
+def test__convert_separators_eu_large() -> None:
+    """
+    ARRANGE: large EU-style number with multiple dots and one comma
+    ACT:     _convert_separators
+    ASSERT:  returns dot-decimal string
+    """
+    value = "1.234.567,89"
+
+    actual = validators._convert_separators(value)
+
+    assert actual == "1234567.89"

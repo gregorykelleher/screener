@@ -94,6 +94,23 @@ def test_invalid_isin_raises() -> None:
         RawEquity(**payload)
 
 
+def test_isin_lowercase_is_uppercased() -> None:
+    """
+    ARRANGE: valid ISIN supplied in lowercase
+    ACT:     construct RawEquity
+    ASSERT:  ISIN is upper-cased on the model
+    """
+    payload = {
+        "name": "ACME CORP",
+        "symbol": "ACME",
+        "isin": "us0378331005",
+    }
+
+    equity = RawEquity(**payload)
+
+    assert equity.isin == "US0378331005"
+
+
 def test_invalid_currency_raises() -> None:
     """
     ARRANGE: invalid currency code
@@ -197,6 +214,17 @@ def test_mics_accepts_none_or_list() -> None:
     actual_list = RawEquity(**payload_list)
 
     assert actual_list.mics == ["XNAS", "XLON"]
+
+
+def test_mic_lowercase_uppercased() -> None:
+    """
+    ARRANGE: lowercase MIC format
+    ACT:     construct RawEquity
+    ASSERT:  mic is uppercased
+    """
+    equity = RawEquity(name="ACME", symbol="ACME", mics=["xnys"])
+
+    assert equity.mics == ["XNYS"]
 
 
 def test_currency_accepts_none() -> None:
@@ -538,6 +566,17 @@ def test_cusip_rejects_invalid_format() -> None:
         RawEquity(**payload)
 
 
+def test_cusip_lowercase_uppercased() -> None:
+    """
+    ARRANGE: lowercase CUSIP format
+    ACT:     construct RawEquity
+    ASSERT:  cusip is uppercased
+    """
+    equity = RawEquity(name="ACME CORP", symbol="ACME", cusip="037833100")
+
+    assert equity.cusip == "037833100"
+
+
 def test_cik_rejects_invalid_format() -> None:
     """
     ARRANGE: invalid CIK format
@@ -568,3 +607,13 @@ def test_figi_rejects_invalid_format() -> None:
 
     with pytest.raises(ValidationError):
         RawEquity(**payload)
+
+
+def test_figi_lowercase_uppercased() -> None:
+    """
+    ARRANGE: lowercase FIGI format
+    ACT:     construct RawEquity
+    ASSERT:  figi is uppercased
+    """
+    equity = RawEquity(name="ACME", symbol="ACME", share_class_figi="bbg001s5n8v8")
+    assert equity.share_class_figi == "BBG001S5N8V8"

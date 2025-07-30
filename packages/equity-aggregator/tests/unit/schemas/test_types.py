@@ -6,6 +6,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from equity_aggregator.schemas.types import (
+    AnalystRatingStr,
     CIKStr,
     CurrencyStr,
     CUSIPStr,
@@ -13,7 +14,10 @@ from equity_aggregator.schemas.types import (
     ISINStr,
     MICStr,
     NonEmptyStr,
-    NonNegDecimal,
+    SignedDecOpt,
+    UnsignedDecOpt,
+    UpperStrOpt,
+    UpperStrReq,
 )
 
 pytestmark = pytest.mark.unit
@@ -189,36 +193,6 @@ def test_currency_invalid_pattern() -> None:
         TypeAdapter(CurrencyStr).validate_python("US$")
 
 
-def test_nonnegdecimal_valid() -> None:
-    """
-    ARRANGE: valid non-negative decimal
-    ACT:     validate NonNegDecimal
-    ASSERT:  value is preserved
-    """
-    value = TypeAdapter(NonNegDecimal).validate_python(Decimal("123.45"))
-    assert value == Decimal("123.45")
-
-
-def test_nonnegdecimal_zero() -> None:
-    """
-    ARRANGE: zero value
-    ACT:     validate NonNegDecimal
-    ASSERT:  value is zero
-    """
-    value = TypeAdapter(NonNegDecimal).validate_python(0)
-    assert value == 0
-
-
-def test_nonnegdecimal_negative() -> None:
-    """
-    ARRANGE: negative value
-    ACT:     validate NonNegDecimal
-    ASSERT:  raises ValidationError
-    """
-    with pytest.raises(ValidationError):
-        TypeAdapter(NonNegDecimal).validate_python(-1)
-
-
 def test_non_empty_str_strips_whitespace() -> None:
     """
     ARRANGE: string with leading/trailing whitespace
@@ -229,17 +203,6 @@ def test_non_empty_str_strips_whitespace() -> None:
     assert value == "hello world"
 
 
-def test_nonnegdecimal_invalid_string() -> None:
-    """
-    ARRANGE: invalid string input
-    ACT:     validate NonNegDecimal
-    ASSERT:  raises ValidationError
-    """
-
-    with pytest.raises(ValidationError):
-        TypeAdapter(NonNegDecimal).validate_python("not_a_number")
-
-
 def test_cik_valid() -> None:
     """
     ARRANGE: valid CIK string (10 digits, zero-padded)
@@ -248,3 +211,123 @@ def test_cik_valid() -> None:
     """
     value = TypeAdapter(CIKStr).validate_python("0000320193")
     assert value == "0000320193"
+
+
+def test_upper_str_req_valid() -> None:
+    """
+    ARRANGE: lower-case string
+    ACT:     validate UpperStrReq
+    ASSERT:  value is upper-cased
+    """
+    value = TypeAdapter(UpperStrReq).validate_python("foo")
+    assert value == "FOO"
+
+
+def test_upper_str_req_none_invalid() -> None:
+    """
+    ARRANGE: None value
+    ACT:     validate UpperStrReq
+    ASSERT:  raises ValidationError
+    """
+    with pytest.raises(ValidationError):
+        TypeAdapter(UpperStrReq).validate_python(None)
+
+
+def test_upper_str_opt_valid() -> None:
+    """
+    ARRANGE: lower-case string
+    ACT:     validate UpperStrOpt
+    ASSERT:  value is upper-cased
+    """
+    value = TypeAdapter(UpperStrOpt).validate_python("bar")
+    assert value == "BAR"
+
+
+def test_upper_str_opt_none_allowed() -> None:
+    """
+    ARRANGE: None value
+    ACT:     validate UpperStrOpt
+    ASSERT:  value is preserved
+    """
+    value = TypeAdapter(UpperStrOpt).validate_python(None)
+    assert value is None
+
+
+def test_signed_dec_opt_positive_valid() -> None:
+    """
+    ARRANGE: positive decimal string
+    ACT:     validate SignedDecOpt
+    ASSERT:  value is converted to Decimal
+    """
+    value = TypeAdapter(SignedDecOpt).validate_python("123.45")
+    assert value == Decimal("123.45")
+
+
+def test_signed_dec_opt_none_allowed() -> None:
+    """
+    ARRANGE: None value
+    ACT:     validate SignedDecOpt
+    ASSERT:  value is preserved
+    """
+    value = TypeAdapter(SignedDecOpt).validate_python(None)
+    assert value is None
+
+
+def test_signed_dec_opt_negative_valid() -> None:
+    """
+    ARRANGE: negative decimal string
+    ACT:     validate SignedDecOpt
+    ASSERT:  value is preserved
+    """
+    value = TypeAdapter(SignedDecOpt).validate_python("-123.45")
+    assert value == Decimal("-123.45")
+
+
+def test_unsigned_dec_opt_negative_invalid() -> None:
+    """
+    ARRANGE: negative decimal string
+    ACT:     validate UnsignedDecOpt
+    ASSERT:  raises ValidationError
+    """
+    with pytest.raises(ValidationError):
+        TypeAdapter(UnsignedDecOpt).validate_python("-1")
+
+
+def test_unsigned_dec_opt_positive_valid() -> None:
+    """
+    ARRANGE: positive decimal string
+    ACT:     validate UnsignedDecOpt
+    ASSERT:  value is preserved
+    """
+    value = TypeAdapter(UnsignedDecOpt).validate_python("1")
+    assert value == Decimal("1")
+
+
+def test_analyst_rating_str_valid() -> None:
+    """
+    ARRANGE: valid analyst rating string
+    ACT:     validate AnalystRatingStr
+    ASSERT:  value is upper-cased and preserved
+    """
+    value = TypeAdapter(AnalystRatingStr).validate_python("buy")
+    assert value == "BUY"
+
+
+def test_analyst_rating_str_invalid_value() -> None:
+    """
+    ARRANGE: invalid analyst rating string
+    ACT:     validate AnalystRatingStr
+    ASSERT:  value is coerced to None
+    """
+    value = TypeAdapter(AnalystRatingStr).validate_python("strong buy")
+    assert value is None
+
+
+def test_analyst_rating_str_none_allowed() -> None:
+    """
+    ARRANGE: None value
+    ACT:     validate AnalystRatingStr
+    ASSERT:  value is preserved (None allowed)
+    """
+    value = TypeAdapter(AnalystRatingStr).validate_python(None)
+    assert value is None

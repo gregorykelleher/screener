@@ -44,6 +44,7 @@ class SecFeedData(BaseModel):
             # no CUSIP, ISIN or FIGI in SEC feed, so omitting from model
             "mics": self.get("mics"),
             # no currency or last_price in SEC feed, so omitting from model
+            # no more additional fields in SEC feed, so omitting from model
         }
 
     model_config = ConfigDict(

@@ -14,12 +14,7 @@ class EuronextFeedData(BaseModel):
     fields to match the RawEquity model's expected attributes.
 
     Args:
-        name (str): Company name, mapped from "name".
-        symbol (str): Equity symbol, mapped from "symbol".
-        isin (str | None): ISIN code, if available.
-        mics (list[str]): List of MIC codes; defaults to an empty list if missing.
-        currency (str | None): Trading currency code.
-        last_price (str | float | int | Decimal | None): Last traded price.
+        self (dict[str, object]): Raw payload containing Euronext feed data.
 
     Returns:
         EuronextFeedData: An instance with fields normalised for RawEquity validation.
@@ -53,6 +48,7 @@ class EuronextFeedData(BaseModel):
             "mics": self.get("mics"),
             "currency": self.get("currency"),
             "last_price": self.get("last_price"),
+            # no additional fields in Euronext feed, so omitting from model
         }
 
     model_config = ConfigDict(

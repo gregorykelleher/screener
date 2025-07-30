@@ -14,13 +14,7 @@ class XetraFeedData(BaseModel):
     to match the RawEquity model's expected attributes.
 
     Args:
-        name (str): The security's full name.
-        symbol (str): The security symbol, mapped from WKN.
-        isin (str | None): The ISIN identifier, if available.
-        mics (list[str]): List of MIC codes for trading venues.
-        currency (str | None): The trading currency code.
-        last_price (str | float | int | Decimal | None): Last traded price.
-        market_cap (str | float | int | Decimal | None): Market capitalization.
+        self (dict[str, object]): Raw payload containing Xetra feed data.
 
     Returns:
         XetraFeedData: An instance with fields normalised for RawEquity validation.
@@ -34,6 +28,12 @@ class XetraFeedData(BaseModel):
     currency: str | None
     last_price: str | float | int | Decimal | None
     market_cap: str | float | int | Decimal | None
+    fifty_two_week_min: str | float | int | Decimal | None = None
+    fifty_two_week_max: str | float | int | Decimal | None = None
+    performance_1_year: str | float | int | Decimal | None = None
+    dividend_yield: str | float | int | Decimal | None = None
+    price_to_book: str | float | int | Decimal | None = None
+    trailing_eps: str | float | int | Decimal | None = None
 
     @model_validator(mode="before")
     def _normalise_fields(self: dict[str, object]) -> dict[str, object]:
@@ -55,12 +55,21 @@ class XetraFeedData(BaseModel):
             "symbol": self.get("wkn"),
             "isin": self.get("isin"),
             # no CUSIP, CIK or FIGI in Xetra feed, so omitting from model
-            # default to XETR if mic not provided
             "mics": [self.get("mic")] if self.get("mic") else ["XETR"],
+            # default to XETR if mic not provided
             "currency": self.get("currency"),
             # nested fields are flattened
             "last_price": (self.get("overview") or {}).get("lastPrice"),
             "market_cap": (self.get("key_data") or {}).get("marketCapitalisation"),
+            "fifty_two_week_min": (self.get("performance") or {}).get("weeks52Low"),
+            "fifty_two_week_max": (self.get("performance") or {}).get("weeks52High"),
+            "performance_1_year": (self.get("performance") or {}).get(
+                "performance1Year",
+            ),
+            "dividend_yield": (self.get("key_data") or {}).get("dividendYield"),
+            "price_to_book": (self.get("key_data") or {}).get("priceBookRatio"),
+            "trailing_eps": (self.get("key_data") or {}).get("earningsPerShareBasic"),
+            # no additional fields in Xetra feed, so omitting from model
         }
 
     model_config = ConfigDict(

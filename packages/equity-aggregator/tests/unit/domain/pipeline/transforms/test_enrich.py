@@ -112,9 +112,92 @@ def test_has_missing_fields_false_when_all_fields_present() -> None:
         currency="USD",
         last_price=Decimal("5"),
         market_cap=Decimal("500"),
+        fifty_two_week_min=Decimal("1"),
+        fifty_two_week_max=Decimal("10"),
+        dividend_yield=Decimal("0.02"),
+        market_volume=Decimal("1000"),
+        held_insiders=Decimal("0.10"),
+        held_institutions=Decimal("0.60"),
+        short_interest=Decimal("0.05"),
+        share_float=Decimal("1000000"),
+        shares_outstanding=Decimal("1200000"),
+        revenue_per_share=Decimal("20"),
+        profit_margin=Decimal("0.15"),
+        gross_margin=Decimal("0.40"),
+        operating_margin=Decimal("0.25"),
+        free_cash_flow=Decimal("100000"),
+        operating_cash_flow=Decimal("150000"),
+        return_on_equity=Decimal("0.12"),
+        return_on_assets=Decimal("0.08"),
+        performance_1_year=Decimal("0.11"),
+        total_debt=Decimal("200000"),
+        revenue=Decimal("1000000"),
+        ebitda=Decimal("300000"),
+        trailing_pe=Decimal("15"),
+        price_to_book=Decimal("2"),
+        trailing_eps=Decimal("3.5"),
+        analyst_rating="HOLD",
+        industry="TECH",
+        sector="TECHNOLOGY",
     )
 
     assert _has_missing_fields(complete) is False
+
+
+def test_enrich_with_feed_short_circuits_when_equity_complete() -> None:
+    """
+    ARRANGE: RawEquity with all fields and a fetcher that errors if called
+    ACT:     call _enrich_with_feed
+    ASSERT:  the original object is returned and the fetcher is *not* executed
+    """
+    complete = RawEquity(
+        name="FULL",
+        symbol="FULL",
+        isin="US0378331005",
+        cusip="037833100",
+        cik="0000320193",
+        share_class_figi="BBG000BLNNH6",
+        mics=["XNAS"],
+        currency="USD",
+        last_price=Decimal("150"),
+        market_cap=Decimal("250000000000"),
+        fifty_two_week_min=Decimal("120"),
+        fifty_two_week_max=Decimal("180"),
+        dividend_yield=Decimal("0.006"),
+        market_volume=Decimal("20000000"),
+        held_insiders=Decimal("0.10"),
+        held_institutions=Decimal("0.60"),
+        short_interest=Decimal("0.01"),
+        share_float=Decimal("16000000000"),
+        shares_outstanding=Decimal("17000000000"),
+        revenue_per_share=Decimal("20"),
+        profit_margin=Decimal("0.22"),
+        gross_margin=Decimal("0.43"),
+        operating_margin=Decimal("0.30"),
+        free_cash_flow=Decimal("95000000000"),
+        operating_cash_flow=Decimal("110000000000"),
+        return_on_equity=Decimal("0.28"),
+        return_on_assets=Decimal("0.18"),
+        performance_1_year=Decimal("0.12"),
+        total_debt=Decimal("98000000000"),
+        revenue=Decimal("365000000000"),
+        ebitda=Decimal("120000000000"),
+        trailing_pe=Decimal("28"),
+        price_to_book=Decimal("35"),
+        trailing_eps=Decimal("5.40"),
+        analyst_rating="BUY",
+        industry="TECH",
+        sector="TECHNOLOGY",
+    )
+
+    async def must_not_call(**_: dict[str, object]) -> dict[str, object]:
+        raise AssertionError("fetcher was called")
+
+    actual = asyncio.run(
+        _enrich_with_feed(complete, must_not_call, object),  # feed_model is irrelevant
+    )
+
+    assert actual is complete
 
 
 def test_replace_none_with_enriched_fills_only_none_fields() -> None:

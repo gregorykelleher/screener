@@ -526,20 +526,67 @@ async def test_try_name_or_symbol_continue_then_success() -> None:
 
 async def test_identifier_quote_summary_none_raises() -> None:
     """
-    ARRANGE: quoteSummary endpoint 500 ➜ fallback 200 but empty result
+    ARRANGE: quoteSummary 500 ➜ fallback empty; patch sleep to no-op
     ACT:     call _try_identifier
-    ASSERT:  LookupError message is 'Quote Summary endpoint returned nothing.'
+    ASSERT:  LookupError with 'HTTP 500' is raised after retries
+    """
+    real_sleep = asyncio.sleep
+
+    async def _instant(_delay: float) -> None:
+        return None
+
+    asyncio.sleep = _instant
+    try:
+        patterns = {
+            "finance/search": httpx.Response(
+                200,
+                json={
+                    "quotes": [
+                        {
+                            "symbol": "EMPTY",
+                            "longname": "Empty Plc",
+                            "quoteType": "EQUITY",
+                        },
+                    ],
+                },
+            ),
+            "getcrumb": httpx.Response(200, text='"crumb"'),
+            "quoteSummary": httpx.Response(500),
+            "/v7/finance/quote": httpx.Response(
+                200,
+                json={"quoteResponse": {"result": []}},
+            ),
+        }
+
+        session = make_session(handler_factory(patterns))
+        feed = YFinanceFeed(session)
+
+        with pytest.raises(LookupError) as exc:
+            await feed._try_identifier("ID-EMPTY", "Empty Plc", "EMPTY")
+        assert "HTTP 500" in str(exc.value)
+    finally:
+        asyncio.sleep = real_sleep
+        await close(session._client)
+
+
+async def test_try_identifier_info_none_raises() -> None:
+    """
+    ARRANGE: search returns one viable quote;
+             quoteSummary responds 401 to trigger fallback;
+             fallback returns empty list so info becomes None
+    ACT:     call _try_identifier
+    ASSERT:  LookupError with 'Quote Summary endpoint returned nothing.' is raised
     """
     search_payload = {
         "quotes": [
-            {"symbol": "EMPTY", "longname": "Empty Plc", "quoteType": "EQUITY"},
+            {"symbol": "MISS", "longname": "Missing Plc", "quoteType": "EQUITY"},
         ],
     }
 
     patterns = {
         "finance/search": httpx.Response(200, json=search_payload),
         "getcrumb": httpx.Response(200, text='"crumb"'),
-        "quoteSummary": httpx.Response(500),
+        "quoteSummary": httpx.Response(httpx.codes.UNAUTHORIZED),
         "/v7/finance/quote": httpx.Response(
             200,
             json={"quoteResponse": {"result": []}},
@@ -550,7 +597,8 @@ async def test_identifier_quote_summary_none_raises() -> None:
     feed = YFinanceFeed(session)
 
     with pytest.raises(LookupError) as exc:
-        await feed._try_identifier("ID-EMPTY", "Empty Plc", "EMPTY")
-    await close(session._client)
+        await feed._try_identifier("ID-MISS", "Missing Plc", "MISS")
 
     assert "Quote Summary endpoint returned nothing." in str(exc.value)
+
+    await close(session._client)

@@ -41,6 +41,8 @@ class LseFeedData(BaseModel):
     currency: str | None
     last_price: str | float | int | Decimal | None
     market_cap: str | float | int | Decimal | None
+    fifty_two_week_min: str | float | int | Decimal | None = None
+    fifty_two_week_max: str | float | int | Decimal | None = None
 
     @model_validator(mode="before")
     def _normalise_fields(self: dict[str, object]) -> dict[str, object]:
@@ -75,6 +77,11 @@ class LseFeedData(BaseModel):
             "last_price": raw.get("lastprice"),
             # marketcapitalization → maps to RawEquity.market_cap
             "market_cap": raw.get("marketcapitalization"),
+            # fiftyTwoWeeksMin → maps to RawEquity.fifty_two_week_min
+            "fifty_two_week_min": raw.get("fiftyTwoWeeksMin"),
+            # fiftyTwoWeeksMax → maps to RawEquity.fifty_two_week_max
+            "fifty_two_week_max": raw.get("fiftyTwoWeeksMax"),
+            # no additional fields in LSE feed, so omitting from model
         }
 
     model_config = ConfigDict(

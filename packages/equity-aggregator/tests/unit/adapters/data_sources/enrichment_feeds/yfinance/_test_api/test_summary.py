@@ -7,6 +7,7 @@ import pytest
 
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.api.summary import (
     _flatten_module_dicts,
+    _get_quote_summary_fallback,
     get_quote_summary,
 )
 from tests.unit.adapters.data_sources.enrichment_feeds.yfinance._helpers import (
@@ -66,31 +67,35 @@ async def test_get_quote_summary_returns_flattened_data_on_success() -> None:
     assert actual == {"regularMarketPrice": 150, "marketCap": 2_000_000_000}
 
 
-async def test_get_quote_summary_uses_fallback_on_500() -> None:
+async def test_get_quote_summary_raises_for_unexpected_status() -> None:
     """
-    ARRANGE: main endpoint 500, fallback returns one quote
+    ARRANGE: mock 500 response, patch sleep to zero delay
     ACT:     call get_quote_summary
-    ASSERT:  fallback quote dict is returned
+    ASSERT:  LookupError is raised after retries
     """
+    real_sleep = asyncio.sleep
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        url = str(request.url)
-        if "quoteSummary" in url:
-            return httpx.Response(500, json={}, request=request)
-        if "quote" in url:
-            payload = {
-                "quoteResponse": {
-                    "result": [{"symbol": "MSFT", "regularMarketPrice": 100}],
-                },
-            }
-            return httpx.Response(200, json=payload, request=request)
-        return httpx.Response(200, json={}, request=request)
+    async def _instant(_delay: float) -> None:
+        return None
 
-    session = make_session(handler)
+    asyncio.sleep = _instant
 
-    actual = await get_quote_summary(session, "MSFT")
+    try:
 
-    assert actual == {"symbol": "MSFT", "regularMarketPrice": 100}
+        def handler(request: httpx.Request) -> httpx.Response:
+            if "quoteSummary" in str(request.url):
+                return httpx.Response(500, json={}, request=request)
+            return httpx.Response(200, json={}, request=request)
+
+        session = make_session(handler)
+
+        with pytest.raises(LookupError) as exc:
+            await get_quote_summary(session, "MSFT")
+
+        assert "HTTP 500" in str(exc.value)
+
+    finally:
+        asyncio.sleep = real_sleep
 
 
 async def test_get_quote_summary_raises_lookup_when_empty_result() -> None:
@@ -129,3 +134,112 @@ async def test_get_quote_summary_raises_on_429() -> None:
         assert "HTTP 429" in str(exc.value)
     finally:
         asyncio.sleep = real_sleep
+
+
+async def test_get_quote_summary_uses_fallback_on_500() -> None:
+    """
+    ARRANGE: primary quoteSummary endpoint yields HTTP 500,
+             fallback endpoint returns one quote dict
+    ACT:     call get_quote_summary
+    ASSERT:  the dict from the fallback call is returned
+    """
+
+    primary_resp = httpx.Response(
+        httpx.codes.INTERNAL_SERVER_ERROR,
+        request=httpx.Request(
+            "GET",
+            "https://example.com/v10/finance/quoteSummary/ABC",
+        ),
+    )
+
+    fallback_payload = {
+        "quoteResponse": {"result": [{"currency": "USD", "marketCap": 1_234_000}]},
+    }
+
+    fallback_resp = httpx.Response(
+        httpx.codes.OK,
+        json=fallback_payload,
+        request=httpx.Request("GET", "https://example.com/v7/finance/quote"),
+    )
+
+    class _Config:
+        quote_summary_url = "https://example.com/v10/finance/quoteSummary/"
+        quote_summary_fallback_url = "https://example.com/v7/finance/quote"
+
+    class _Session:
+        def __init__(self) -> None:
+            self.config = _Config()
+
+        async def get(self, url: str, *, params: dict | None = None) -> httpx.Response:
+            return (
+                primary_resp
+                if url.startswith(self.config.quote_summary_url)
+                else fallback_resp
+            )
+
+    session = _Session()
+
+    actual = await get_quote_summary(session, "ABC", modules=("price",))
+
+    assert actual == {"currency": "USD", "marketCap": 1_234_000}
+
+
+async def test_get_quote_summary_fallback_returns_none_when_no_results() -> None:
+    """
+    ARRANGE: fallback endpoint returns empty result array
+    ACT:     call _get_quote_summary_fallback directly
+    ASSERT:  function returns None
+    """
+    empty_resp = httpx.Response(
+        httpx.codes.OK,
+        json={"quoteResponse": {"result": []}},
+        request=httpx.Request("GET", "https://example.com/v7/finance/quote"),
+    )
+
+    class _Config:
+        quote_summary_fallback_url = "https://example.com/v7/finance/quote"
+
+    class _Session:
+        def __init__(self) -> None:
+            self.config = _Config()
+
+        async def get(self, _url: str, *, params: dict | None = None) -> httpx.Response:
+            return empty_resp
+
+    session = _Session()
+    actual = await _get_quote_summary_fallback(session, "EMPTY")
+
+    assert actual is None
+
+
+async def test_get_quote_summary_raises_lookup_error_on_429() -> None:
+    """
+    ARRANGE: stub session that always returns HTTP 429
+    ACT:     invoke get_quote_summary
+    ASSERT:  LookupError with 'HTTP 429' is raised
+    """
+    resp_429 = httpx.Response(
+        httpx.codes.TOO_MANY_REQUESTS,
+        request=httpx.Request(
+            "GET",
+            "https://example.com/v10/finance/quoteSummary/XYZ",
+        ),
+    )
+
+    class _Config:
+        modules = ("price",)
+        quote_summary_url = "https://example.com/v10/finance/quoteSummary/"
+
+    class _Session:
+        def __init__(self) -> None:
+            self.config = _Config()
+
+        async def get(self, _url: str, *, params: dict | None = None) -> httpx.Response:
+            return resp_429
+
+    session = _Session()
+
+    with pytest.raises(LookupError) as exc_info:
+        await get_quote_summary(session, "XYZ", modules=("price",))
+
+    assert "HTTP 429" in str(exc_info.value)

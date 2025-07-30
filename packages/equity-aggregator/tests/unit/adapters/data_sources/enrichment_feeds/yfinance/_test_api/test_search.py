@@ -53,21 +53,31 @@ async def test_search_quotes_handles_missing_quotes_field() -> None:
 
 async def test_search_quotes_raises_for_unexpected_status() -> None:
     """
-    ARRANGE: mock 500 response
+    ARRANGE: mock 500 response, patch sleep to zero delay
     ACT:     call search_quotes
-    ASSERT:  HTTPStatusError is raised
+    ASSERT:  LookupError is raised after retries
     """
-    session = make_session(lambda r: httpx.Response(500, json={}, request=r))
+    real_sleep = asyncio.sleep
 
-    with pytest.raises(httpx.HTTPStatusError):
-        await search_quotes(session, "fail")
+    async def _instant(_delay: float) -> None:
+        return None
+
+    asyncio.sleep = _instant
+
+    try:
+        session = make_session(lambda r: httpx.Response(500, json={}, request=r))
+
+        with pytest.raises(LookupError):
+            await search_quotes(session, "fail")
+    finally:
+        asyncio.sleep = real_sleep
 
 
-async def test_search_quotes_returns_empty_on_429() -> None:
+async def test_search_quotes_raises_for_too_many_requests() -> None:
     """
-    ARRANGE: session.get always returns HTTP 429; asyncio.sleep patched to zero
+    ARRANGE: mock 429 response; patch sleep to zero delay
     ACT:     call search_quotes
-    ASSERT:  empty list is returned
+    ASSERT:  LookupError is raised after retries
     """
     real_sleep = asyncio.sleep
 
@@ -79,8 +89,38 @@ async def test_search_quotes_returns_empty_on_429() -> None:
     try:
         session = make_session(lambda r: httpx.Response(429, json={}, request=r))
 
-        actual = await search_quotes(session, "QUERY429")
-
-        assert actual == []
+        with pytest.raises(LookupError):
+            await search_quotes(session, "QUERY429")
     finally:
         asyncio.sleep = real_sleep
+
+
+async def test_search_quotes_returns_empty_list_on_429() -> None:
+    """
+    ARRANGE: session stub that always yields a 429 response
+    ACT:     invoke search_quotes
+    ASSERT:  an empty list is returned
+    """
+
+    response_429 = httpx.Response(
+        httpx.codes.TOO_MANY_REQUESTS,
+        request=httpx.Request("GET", "https://example.com/search"),
+        json={},
+    )
+
+    class _StubConfig:
+        search_url = "https://example.com/search"
+
+    class _StubSession:
+        def __init__(self, resp: httpx.Response) -> None:
+            self._resp = resp
+            self.config = _StubConfig()
+
+        async def get(self, _url: str, *, params: dict | None = None) -> httpx.Response:
+            return self._resp
+
+    session = _StubSession(response_429)
+
+    actual = await search_quotes(session, "throttled")
+
+    assert actual == []

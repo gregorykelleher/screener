@@ -14,7 +14,6 @@ from .types import (
     ISINStr,
     MICStr,
     NonEmptyStr,
-    NonNegDecimal,
 )
 
 
@@ -94,14 +93,10 @@ class EquityFinancials(BaseModel):
     Attributes:
         mics (list[MICStr]): Market Identifier Codes where the equity is traded.
         currency (CurrencyStr): Currency code (e.g., USD, EUR) for the equity's price.
-        last_price (NonNegDecimal): Most recent trade price.
-        market_cap (NonNegDecimal): Latest market capitalisation.
 
     Args:
         mics (list[MICStr]): List of MICs for trading venues.
         currency (CurrencyStr): Price currency code.
-        last_price (NonNegDecimal): Last trade price.
-        market_cap (NonNegDecimal): Market capitalisation.
 
     Returns:
         EquityFinancials: An instance containing supplementary financial data.
@@ -111,8 +106,6 @@ class EquityFinancials(BaseModel):
 
     mics: list[MICStr]
     currency: CurrencyStr
-    last_price: NonNegDecimal
-    market_cap: NonNegDecimal
 
 
 # ────────────────────────────── Composite model ─────────────────────────────

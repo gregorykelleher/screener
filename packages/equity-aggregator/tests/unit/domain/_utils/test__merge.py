@@ -779,3 +779,915 @@ def test_merge_currency_majority_appears_later() -> None:
     merged = merge(equities)
 
     assert merged.currency == "USD"
+
+
+def test_merge_fifty_two_week_min_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with 52-week lows 4 and 10
+    ACT:     merge
+    ASSERT:  median == 7
+    """
+    equities = [
+        RawEquity(
+            name="LOW",
+            symbol="L",
+            share_class_figi="FIGI00000001",
+            fifty_two_week_min=Decimal("4"),
+        ),
+        RawEquity(
+            name="LOW",
+            symbol="L",
+            share_class_figi="FIGI00000001",
+            fifty_two_week_min=Decimal("10"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.fifty_two_week_min == Decimal("7")
+
+
+def test_merge_fifty_two_week_max_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with 52-week highs 14 and 26
+    ACT:     merge
+    ASSERT:  median == 20
+    """
+    equities = [
+        RawEquity(
+            name="HIGH",
+            symbol="H",
+            share_class_figi="FIGI00000001",
+            fifty_two_week_max=Decimal("14"),
+        ),
+        RawEquity(
+            name="HIGH",
+            symbol="H",
+            share_class_figi="FIGI00000001",
+            fifty_two_week_max=Decimal("26"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.fifty_two_week_max == Decimal("20")
+
+
+def test_merge_dividend_yield_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with dividend yields 2 and 4
+    ACT:     merge
+    ASSERT:  median == 3
+    """
+    equities = [
+        RawEquity(
+            name="DIV",
+            symbol="D",
+            share_class_figi="FIGI00000001",
+            dividend_yield=Decimal("2"),
+        ),
+        RawEquity(
+            name="DIV",
+            symbol="D",
+            share_class_figi="FIGI00000001",
+            dividend_yield=Decimal("4"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.dividend_yield == Decimal("3")
+
+
+def test_merge_market_volume_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with market volumes 1 000 and 3 000
+    ACT:     merge
+    ASSERT:  median == 2 000
+    """
+    equities = [
+        RawEquity(
+            name="VOL",
+            symbol="V",
+            share_class_figi="FIGI00000001",
+            market_volume=Decimal("1000"),
+        ),
+        RawEquity(
+            name="VOL",
+            symbol="V",
+            share_class_figi="FIGI00000001",
+            market_volume=Decimal("3000"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.market_volume == Decimal("2000")
+
+
+def test_merge_insiders_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with held_insiders 10 and 20
+    ACT:     merge
+    ASSERT:  median == 15
+    """
+    equities = [
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            held_insiders=Decimal("10"),
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            held_insiders=Decimal("20"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.held_insiders == Decimal("15")
+
+
+def test_merge_institutions_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with held_institutions 5 and 15
+    ACT:     merge
+    ASSERT:  median == 10
+    """
+    equities = [
+        RawEquity(
+            name="INST",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            held_institutions=Decimal("5"),
+        ),
+        RawEquity(
+            name="INST",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            held_institutions=Decimal("15"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.held_institutions == Decimal("10")
+
+
+def test_merge_short_interest_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with short_interest 12 and 18
+    ACT:     merge
+    ASSERT:  median == 15
+    """
+    equities = [
+        RawEquity(
+            name="SHRT",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            short_interest=Decimal("12"),
+        ),
+        RawEquity(
+            name="SHRT",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            short_interest=Decimal("18"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.short_interest == Decimal("15")
+
+
+def test_merge_share_float_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with share_float 1 000 and 3 000
+    ACT:     merge
+    ASSERT:  median == 2 000
+    """
+    equities = [
+        RawEquity(
+            name="FLT",
+            symbol="F",
+            share_class_figi="FIGI00000001",
+            share_float=Decimal("1000"),
+        ),
+        RawEquity(
+            name="FLT",
+            symbol="F",
+            share_class_figi="FIGI00000001",
+            share_float=Decimal("3000"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.share_float == Decimal("2000")
+
+
+def test_merge_shares_outstanding_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with shares_outstanding 100 and 300
+    ACT:     merge
+    ASSERT:  median == 200
+    """
+    equities = [
+        RawEquity(
+            name="OUT",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            shares_outstanding=Decimal("100"),
+        ),
+        RawEquity(
+            name="OUT",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            shares_outstanding=Decimal("300"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.shares_outstanding == Decimal("200")
+
+
+def test_merge_revenue_per_share_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with revenue_per_share 4 and 6
+    ACT:     merge
+    ASSERT:  median == 5
+    """
+    equities = [
+        RawEquity(
+            name="RPS",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            revenue_per_share=Decimal("4"),
+        ),
+        RawEquity(
+            name="RPS",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            revenue_per_share=Decimal("6"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.revenue_per_share == Decimal("5")
+
+
+def test_merge_profit_margin_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with profit_margin 8 and 12
+    ACT:     merge
+    ASSERT:  median == 10
+    """
+    equities = [
+        RawEquity(
+            name="PM",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            profit_margin=Decimal("8"),
+        ),
+        RawEquity(
+            name="PM",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            profit_margin=Decimal("12"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.profit_margin == Decimal("10")
+
+
+def test_merge_gross_margin_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with gross_margin 30 and 50
+    ACT:     merge
+    ASSERT:  median == 40
+    """
+    equities = [
+        RawEquity(
+            name="GM",
+            symbol="G",
+            share_class_figi="FIGI00000001",
+            gross_margin=Decimal("30"),
+        ),
+        RawEquity(
+            name="GM",
+            symbol="G",
+            share_class_figi="FIGI00000001",
+            gross_margin=Decimal("50"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.gross_margin == Decimal("40")
+
+
+def test_merge_operating_margin_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with operating_margin 15 and 25
+    ACT:     merge
+    ASSERT:  median == 20
+    """
+    equities = [
+        RawEquity(
+            name="OPM",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            operating_margin=Decimal("15"),
+        ),
+        RawEquity(
+            name="OPM",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            operating_margin=Decimal("25"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.operating_margin == Decimal("20")
+
+
+def test_merge_free_cash_flow_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with free_cash_flow 1 and 3
+    ACT:     merge
+    ASSERT:  median == 2
+    """
+    equities = [
+        RawEquity(
+            name="FCF",
+            symbol="F",
+            share_class_figi="FIGI00000001",
+            free_cash_flow=Decimal("1"),
+        ),
+        RawEquity(
+            name="FCF",
+            symbol="F",
+            share_class_figi="FIGI00000001",
+            free_cash_flow=Decimal("3"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.free_cash_flow == Decimal("2")
+
+
+def test_merge_operating_cash_flow_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with operating_cash_flow 2 and 6
+    ACT:     merge
+    ASSERT:  median == 4
+    """
+    equities = [
+        RawEquity(
+            name="OCF",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            operating_cash_flow=Decimal("2"),
+        ),
+        RawEquity(
+            name="OCF",
+            symbol="O",
+            share_class_figi="FIGI00000001",
+            operating_cash_flow=Decimal("6"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.operating_cash_flow == Decimal("4")
+
+
+def test_merge_return_on_equity_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with return_on_equity 10 and 14
+    ACT:     merge
+    ASSERT:  median == 12
+    """
+    equities = [
+        RawEquity(
+            name="ROE",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            return_on_equity=Decimal("10"),
+        ),
+        RawEquity(
+            name="ROE",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            return_on_equity=Decimal("14"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.return_on_equity == Decimal("12")
+
+
+def test_merge_return_on_assets_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with return_on_assets 6 and 10
+    ACT:     merge
+    ASSERT:  median == 8
+    """
+    equities = [
+        RawEquity(
+            name="ROA",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            return_on_assets=Decimal("6"),
+        ),
+        RawEquity(
+            name="ROA",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            return_on_assets=Decimal("10"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.return_on_assets == Decimal("8")
+
+
+def test_merge_performance_1_year_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with performance_1_year -4 and 8
+    ACT:     merge
+    ASSERT:  median == 2
+    """
+    equities = [
+        RawEquity(
+            name="P1Y",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            performance_1_year=Decimal("-4"),
+        ),
+        RawEquity(
+            name="P1Y",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            performance_1_year=Decimal("8"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.performance_1_year == Decimal("2")
+
+
+def test_merge_total_debt_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with total_debt 1 000 000 and 3 000 000
+    ACT:     merge
+    ASSERT:  median == 2 000 000
+    """
+    equities = [
+        RawEquity(
+            name="DEBT",
+            symbol="D",
+            share_class_figi="FIGI00000001",
+            total_debt=Decimal("1000000"),
+        ),
+        RawEquity(
+            name="DEBT",
+            symbol="D",
+            share_class_figi="FIGI00000001",
+            total_debt=Decimal("3000000"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.total_debt == Decimal("2000000")
+
+
+def test_merge_revenue_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with revenue 20 and 60
+    ACT:     merge
+    ASSERT:  median == 40
+    """
+    equities = [
+        RawEquity(
+            name="REV",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            revenue=Decimal("20"),
+        ),
+        RawEquity(
+            name="REV",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            revenue=Decimal("60"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.revenue == Decimal("40")
+
+
+def test_merge_ebitda_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with ebitda 9 and 15
+    ACT:     merge
+    ASSERT:  median == 12
+    """
+    equities = [
+        RawEquity(
+            name="EBIT",
+            symbol="E",
+            share_class_figi="FIGI00000001",
+            ebitda=Decimal("9"),
+        ),
+        RawEquity(
+            name="EBIT",
+            symbol="E",
+            share_class_figi="FIGI00000001",
+            ebitda=Decimal("15"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.ebitda == Decimal("12")
+
+
+def test_merge_trailing_pe_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with trailing_pe 11 and 19
+    ACT:     merge
+    ASSERT:  median == 15
+    """
+    equities = [
+        RawEquity(
+            name="PE",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            trailing_pe=Decimal("11"),
+        ),
+        RawEquity(
+            name="PE",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            trailing_pe=Decimal("19"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.trailing_pe == Decimal("15")
+
+
+def test_merge_price_to_book_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with price_to_book 1.1 and 3.3
+    ACT:     merge
+    ASSERT:  median == 2.2
+    """
+    equities = [
+        RawEquity(
+            name="P2B",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            price_to_book=Decimal("1.1"),
+        ),
+        RawEquity(
+            name="P2B",
+            symbol="P",
+            share_class_figi="FIGI00000001",
+            price_to_book=Decimal("3.3"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.price_to_book == Decimal("2.2")
+
+
+def test_merge_trailing_eps_even_number_median() -> None:
+    """
+    ARRANGE: two duplicates with trailing_eps 0.50 and 1.50
+    ACT:     merge
+    ASSERT:  median == 1.00
+    """
+    equities = [
+        RawEquity(
+            name="EPS",
+            symbol="E",
+            share_class_figi="FIGI00000001",
+            trailing_eps=Decimal("0.50"),
+        ),
+        RawEquity(
+            name="EPS",
+            symbol="E",
+            share_class_figi="FIGI00000001",
+            trailing_eps=Decimal("1.50"),
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.trailing_eps == Decimal("1.00")
+
+
+def test_merge_analyst_rating_majority_wins() -> None:
+    """
+    ARRANGE: ratings BUY, SELL, BUY
+    ACT:     merge
+    ASSERT:  majority BUY retained
+    """
+    equities = [
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="BUY",
+        ),
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="SELL",
+        ),
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="BUY",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.analyst_rating == "BUY"
+
+
+def test_merge_analyst_rating_majority_appears_later() -> None:
+    """
+    ARRANGE: first item has no rating, second is a minority rating,
+             third and fourth are the majority rating.
+    ACT:     merge
+    ASSERT:  majority rating BUY is selected.
+    """
+    equities = [
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating=None,
+        ),
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="SELL",
+        ),
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="BUY",
+        ),
+        RawEquity(
+            name="R",
+            symbol="R",
+            share_class_figi="FIGI00000001",
+            analyst_rating="BUY",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.analyst_rating == "BUY"
+
+
+def test_merge_industry_cluster_majority() -> None:
+    """
+    ARRANGE: three spellings, two reduce to the same normalised form.
+    ACT:     merge
+    ASSERT:  majority cluster 'CONSUMER ELECTRONICS' kept.
+    """
+    equities = [
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="ELECTRONIC COMPUTERS",
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="Consumer Electronics",
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="consumer-electronics",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.industry == "CONSUMER ELECTRONICS"
+
+
+def test_merge_industry_all_none_results_in_none() -> None:
+    """
+    ARRANGE: industry missing everywhere
+    ACT:     merge
+    ASSERT:  merged.industry is None
+    """
+    equities = [
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry=None,
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry=None,
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.industry is None
+
+
+def test_merge_industry_cluster_tie_keeps_earliest() -> None:
+    """
+    ARRANGE: Two distinct industry clusters, each with the same weight.
+             The first cluster seen should win the tie.
+    ACT:     merge
+    ASSERT:  'ALPHA ENGINES' (earliest spelling from the first cluster) is kept.
+    """
+    equities = [
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="ALPHA ENGINES",
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="ALPHA-ENGINES",
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="BETA ENERGY",
+        ),
+        RawEquity(
+            name="I",
+            symbol="I",
+            share_class_figi="FIGI00000001",
+            industry="BETA-ENERGY",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.industry == "ALPHA ENGINES"
+
+
+def test_merge_sector_cluster_majority() -> None:
+    """
+    ARRANGE: three spellings, two collapse into the same normalised form.
+    ACT:     merge
+    ASSERT:  majority cluster 'CONSUMER DISCRETIONARY' kept.
+    """
+    equities = [
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="Consumer Discretionary",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="consumer-discretionary",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="Information Technology",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.sector == "CONSUMER DISCRETIONARY"
+
+
+def test_merge_sector_all_none_results_in_none() -> None:
+    """
+    ARRANGE: sector missing everywhere
+    ACT:     merge
+    ASSERT:  merged.sector is None
+    """
+    equities = [
+        RawEquity(name="S", symbol="S", share_class_figi="FIGI00000001", sector=None),
+        RawEquity(name="S", symbol="S", share_class_figi="FIGI00000001", sector=None),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.sector is None
+
+
+def test_merge_sector_cluster_tie_keeps_earliest() -> None:
+    """
+    ARRANGE: two distinct sector clusters with equal weight.
+             First cluster seen should win tie.
+    ACT:     merge
+    ASSERT:  'ENERGY' (earliest spelling from first cluster) kept.
+    """
+    equities = [
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="Energy",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="energy",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="Health-Care",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="HEALTH CARE",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.sector == "ENERGY"
+
+
+def test_merge_sector_best_cluster_appears_later() -> None:
+    """
+    ARRANGE: first record's sector is a 1-member cluster; a later 2-member
+             cluster has greater weight.
+    ACT:     merge
+    ASSERT:  majority cluster 'TECHNOLOGY' wins even though it starts later.
+    """
+    equities = [
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="ENERGY",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="Technology",
+        ),
+        RawEquity(
+            name="S",
+            symbol="S",
+            share_class_figi="FIGI00000001",
+            sector="TECHNOLOGY",
+        ),
+    ]
+
+    merged = merge(equities)
+
+    assert merged.sector == "TECHNOLOGY"

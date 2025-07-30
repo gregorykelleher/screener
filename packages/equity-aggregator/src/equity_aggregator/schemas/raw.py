@@ -1,32 +1,23 @@
 # schemas/raw.py
 
-from typing import Annotated
-
 from pydantic import (
     BaseModel,
-    BeforeValidator,
     ConfigDict,
     Field,
 )
 
 from .types import (
+    AnalystRatingStr,
     CIKStr,
     CurrencyStr,
     CUSIPStr,
     FIGIStr,
     ISINStr,
-    MICStr,
-    NonEmptyStr,
-    NonNegDecimal,
-)
-from .validators import (
-    validate_currency,
-    validate_id,
-    validate_last_price,
-    validate_market_cap,
-    validate_mics,
-    validate_name,
-    validate_symbol,
+    MICListOpt,
+    SignedDecOpt,
+    UnsignedDecOpt,
+    UpperStrOpt,
+    UpperStrReq,
 )
 
 
@@ -43,59 +34,77 @@ class RawEquity(BaseModel):
       - currency: currency code (ISO-4217)
       - last_price: last known price of the equity
       - market_cap: latest market capitalisation
+      - fifty_two_week_min: 52-week low price
+      - fifty_two_week_max: 52-week high price
+      - dividend_yield: annual dividend yield
+      - market_volume: latest trading volume
+      - held_insiders: % of shares held by insiders
+      - held_institutions: % of shares held by institutions
+      - short_interest: % of float sold short
+      - share_float: shares available for trading
+      - shares_outstanding: total shares outstanding
+      - revenue_per_share: revenue per share
+      - profit_margin: net profit margin
+      - gross_margin: gross profit margin
+      - operating_margin: operating profit margin
+      - free_cash_flow: free cash flow
+      - operating_cash_flow: operating cash flow
+      - return_on_equity: return on equity
+      - return_on_assets: return on assets
+      - performance_1_year: total 1-year return
+      - total_debt: total debt
+      - revenue: total revenue
+      - ebitda: EBITDA
+      - trailing_pe: price-to-earnings ratio
+      - price_to_book: price-to-book ratio
+      - trailing_eps: earnings per share
+      - analyst_rating: consensus analyst rating
+      - industry: industry classification
+      - sector: sector classification
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
 
     # raw metadata, required
-    name: Annotated[NonEmptyStr, BeforeValidator(validate_name)] = Field(
-        ...,
-        description="Equity name, required.",
-    )
-    symbol: Annotated[NonEmptyStr, BeforeValidator(validate_symbol)] = Field(
-        ...,
-        description="Equity symbol, required.",
-    )
+    name: UpperStrReq = Field(..., description="Equity name, required.")
+    symbol: UpperStrReq = Field(..., description="Equity symbol, required.")
 
     # identifiers, optional
-    isin: Annotated[ISINStr | None, BeforeValidator(validate_id)] = None
-    cusip: Annotated[CUSIPStr | None, BeforeValidator(validate_id)] = None
-    cik: Annotated[CIKStr | None, BeforeValidator(validate_id)] = None
-    share_class_figi: Annotated[FIGIStr | None, BeforeValidator(validate_id)] = None
+    isin: ISINStr = None
+    cusip: CUSIPStr = None
+    cik: CIKStr = None
+    share_class_figi: FIGIStr = None
+
+    mics: MICListOpt = None
+    currency: CurrencyStr = None
 
     # financial data, optional
-    mics: Annotated[list[MICStr] | None, BeforeValidator(validate_mics)] = None
-    currency: Annotated[CurrencyStr | None, BeforeValidator(validate_currency)] = None
-    last_price: Annotated[
-        NonNegDecimal | None,
-        BeforeValidator(validate_last_price),
-    ] = None
-    market_cap: Annotated[
-        NonNegDecimal | None,
-        BeforeValidator(validate_market_cap),
-    ] = None
-
-    # fiftyTwoWeeksMin
-    # fiftyTwoWeeksMax
-    # industry
-    # sector
-    # p/e
-    # eps
-    # dividend yield/rate
-    # p/b
-    # market volume
-    # held % insiders/institutions
-    # short interest
-    # share float
-    # shares outstanding
-    # revenue per share
-    # margins (profit/gross/operating)
-    # analyst ratings
-    # free cash flow
-    # operating cash flow
-    # EBITDA
-    # return on equity
-    # return on assets
-    # performance 1 years (% change)
-    # revenue
-    # total debt
+    last_price: UnsignedDecOpt = None
+    market_cap: UnsignedDecOpt = None
+    fifty_two_week_min: UnsignedDecOpt = None
+    fifty_two_week_max: UnsignedDecOpt = None
+    dividend_yield: UnsignedDecOpt = None
+    market_volume: UnsignedDecOpt = None
+    held_insiders: UnsignedDecOpt = None
+    held_institutions: UnsignedDecOpt = None
+    short_interest: UnsignedDecOpt = None
+    share_float: UnsignedDecOpt = None
+    shares_outstanding: UnsignedDecOpt = None
+    revenue_per_share: UnsignedDecOpt = None
+    profit_margin: SignedDecOpt = None
+    gross_margin: SignedDecOpt = None
+    operating_margin: SignedDecOpt = None
+    free_cash_flow: SignedDecOpt = None
+    operating_cash_flow: SignedDecOpt = None
+    return_on_equity: SignedDecOpt = None
+    return_on_assets: SignedDecOpt = None
+    performance_1_year: SignedDecOpt = None
+    total_debt: UnsignedDecOpt = None
+    revenue: UnsignedDecOpt = None
+    ebitda: SignedDecOpt = None
+    trailing_pe: SignedDecOpt = None
+    price_to_book: SignedDecOpt = None
+    trailing_eps: SignedDecOpt = None
+    analyst_rating: AnalystRatingStr = None
+    industry: UpperStrOpt = None
+    sector: UpperStrOpt = None

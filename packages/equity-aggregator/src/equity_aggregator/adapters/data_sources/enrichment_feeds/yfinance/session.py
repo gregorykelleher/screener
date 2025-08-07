@@ -14,28 +14,6 @@ from .utils import backoff_delays
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def create_new_yf_client() -> httpx.AsyncClient:
-    """
-    Create an AsyncClient for Yahoo Finance with strict connection limits.
-
-    This client enforces a single connection and enables HTTP/2, ensuring
-    compliance with Yahoo's stream restrictions.
-
-    Args:
-        None
-
-    Returns:
-        httpx.AsyncClient: Configured asynchronous HTTP client.
-    """
-    limits = httpx.Limits(
-        max_connections=8,
-        max_keepalive_connections=0,
-        keepalive_expiry=0.8,
-    )
-    transport = httpx.AsyncHTTPTransport(http2=False, retries=1, limits=limits)
-    return make_client(transport=transport)
-
-
 class YFSession:
     """
     Asynchronous session for Yahoo Finance JSON endpoints.
@@ -43,7 +21,7 @@ class YFSession:
     This class manages HTTP requests to Yahoo Finance, handling authentication,
     rate limits, and crumb renewal. It is lightweight and reusable, maintaining
     only a client and session state. Concurrency is limited by a shared
-    semaphore to respect Yahoo's 5 HTTP/2 stream restriction.
+    semaphore to respect Yahoo's HTTP/2 stream restriction.
 
     Args:
         config (FeedConfig): Immutable feed configuration.
@@ -55,8 +33,11 @@ class YFSession:
 
     __slots__: tuple[str, ...] = ("_client", "_config", "_crumb", "_crumb_lock")
 
-    # TODO: should be unnecessary now that http/1.1 is used
-    _stream_semaphore: asyncio.Semaphore = asyncio.Semaphore(5)
+    # Limit HTTP/2 concurrent streams to 1; in effect serialising requests.
+    # This is workaround to alleviate reliability issues with Yahoo Finance's endpoints.
+    # With this approach, the HTTP/2 protocol is still in use, without having to drop to
+    # HTTP/1.1.
+    _concurrent_streams: asyncio.Semaphore = asyncio.Semaphore(1)
 
     def __init__(
         self,
@@ -74,7 +55,7 @@ class YFSession:
             None
         """
         self._config: FeedConfig = config
-        self._client: httpx.AsyncClient = client or create_new_yf_client()
+        self._client: httpx.AsyncClient = client or make_client()
         self._crumb: str | None = None
         self._crumb_lock: asyncio.Lock = asyncio.Lock()
 
@@ -123,7 +104,7 @@ class YFSession:
         Returns:
             httpx.Response: The successful HTTP response.
         """
-        async with self.__class__._stream_semaphore:
+        async with self.__class__._concurrent_streams:
             merged_params: dict[str, str] = self._attach_crumb(url, dict(params or {}))
             return await self._fetch_with_retry(url, merged_params)
 
@@ -235,7 +216,7 @@ class YFSession:
         """
         self._crumb = None
         await self._client.aclose()
-        self._client = create_new_yf_client()
+        self._client = make_client()
 
     async def _renew_crumb_once(
         self,

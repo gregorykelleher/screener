@@ -1,7 +1,6 @@
 # pipeline/runner.py
 
 import logging
-from collections.abc import AsyncIterable
 from typing import TypeVar
 
 from equity_aggregator import save_equities
@@ -14,20 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 T = TypeVar("T")
-
-
-# TODO: temp take function to limit the number of items processed (to be removed)
-async def take(
-    stream: AsyncIterable[T],
-    n: int,
-) -> AsyncIterable[T]:
-    """Yield at most the first n items from the incoming async stream."""
-    count = 0
-    async for item in stream:
-        if count >= n:
-            break
-        yield item
-        count += 1
 
 
 async def aggregate_equity_profiles() -> list[RawEquity]:
@@ -63,10 +48,6 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
     # pipe stream through each transform sequentially
     for stage in transforms:
         stream = stage(stream)
-
-    # TODO: take only the first 10 equities for now
-    # stream = take(stream, 10)
-    # stream = enrich(stream)
 
     # materialise the stream
     equities = [equity async for equity in stream]

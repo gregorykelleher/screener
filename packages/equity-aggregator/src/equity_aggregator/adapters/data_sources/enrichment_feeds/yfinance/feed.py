@@ -128,11 +128,6 @@ class YFinanceFeed:
                 continue
             if data:
                 save_cache_entry("yfinance_equities", symbol, data)
-                # TODO: temp
-                logger.info(
-                    "YFinance enrichment successful (remote fetch) for symbol=%s",
-                    symbol,
-                )
                 return data
 
         raise LookupError("Quote Summary endpoint returned nothing.")

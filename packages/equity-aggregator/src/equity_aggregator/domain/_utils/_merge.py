@@ -81,7 +81,6 @@ def merge(group: Sequence[RawEquity]) -> RawEquity:
         analyst_rating=_merge_analyst_rating(group),
         industry=_merge_industry(group),
         sector=_merge_sector(group),
-        # TODO: add sector
     )
 
 

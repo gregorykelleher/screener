@@ -9,7 +9,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from equity_aggregator.schemas import RawEquity
+from equity_aggregator.schemas import CanonicalEquity
 
 logger = logging.getLogger(__name__)
 
@@ -97,39 +97,39 @@ def _init_cache_table(conn: sqlite3.Connection) -> None:
     )
 
 
-def _serialise(raw_equity: RawEquity) -> tuple[str, bytes]:
+def _serialise(canonical_equity: CanonicalEquity) -> tuple[str, bytes]:
     """
-    Serialise a RawEquity object into a (figi, payload) tuple for database storage.
+    Serialise a CanonicalEquity object into (figi, payload) tuple for database storage.
 
     Args:
-        raw_equity (RawEquity): The RawEquity instance to serialise. Must have a
-            non-empty 'share_class_figi' attribute.
+        canonical_equity (CanonicalEquity): The CanonicalEquity instance to serialise.
+        Must have a non-empty 'share_class_figi' attribute.
 
     Returns:
         tuple[str, bytes]: A tuple containing the share class FIGI as a string and
-            the pickled RawEquity object as bytes.
+            the pickled CanonicalEquity object as bytes.
 
     Raises:
         ValueError: If 'share_class_figi' is missing or empty in the provided object.
     """
-    figi = raw_equity.share_class_figi
+    figi = canonical_equity.identity.share_class_figi
     if not figi:
         raise ValueError("share_class_figi is required for equity persistence")
 
-    return figi, pickle.dumps(raw_equity, protocol=4)
+    return figi, pickle.dumps(canonical_equity, protocol=4)
 
 
-def save_equities(raw_equities: Iterable[RawEquity]) -> None:
+def save_canonical_equities(canonical_equities: Iterable[CanonicalEquity]) -> None:
     """
-    Saves a collection of RawEquity objects to the database.
+    Saves a collection of CanonicalEquity objects to the database.
 
     Each equity is serialised and inserted or replaced in the database table. The
     function ensures the database connection is established and initialised before
     performing the operation.
 
     Args:
-        equities (Iterable[RawEquity]): An iterable of RawEquity objects to be saved
-            to the database.
+        equities (Iterable[CanonicalEquity]): An iterable of CanonicalEquity objects to
+            be saved to the database.
 
     Returns:
         None
@@ -140,7 +140,7 @@ def save_equities(raw_equities: Iterable[RawEquity]) -> None:
         conn.executemany(
             f"INSERT OR REPLACE INTO {_EQUITY_TABLE} "
             "(share_class_figi, payload) VALUES (?, ?)",
-            map(_serialise, raw_equities),
+            map(_serialise, canonical_equities),
         )
 
 

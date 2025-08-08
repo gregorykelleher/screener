@@ -9,35 +9,48 @@ _WORDS = re.compile(r"[^\w]+")
 _SPACES = re.compile(r"\s+")
 
 
-def to_upper(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-    *,
-    required: bool = False,
-) -> str | None:
+def require_non_empty(value: str | None, info: cs.ValidationInfo) -> str:
+    """
+    Validates that the provided string value is not None or empty.
+
+    Args:
+        value (str | None): The value to validate. Can be a string or None.
+        info (cs.ValidationInfo): Validation context containing field metadata.
+
+    Returns:
+        str: The validated, non-empty string value.
+
+    Raises:
+        ValueError: If the value is None or an empty string after stripping whitespace.
+    """
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        raise ValueError(f"{info.field_name} is mandatory")
+    return value
+
+
+def to_upper(value: str | float | Decimal | None) -> str | None:
     """
     Normalises text by removing punctuation, collapsing spaces, and converting to
-    uppercase. If *required* is True and the input is blank or None, raises a
-    ValueError with the field name.
+    uppercase.
+
+    - Returns None for None or blank input.
+    - Use a separate presence check (e.g., AfterValidator(require_non_empty)) on
+      required fields to enforce non-blank values.
 
     Args:
         value: The input value to normalise, expected as a string or None.
-        info (cs.ValidationInfo): Validation context containing field metadata.
-        required (bool, optional): If True, blank or None input raises ValueError.
-            Defaults to False.
 
     Returns:
-        str | None: The normalised uppercase string, or None if input is blank and
-        not required.
-
-    Raises:
-        ValueError: If *required* is True and input is blank or None.
+        str | None: The normalised uppercase string, or None if input is blank.
     """
-    if value is None or str(value).strip() == "":
-        if required:
-            raise ValueError(f"{info.field_name} is mandatory")
+    if value is None:
         return None
-    text = _WORDS.sub(" ", str(value))
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    text = _WORDS.sub(" ", text)
     text = _SPACES.sub(" ", text)
     return text.strip().upper()
 
@@ -95,10 +108,7 @@ def to_unsigned_decimal(
     return num
 
 
-def to_isin(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_isin(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates an ISIN (ISO-6166) code.
 
@@ -118,23 +128,20 @@ def to_isin(
     Raises:
         ValueError: If the value does not match the ISIN format.
     """
-    code = to_upper(value, info)
+    isin = to_upper(value)
 
     isin_pattern = r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$"
 
-    if code is None:
+    if isin is None:
         return None
 
-    if not re.fullmatch(isin_pattern, code):
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if not re.fullmatch(isin_pattern, isin):
+        raise ValueError(f"invalid ISIN code: {value!r}")
 
-    return code
+    return isin
 
 
-def to_cusip(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_cusip(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates a CUSIP code (9 alphanumeric characters).
 
@@ -152,23 +159,20 @@ def to_cusip(
     Raises:
         ValueError: If the value does not match the CUSIP format.
     """
-    code = to_upper(value, info)
+    cusip = to_upper(value)
 
     cusip_pattern = r"^[0-9A-Z]{9}$"
 
-    if code is None:
+    if cusip is None:
         return None
 
-    if not re.fullmatch(cusip_pattern, code):
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if not re.fullmatch(cusip_pattern, cusip):
+        raise ValueError(f"invalid CUSIP code: {value!r}")
 
-    return code
+    return cusip
 
 
-def to_cik(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_cik(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates a CIK (Central Index Key) to exactly 10 digits.
 
@@ -186,23 +190,20 @@ def to_cik(
     Raises:
         ValueError: If the value does not match the CIK specification.
     """
-    code = to_upper(value, info)
+    cik = to_upper(value)
 
     cik_pattern = re.compile(r"^[0-9]{10}$")
 
-    if code is None:
+    if cik is None:
         return None
 
-    if not cik_pattern.fullmatch(code):
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if not cik_pattern.fullmatch(cik):
+        raise ValueError(f"invalid CIK code: {value!r}")
 
-    return code
+    return cik
 
 
-def to_figi(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_figi(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates a FIGI (Financial Instrument Global Identifier).
 
@@ -220,23 +221,20 @@ def to_figi(
     Raises:
         ValueError: If the value does not match the FIGI format.
     """
-    code = to_upper(value, info)
+    figi = to_upper(value)
 
     figi_pattern = r"^[A-Z0-9]{12}$"
 
-    if code is None:
+    if figi is None:
         return None
 
-    if not re.fullmatch(figi_pattern, code):
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if not re.fullmatch(figi_pattern, figi):
+        raise ValueError(f"invalid FIGI code: {value!r}")
 
-    return code
+    return figi
 
 
-def to_mic(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_mic(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates a MIC (Market Identifier Code, ISO 10383).
 
@@ -254,23 +252,20 @@ def to_mic(
     Raises:
         ValueError: If the code does not match the MIC format (^[A-Z0-9]{4}$).
     """
-    code = to_upper(value, info)
+    mic = to_upper(value)
 
     mic_pattern = r"^[A-Z0-9]{4}$"
 
-    if code is None:
+    if mic is None:
         return None
 
-    if not re.fullmatch(mic_pattern, code):
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if not re.fullmatch(mic_pattern, mic):
+        raise ValueError(f"invalid MIC code: {value!r}")
 
-    return code
+    return mic
 
 
-def to_currency(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_currency(value: str | float | Decimal | None) -> str | None:
     """
     Normalises and validates a currency code to ISO-4217 format (AAA).
 
@@ -288,22 +283,20 @@ def to_currency(
     Raises:
         ValueError: If the code is not exactly 3 A-Z letters.
     """
-    code = to_upper(value, info)
+    currency = to_upper(value)
+
     currency_code_length = 3
 
-    if code is None:
+    if currency is None:
         return None
 
-    if len(code) != currency_code_length or not code.isalpha():
-        raise ValueError(f"invalid {info.field_name}: {value!r}")
+    if len(currency) != currency_code_length or not currency.isalpha():
+        raise ValueError(f"invalid currency code: {value!r}")
 
-    return code
+    return currency
 
 
-def to_analyst_rating(
-    value: str | float | Decimal | None,
-    info: cs.ValidationInfo,
-) -> str | None:
+def to_analyst_rating(value: str | float | Decimal | None) -> str | None:
     """
     Normalises analyst rating input to one of the canonical tokens: "BUY", "SELL",
     or "HOLD".
@@ -322,7 +315,7 @@ def to_analyst_rating(
         str | None: The canonical rating ("BUY", "SELL", or "HOLD"), or None if
         input is blank or unrecognised.
     """
-    text = to_upper(value, info)
+    text = to_upper(value)
     if text in {"BUY", "SELL", "HOLD"}:
         return text
     return None

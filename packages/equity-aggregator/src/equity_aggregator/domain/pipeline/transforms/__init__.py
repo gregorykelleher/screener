@@ -1,5 +1,6 @@
 # transforms/__init__.py
 
+from .canonicalise import canonicalise
 from .convert import convert
 from .deduplicate import deduplicate
 from .enrich import enrich
@@ -10,6 +11,7 @@ __all__ = [
     "deduplicate",
     "enrich",
     "identify",
+    "canonicalise",
     "convert",
     "parse",
 ]

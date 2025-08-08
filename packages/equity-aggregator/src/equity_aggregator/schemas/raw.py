@@ -7,12 +7,12 @@ from pydantic import (
 )
 
 from .types import (
-    AnalystRatingStr,
-    CIKStr,
-    CurrencyStr,
-    CUSIPStr,
-    FIGIStr,
-    ISINStr,
+    AnalystRatingStrOpt,
+    CIKStrOpt,
+    CurrencyStrOpt,
+    CUSIPStrOpt,
+    FIGIStrOpt,
+    ISINStrOpt,
     MICListOpt,
     SignedDecOpt,
     UnsignedDecOpt,
@@ -23,7 +23,8 @@ from .types import (
 
 # ──────────────────────────── Raw equity data ────────────────────────────
 class RawEquity(BaseModel):
-    """Raw equity data fetched from data feeds. Fields undergo validation
+    """
+    Raw equity data fetched from data feeds. Fields undergo validation
     and normalisation to ensure consistency and correctness.
 
     Fields:
@@ -70,15 +71,15 @@ class RawEquity(BaseModel):
     symbol: UpperStrReq = Field(..., description="Equity symbol, required.")
 
     # identifiers, optional
-    isin: ISINStr = None
-    cusip: CUSIPStr = None
-    cik: CIKStr = None
-    share_class_figi: FIGIStr = None
-
-    mics: MICListOpt = None
-    currency: CurrencyStr = None
+    isin: ISINStrOpt = None
+    cusip: CUSIPStrOpt = None
+    cik: CIKStrOpt = None
+    share_class_figi: FIGIStrOpt = None
 
     # financial data, optional
+    mics: MICListOpt = None
+    currency: CurrencyStrOpt = None
+
     last_price: UnsignedDecOpt = None
     market_cap: UnsignedDecOpt = None
     fifty_two_week_min: UnsignedDecOpt = None
@@ -105,6 +106,6 @@ class RawEquity(BaseModel):
     trailing_pe: SignedDecOpt = None
     price_to_book: SignedDecOpt = None
     trailing_eps: SignedDecOpt = None
-    analyst_rating: AnalystRatingStr = None
+    analyst_rating: AnalystRatingStrOpt = None
     industry: UpperStrOpt = None
     sector: UpperStrOpt = None

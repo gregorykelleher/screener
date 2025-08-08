@@ -1,6 +1,6 @@
 # schemas/__init__.py
 
-from .canonical import EquityFinancials, EquityIdentity, EquityProfile
+from .canonical import CanonicalEquity, EquityFinancials, EquityIdentity
 from .feeds import (
     EuronextFeedData,
     LseFeedData,
@@ -14,7 +14,7 @@ __all__ = [
     # canonical
     "EquityFinancials",
     "EquityIdentity",
-    "EquityProfile",
+    "CanonicalEquity",
     # authoritative feeds
     "EuronextFeedData",
     "LseFeedData",

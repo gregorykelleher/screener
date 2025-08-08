@@ -14,7 +14,7 @@ from equity_aggregator.data_store import (
     load_cache_entry,
     save_cache,
     save_cache_entry,
-    save_equities,
+    save_canonical_equities,
 )
 
 pytestmark = pytest.mark.unit
@@ -104,7 +104,7 @@ def test_save_equities_inserts_rows() -> None:
     ASSERT:  row count == 2
     """
     expected_row_count = 2
-    save_equities([DummyEquity("F1"), DummyEquity("F2")])
+    save_canonical_equities([DummyEquity("F1"), DummyEquity("F2")])
 
     assert _count_rows(_EQUITY_TABLE) == expected_row_count
 
@@ -115,8 +115,8 @@ def test_save_equities_upsert_single_row() -> None:
     ACT:     save_equities twice
     ASSERT:  row count == 1
     """
-    save_equities([DummyEquity("DUP")])
-    save_equities([DummyEquity("DUP")])
+    save_canonical_equities([DummyEquity("DUP")])
+    save_canonical_equities([DummyEquity("DUP")])
 
     assert _count_rows(_EQUITY_TABLE) == 1
 
@@ -128,4 +128,4 @@ def test_save_equities_raises_for_missing_figi() -> None:
     ASSERT:  ValueError raised with correct message
     """
     with pytest.raises(ValueError, match="share_class_figi"):
-        save_equities([DummyEquity("")])
+        save_canonical_equities([DummyEquity("")])

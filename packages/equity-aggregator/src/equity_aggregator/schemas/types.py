@@ -3,9 +3,10 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BeforeValidator, StringConstraints
+from pydantic import AfterValidator, BeforeValidator
 
 from .validators import (
+    require_non_empty,
     to_analyst_rating,
     to_cik,
     to_currency,
@@ -18,17 +19,15 @@ from .validators import (
     to_upper,
 )
 
-# Non-empty string with whitespace stripped.
-NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-# Required upper-cased string.
-UpperStrReq = Annotated[
-    str,
-    BeforeValidator(lambda v, i: to_upper(v, i, required=True)),
-]
-
 # Optional upper-cased string.
 UpperStrOpt = Annotated[str | None, BeforeValidator(to_upper)]
+
+# Required upper-cased string must be non-empty.
+UpperStrReq = Annotated[
+    str | None,
+    BeforeValidator(to_upper),
+    AfterValidator(require_non_empty),
+]
 
 # Signed decimal - can be positive or negative (±).
 SignedDecOpt = Annotated[Decimal | None, BeforeValidator(to_signed_decimal)]
@@ -38,45 +37,52 @@ UnsignedDecOpt = Annotated[Decimal | None, BeforeValidator(to_unsigned_decimal)]
 
 # Valid ISIN must be exactly 12 characters, start with two letters,
 # followed by nine alphanumeric chars, and end with a digit.
-ISINStr = Annotated[
+ISINStrOpt = Annotated[
     str | None,
     BeforeValidator(to_isin),
 ]
 
 # Valid CUSIP must be exactly 9 characters, consisting of digits and uppercase letters.
 # Doesn't strictly enforce the CUSIP checksum.
-CUSIPStr = Annotated[
+CUSIPStrOpt = Annotated[
     str | None,
     BeforeValidator(to_cusip),
 ]
 
 # Valid CIK must be exactly 10 digits.
 # Only digits allowed; no letters.
-CIKStr = Annotated[
+CIKStrOpt = Annotated[
     str | None,
     BeforeValidator(to_cik),
 ]
 
 # Valid FIGI must be exactly 12 characters and consist of uppercase letters and digits.
-FIGIStr = Annotated[
+FIGIStrOpt = Annotated[
     str | None,
     BeforeValidator(to_figi),
 ]
 
+# Required FIGI must be non-empty.
+FIGIStrReq = Annotated[
+    str | None,
+    BeforeValidator(to_figi),
+    AfterValidator(require_non_empty),
+]
+
 # Valid MIC must be exactly 4 characters and consist of uppercase letters and digits.
-MICStr = Annotated[
+MICStrOpt = Annotated[
     str | None,
     BeforeValidator(to_mic),
 ]
 
-# List of MICs, which are non-empty strings.
+# List of MICs.
 MICListOpt = Annotated[
-    list[MICStr] | None,
+    list[MICStrOpt] | None,
     BeforeValidator(lambda v, _: v if v else None),
 ]
 
 # Valid currency code must be exactly 3 uppercase letters (ISO-4217).
-CurrencyStr = Annotated[str | None, BeforeValidator(to_currency)]
+CurrencyStrOpt = Annotated[str | None, BeforeValidator(to_currency)]
 
 # Analyst rating must be a distinct value, either "BUY", "SELL", or "HOLD".
-AnalystRatingStr = Annotated[str | None, BeforeValidator(to_analyst_rating)]
+AnalystRatingStrOpt = Annotated[str | None, BeforeValidator(to_analyst_rating)]

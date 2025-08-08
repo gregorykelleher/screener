@@ -9,16 +9,54 @@ from equity_aggregator.schemas import validators
 pytestmark = pytest.mark.unit
 
 
+def test_require_non_empty_valid() -> None:
+    """
+    ARRANGE: non-empty string and dummy info
+    ACT:     require_non_empty
+    ASSERT:  returns the original string
+    """
+    info = type("Info", (), {"field_name": "field"})()
+    value = "FOO"
+
+    actual = validators.require_non_empty(value, info)
+
+    assert actual == "FOO"
+
+
+def test_require_non_empty_none_raises() -> None:
+    """
+    ARRANGE: None value and dummy info
+    ACT:     require_non_empty
+    ASSERT:  raises ValueError
+    """
+    info = type("Info", (), {"field_name": "field"})()
+
+    with pytest.raises(ValueError):
+        validators.require_non_empty(None, info)
+
+
+def test_require_non_empty_blank_raises() -> None:
+    """
+    ARRANGE: blank string and dummy info
+    ACT:     require_non_empty
+    ASSERT:  raises ValueError
+    """
+    info = type("Info", (), {"field_name": "field"})()
+    value = "   "
+
+    with pytest.raises(ValueError):
+        validators.require_non_empty(value, info)
+
+
 def test_to_upper_basic() -> None:
     """
     ARRANGE: simple lower-case string
     ACT:     to_upper
     ASSERT:  returns upper-cased string
     """
-    info = type("Info", (), {"field_name": "field"})()
     value = "foo"
 
-    actual = validators.to_upper(value, info)
+    actual = validators.to_upper(value)
 
     assert actual == "FOO"
 
@@ -29,24 +67,11 @@ def test_to_upper_whitespace_and_punct() -> None:
     ACT:     to_upper
     ASSERT:  returns cleaned, upper-cased string
     """
-    info = type("Info", (), {"field_name": "field"})()
     value = "  Foo-Bar!  Ltd.  "
 
-    actual = validators.to_upper(value, info)
+    actual = validators.to_upper(value)
 
     assert actual == "FOO BAR LTD"
-
-
-def test_to_upper_required_none_raises() -> None:
-    """
-    ARRANGE: None value with required=True
-    ACT:     to_upper
-    ASSERT:  raises ValueError
-    """
-    info = type("Info", (), {"field_name": "field"})()
-
-    with pytest.raises(ValueError):
-        validators.to_upper(None, info, required=True)
 
 
 def test_to_upper_optional_none() -> None:
@@ -55,10 +80,9 @@ def test_to_upper_optional_none() -> None:
     ACT:     to_upper
     ASSERT:  returns None
     """
-    info = type("Info", (), {"field_name": "field"})()
     value = None
 
-    actual = validators.to_upper(value, info)
+    actual = validators.to_upper(value)
 
     assert actual is None
 
@@ -69,10 +93,9 @@ def test_to_upper_blank_string_optional() -> None:
     ACT:     to_upper
     ASSERT:  returns None
     """
-    info = type("Info", (), {"field_name": "field"})()
     value = "   "
 
-    actual = validators.to_upper(value, info)
+    actual = validators.to_upper(value)
 
     assert actual is None
 
@@ -179,10 +202,9 @@ def test_to_analyst_rating_valid_buy() -> None:
     ACT:     to_analyst_rating
     ASSERT:  returns canonical upper-cased rating
     """
-    info = type("Info", (), {"field_name": "analyst_rating"})()
     value = "buy"
 
-    actual = validators.to_analyst_rating(value, info)
+    actual = validators.to_analyst_rating(value)
 
     assert actual == "BUY"
 
@@ -193,10 +215,9 @@ def test_to_analyst_rating_invalid_value() -> None:
     ACT:     to_analyst_rating
     ASSERT:  returns None
     """
-    info = type("Info", (), {"field_name": "analyst_rating"})()
     value = "outperform"
 
-    actual = validators.to_analyst_rating(value, info)
+    actual = validators.to_analyst_rating(value)
 
     assert actual is None
 

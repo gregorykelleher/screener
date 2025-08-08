@@ -6,14 +6,13 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from equity_aggregator.schemas.types import (
-    AnalystRatingStr,
-    CIKStr,
-    CurrencyStr,
-    CUSIPStr,
-    FIGIStr,
-    ISINStr,
-    MICStr,
-    NonEmptyStr,
+    AnalystRatingStrOpt,
+    CIKStrOpt,
+    CurrencyStrOpt,
+    CUSIPStrOpt,
+    FIGIStrOpt,
+    ISINStrOpt,
+    MICStrOpt,
     SignedDecOpt,
     UnsignedDecOpt,
     UpperStrOpt,
@@ -29,18 +28,18 @@ def test_non_empty_str_valid() -> None:
     ACT:     validate NonEmptyStr
     ASSERT:  value is preserved
     """
-    value = TypeAdapter(NonEmptyStr).validate_python("foo")
-    assert value == "foo"
+    value = TypeAdapter(UpperStrReq).validate_python("foo")
+    assert value == "FOO"
 
 
 def test_non_empty_str_strips_and_rejects_empty() -> None:
     """
     ARRANGE: whitespace-only string
-    ACT:     validate NonEmptyStr
+    ACT:     validate UpperStrReq
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(NonEmptyStr).validate_python("   ")
+        TypeAdapter(UpperStrReq).validate_python("   ")
 
 
 def test_isin_valid() -> None:
@@ -49,7 +48,7 @@ def test_isin_valid() -> None:
     ACT:     validate ISINStr
     ASSERT:  value is preserved
     """
-    value = TypeAdapter(ISINStr).validate_python("US0378331005")
+    value = TypeAdapter(ISINStrOpt).validate_python("US0378331005")
     assert value == "US0378331005"
 
 
@@ -60,7 +59,7 @@ def test_isin_invalid_length() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(ISINStr).validate_python("US123")
+        TypeAdapter(ISINStrOpt).validate_python("US123")
 
 
 def test_isin_invalid_pattern() -> None:
@@ -70,7 +69,7 @@ def test_isin_invalid_pattern() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(ISINStr).validate_python("US!378331005")
+        TypeAdapter(ISINStrOpt).validate_python("US!378331005")
 
 
 def test_cusip_valid() -> None:
@@ -79,7 +78,7 @@ def test_cusip_valid() -> None:
     ACT:     validate CUSIPStr
     ASSERT:  value is uppercased
     """
-    value = TypeAdapter(CUSIPStr).validate_python("037833100")
+    value = TypeAdapter(CUSIPStrOpt).validate_python("037833100")
     assert value == "037833100"
 
 
@@ -90,7 +89,7 @@ def test_cusip_invalid_length() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(CUSIPStr).validate_python("03783")
+        TypeAdapter(CUSIPStrOpt).validate_python("03783")
 
 
 def test_cusip_invalid_pattern() -> None:
@@ -100,7 +99,7 @@ def test_cusip_invalid_pattern() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(CUSIPStr).validate_python("03783310!")
+        TypeAdapter(CUSIPStrOpt).validate_python("03783310!")
 
 
 def test_figi_valid() -> None:
@@ -109,7 +108,7 @@ def test_figi_valid() -> None:
     ACT:     validate FIGIStr
     ASSERT:  value is uppercased
     """
-    value = TypeAdapter(FIGIStr).validate_python("BBG001S5N8V8")
+    value = TypeAdapter(FIGIStrOpt).validate_python("BBG001S5N8V8")
     assert value == "BBG001S5N8V8"
 
 
@@ -120,7 +119,7 @@ def test_figi_invalid_length() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(FIGIStr).validate_python("BBG001S5N8")
+        TypeAdapter(FIGIStrOpt).validate_python("BBG001S5N8")
 
 
 def test_figi_invalid_pattern() -> None:
@@ -130,7 +129,7 @@ def test_figi_invalid_pattern() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(FIGIStr).validate_python("BBG001S5N8!!")
+        TypeAdapter(FIGIStrOpt).validate_python("BBG001S5N8!!")
 
 
 def test_mic_valid() -> None:
@@ -139,7 +138,7 @@ def test_mic_valid() -> None:
     ACT:     validate MICStr
     ASSERT:  value is preserved
     """
-    value = TypeAdapter(MICStr).validate_python("XLON")
+    value = TypeAdapter(MICStrOpt).validate_python("XLON")
     assert value == "XLON"
 
 
@@ -150,7 +149,7 @@ def test_mic_invalid_length() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(MICStr).validate_python("XL")
+        TypeAdapter(MICStrOpt).validate_python("XL")
 
 
 def test_mic_invalid_pattern() -> None:
@@ -160,7 +159,7 @@ def test_mic_invalid_pattern() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(MICStr).validate_python("X!ON")
+        TypeAdapter(MICStrOpt).validate_python("X!ON")
 
 
 def test_currency_valid() -> None:
@@ -169,7 +168,7 @@ def test_currency_valid() -> None:
     ACT:     validate CurrencyStr
     ASSERT:  value is preserved
     """
-    value = TypeAdapter(CurrencyStr).validate_python("USD")
+    value = TypeAdapter(CurrencyStrOpt).validate_python("USD")
     assert value == "USD"
 
 
@@ -180,7 +179,7 @@ def test_currency_invalid_length() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(CurrencyStr).validate_python("US")
+        TypeAdapter(CurrencyStrOpt).validate_python("US")
 
 
 def test_currency_invalid_pattern() -> None:
@@ -190,17 +189,17 @@ def test_currency_invalid_pattern() -> None:
     ASSERT:  raises ValidationError
     """
     with pytest.raises(ValidationError):
-        TypeAdapter(CurrencyStr).validate_python("US$")
+        TypeAdapter(CurrencyStrOpt).validate_python("US$")
 
 
 def test_non_empty_str_strips_whitespace() -> None:
     """
     ARRANGE: string with leading/trailing whitespace
-    ACT:     validate NonEmptyStr
+    ACT:     validate UpperStrReq
     ASSERT:  value is stripped
     """
-    value = TypeAdapter(NonEmptyStr).validate_python(" hello world   ")
-    assert value == "hello world"
+    value = TypeAdapter(UpperStrReq).validate_python(" hello world   ")
+    assert value == "HELLO WORLD"
 
 
 def test_cik_valid() -> None:
@@ -209,7 +208,7 @@ def test_cik_valid() -> None:
     ACT:     validate CIKStr
     ASSERT:  value is preserved
     """
-    value = TypeAdapter(CIKStr).validate_python("0000320193")
+    value = TypeAdapter(CIKStrOpt).validate_python("0000320193")
     assert value == "0000320193"
 
 
@@ -309,7 +308,7 @@ def test_analyst_rating_str_valid() -> None:
     ACT:     validate AnalystRatingStr
     ASSERT:  value is upper-cased and preserved
     """
-    value = TypeAdapter(AnalystRatingStr).validate_python("buy")
+    value = TypeAdapter(AnalystRatingStrOpt).validate_python("buy")
     assert value == "BUY"
 
 
@@ -319,7 +318,7 @@ def test_analyst_rating_str_invalid_value() -> None:
     ACT:     validate AnalystRatingStr
     ASSERT:  value is coerced to None
     """
-    value = TypeAdapter(AnalystRatingStr).validate_python("strong buy")
+    value = TypeAdapter(AnalystRatingStrOpt).validate_python("strong buy")
     assert value is None
 
 
@@ -329,5 +328,5 @@ def test_analyst_rating_str_none_allowed() -> None:
     ACT:     validate AnalystRatingStr
     ASSERT:  value is preserved (None allowed)
     """
-    value = TypeAdapter(AnalystRatingStr).validate_python(None)
+    value = TypeAdapter(AnalystRatingStrOpt).validate_python(None)
     assert value is None

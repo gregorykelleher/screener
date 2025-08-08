@@ -183,8 +183,14 @@ async def _produce_chunk(
         for index, record in enumerate(identification_records):
             await queue.put((start_index + index, record))
 
-    except Exception:
-        logger.exception("OpenFIGI batch starting at %d failed.", start_index)
+    except Exception as exc:
+        logger.error(
+            "OpenFIGI batch starting at %d failed: %s: %s",
+            start_index,
+            type(exc).__name__,
+            exc,
+            exc_info=False,
+        )
         placeholder: IndentificationRecord = (None, None, None)
         for index in range(len(batch)):
             await queue.put((start_index + index, placeholder))
@@ -266,6 +272,10 @@ def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
     api_key = os.getenv("OPENFIGI_API_KEY")
 
     if not api_key:
+        logger.error(
+            "OPENFIGI_API_KEY is not set; skipping OpenFIGI lookup.",
+            exc_info=False,
+        )
         return None
 
     client = OpenFigiClient(api_key=api_key)

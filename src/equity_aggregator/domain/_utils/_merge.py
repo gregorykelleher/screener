@@ -166,7 +166,8 @@ def _merge_symbol(duplicate_group: Sequence[RawEquity]) -> str:
 
 
 def _merge_decimal_field(
-    duplicate_group: Sequence[RawEquity], field: str
+    duplicate_group: Sequence[RawEquity],
+    field: str,
 ) -> Decimal | None:
     """
     Calculates the median value for a specified Decimal field from a group of
@@ -317,7 +318,7 @@ def _merge_industry(
     Selects a representative industry from a group of RawEquity objects.
 
     - Ignores blank or missing industry values.
-    - Clusters similar industry names using single-link fuzzy matching (token-set ratio).
+    - Clusters similar industry names with single-link fuzzy matching (token-set ratio).
     - The cluster with the highest total frequency is chosen (majority rule).
     - Within the winning cluster, the earliest spelling in the original sequence is
         returned, preserving original capitalisation.

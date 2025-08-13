@@ -1,8 +1,8 @@
-# Screener
+# Equity Aggregator
 
 ## Description
 
-Screener is a container-based application designed to provided financial data analysis and visualisation. It leverages various data sources to display information about stocks, sectors, commodities and more.
+Equity Aggregator is a container-based application designed to provided financial data analysis and visualisation. It leverages various data sources to display information about stocks, sectors, commodities and more.
 
 ## Project Structure
 
@@ -88,10 +88,11 @@ To run a package's tests using its pytest options:
 
 ```sh
 uv run pytest -c packages/equity-aggregator/pyproject.toml
+uv run pytest -vvv -m unit --cov=equity_aggregator --cov-report=term-missing --cov-report=html
 uv run pytest -m unit -vvv
 ```
 
-## Launch the Screener Application
+## Launch the Equity Aggregator Application
 
 The `packages` directory contains the project's packages, managed by `uv`. Each package has a corresponding `pyproject.toml` and is distributable as a Python module.
 

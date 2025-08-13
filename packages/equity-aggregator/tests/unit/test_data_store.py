@@ -21,12 +21,25 @@ pytestmark = pytest.mark.unit
 
 
 @dataclass(slots=True)
+class _Identity:
+    """
+    Dataclass representing an identity with a share class FIGI.
+    """
+
+    share_class_figi: str
+
+
+@dataclass(slots=True)
 class DummyEquity:
     """
     A dummy data class representing an equity with a share class FIGI identifier.
     """
 
     share_class_figi: str
+
+    @property
+    def identity(self) -> _Identity:
+        return _Identity(self.share_class_figi)
 
 
 def _count_rows(table: str) -> int:

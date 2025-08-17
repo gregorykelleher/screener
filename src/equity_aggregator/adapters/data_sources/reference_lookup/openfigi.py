@@ -4,7 +4,8 @@ import asyncio
 import logging
 import os
 import re
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Callable, Sequence
+from typing import Protocol
 
 import pandas as pd
 from openfigipy import OpenFigiClient
@@ -14,370 +15,410 @@ from equity_aggregator.schemas import RawEquity
 
 logger = logging.getLogger(__name__)
 
-# an identification record is a tuple of (name, symbol, shareClassFIGI)
-IndentificationRecord = tuple[str | None, str | None, str | None]
+type IdentificationRecord = tuple[str | None, str | None, str | None]
 
-# a function that fetches identification records for a sequence of RawEquity objects
-FetchIdentificationRecords = Callable[
-    [Sequence[RawEquity]],
-    Awaitable[list[IndentificationRecord]],
-]
 
-# a producer function produces identification records for a chunk of RawEquity objects
-Producer = Callable[
-    [int, Sequence[RawEquity], asyncio.Queue["_INDEXED | None"]],
-    Awaitable[None],
-]
+class _OpenFigiClient(Protocol):
+    """
+    Protocol for OpenFIGI client implementations.
 
-# an indexed identification record is a tuple of (index, identification record)
-_INDEXED = tuple[int, IndentificationRecord]
+    Defines the expected interface for an OpenFIGI client.
 
-# OpenFIGI limits
-_REQUESTS_PER_WINDOW = 25
-_WINDOW_SECONDS = 6.0
-_CHUNK_SIZE = 100
+    Methods
+    -------
+    connect() -> None
+        Establishes a connection to the OpenFIGI service. May raise an exception
+        if connection fails.
 
-_VALID_FIGI = re.compile(r"^[A-Z0-9]{12}$").fullmatch
+    map(df: pd.DataFrame) -> pd.DataFrame
+        Maps reference data using the provided DataFrame and returns a new
+        DataFrame containing the identification results.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input DataFrame containing reference data queries (e.g. ISINs, tickers).
+
+        Returns
+        -------
+        pd.DataFrame
+            The mapped results returned from the OpenFIGI service.
+    """
+
+    def connect(self) -> object: ...
+    def map(self, df: pd.DataFrame) -> pd.DataFrame: ...
 
 
 async def fetch_equity_identification(
     raw_equities: Sequence[RawEquity],
     *,
-    cache_key: str = "openfigi",
-) -> list[IndentificationRecord]:
+    client_factory: Callable[[], _OpenFigiClient | None] = None,
+    cache_key: str | None = "openfigi",
+) -> list[IdentificationRecord]:
     """
-    Fetches equity identification records (name, symbol, shareClassFIGI) for each
-    RawEquity in the input sequence, preserving input order and length. Utilises a
-    cache to avoid redundant lookups. Missing FIGIs are represented as (None, None,
-    None).
+    Fetches equity identification records using the OpenFIGI API, with caching support.
+
+    This asynchronous function attempts to load identification records from cache
+    first. If not available, it uses the provided client factory to create an
+    OpenFIGI client and fetches identification records for the given raw equities.
+    Results are cached for future calls.
 
     Args:
-        raw_equities (Sequence[RawEquity]): Sequence of RawEquity objects to resolve.
-        cache_key (str, optional): Key for caching results. Defaults to
-            "openfigi".
+        raw_equities (Sequence[RawEquity]): List of raw equity objects to identify.
+        client_factory (Callable[[], _OpenFigiClient | None], optional): Factory
+            function to create an OpenFIGI client. If not provided, a default client
+            is used.
+        cache_key (str | None, optional): Key for cache lookup and storage. Defaults
+            to "openfigi".
 
     Returns:
-        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI) records,
-        aligned 1-for-1 with input. If a FIGI cannot be resolved, the corresponding
-        record is (None, None, None).
+        list[IdentificationRecord]: List of identification records for the equities.
     """
     if not raw_equities:
         return []
 
     cached = load_cache(cache_key)
-
     if cached is not None:
         logger.debug("Loaded %d OpenFIGI records from cache.", len(cached))
         return cached
 
-    equity_id_records = await _identify_equity_indentification_records(raw_equities)
+    # resolve identities using the provided client or a default one
+    identities = await _resolve_identities(
+        raw_equities,
+        client_factory or _make_openfigi_client,
+    )
 
-    save_cache(cache_key, equity_id_records)
+    save_cache(cache_key, identities)
+    logger.debug("Saved %d OpenFIGI identification records to cache.", len(identities))
+    return identities
 
-    logger.debug("Saved %d OpenFIGI records to cache.", len(equity_id_records))
-    return equity_id_records
 
-
-async def _identify_equity_indentification_records(
-    equities: Sequence[RawEquity],
-) -> list[IndentificationRecord]:
+async def _resolve_identities(
+    raw_equities: Sequence[RawEquity],
+    client_factory: Callable[[], _OpenFigiClient | None],
+) -> list[IdentificationRecord]:
     """
-    Asynchronously resolves identification for a sequence of RawEquity objects.
-    This function processes the given equities in chunks, distributing the workload
-    across multiple asynchronous tasks. It uses a producer-consumer pattern with an
-    asyncio queue to efficiently handle the identification resolution process.
+    Resolve identification records for a sequence of raw equities using OpenFIGI.
+
+    This function attempts to create an OpenFIGI client using the provided factory.
+    If the client is valid, it identifies each equity with a fallback mechanism.
+    If the client cannot be created, it returns a list of default (None, None, None)
+    records matching the input length.
 
     Args:
-        equities (Sequence[RawEquity]): A sequence of RawEquity instances to resolve.
+        raw_equities (Sequence[RawEquity]): Sequence of raw equity objects to resolve.
+        client_factory (Callable[[], _OpenFigiClient | None]): Factory returning an
+            OpenFIGI client instance or None.
+
     Returns:
-        list[IndentificationRecord]: A list of IndentificationRecord objects containing
-            resolved identification information for each input equity.
+        list[IdentificationRecord]: Identification records for each input equity.
+            If client is invalid, returns a list of (None, None, None) records.
     """
+    client = client_factory()
 
-    queue: asyncio.Queue[_INDEXED | None] = asyncio.Queue()
-    chunks = _enumerate_chunks(equities, _CHUNK_SIZE)
+    if client is None:
+        return [(None, None, None)] * len(raw_equities)
 
-    async with asyncio.TaskGroup() as task_group:
-        task_group.create_task(_fan_out(chunks, queue))  # producers
-        return await _consume_queue(  # consumer
-            queue,
-            expected_items=len(equities),
-            expected_sentinels=len(chunks),
-        )
+    return await _identify_with_fallback(raw_equities, client)
 
 
-async def _fan_out(
-    chunks: list[tuple[int, Sequence[RawEquity]]],
-    queue: asyncio.Queue[_INDEXED | None],
-    *,
-    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
-    produce_chunk: Callable[
-        [int, Sequence[RawEquity], asyncio.Queue[_INDEXED | None]],
-        Awaitable[None],
-    ] = None,
-) -> None:
+def _get_api_key(getenv: Callable[[str], str | None] = os.getenv) -> str | None:
     """
-    Launches producer tasks in waves, respecting the OpenFIGI rate limit of 25
-    requests per 6 seconds. Each wave processes up to 25 chunks in parallel,
-    then waits for the required window before launching the next wave.
+    Retrieve the OpenFIGI API key from environment variables.
 
     Args:
-        chunks (list[tuple[int, Sequence[RawEquity]]]): List of (start_index,
-            batch) tuples, where each batch is a chunk of RawEquity objects.
-        queue (asyncio.Queue[_INDEXED | None]): Queue to which producer tasks
-            will push their results and sentinels.
-        sleep (Callable[[float], Awaitable[None]], optional): Async sleep
-            function to pause between waves. Defaults to asyncio.sleep.
-        produce_chunk (Callable[[int, Sequence[RawEquity],
-            asyncio.Queue[_INDEXED | None]], Awaitable[None]], optional):
-            Function to produce results for a chunk. Defaults to _produce_chunk.
+        getenv (Callable[[str], str | None], optional): Function to fetch environment
+            variables. Defaults to os.getenv.
 
     Returns:
-        None
+        str | None: The OpenFIGI API key if set, otherwise None.
     """
-    for offset in range(0, len(chunks), _REQUESTS_PER_WINDOW):
-        wave = chunks[offset : offset + _REQUESTS_PER_WINDOW]
-
-        if produce_chunk is None:
-            produce_chunk = _produce_chunk
-
-        tasks = [
-            asyncio.create_task(produce_chunk(start, batch, queue))
-            for start, batch in wave
-        ]
-        await asyncio.gather(*tasks)
-
-        if offset + _REQUESTS_PER_WINDOW < len(chunks):
-            await sleep(_WINDOW_SECONDS)
-
-
-async def _produce_chunk(
-    start_index: int,
-    batch: Sequence[RawEquity],
-    queue: asyncio.Queue[_INDEXED | None],
-    *,
-    fetch: FetchIdentificationRecords | None = None,
-) -> None:
-    """
-    Producer coroutine that resolves a chunk of RawEquity objects and pushes
-    (index, identification records) results to the queue. Always pushes a sentinel
-    (None) at the end to mark completion, regardless of success or failure.
-
-    Args:
-        start_index (int): The starting index of this batch in the full sequence.
-        batch (Sequence[RawEquity]): The chunk of RawEquity objects to resolve.
-        queue (asyncio.Queue[_INDEXED | None]): Queue to push (index, identification
-            records) results and a sentinel (None) when done.
-        fetch (FetchIdentificationRecords | None, optional):
-            Function to fetch identification records for the batch. If None, uses the
-            default_fetch_and_extract function.
-
-    Returns:
-        None
-    """
-    if fetch is None:
-        fetch = _fetch_and_extract
-
-    try:
-        identification_records = await fetch(batch)
-        for index, record in enumerate(identification_records):
-            await queue.put((start_index + index, record))
-
-    except Exception as exc:
-        logger.error(
-            "OpenFIGI batch starting at %d failed: %s: %s",
-            start_index,
-            type(exc).__name__,
-            exc,
-            exc_info=False,
-        )
-        placeholder: IndentificationRecord = (None, None, None)
-        for index in range(len(batch)):
-            await queue.put((start_index + index, placeholder))
-
-    finally:
-        await queue.put(None)  # sentinel
-
-
-async def _consume_queue(
-    queue: asyncio.Queue[_INDEXED | None],
-    *,
-    expected_items: int,
-    expected_sentinels: int,
-) -> list[IndentificationRecord]:
-    """
-    Consumes items from the queue until all sentinels are received, reconstructing
-    an ordered list of identification records matching the original input order.
-
-    Args:
-        queue (asyncio.Queue[_INDEXED | None]): Queue from which to consume
-            (index, record) results and sentinel (None) values.
-        expected_items (int): Total number of record items expected.
-        expected_sentinels (int): Number of sentinel (None) values to wait for,
-            corresponding to the number of producer tasks.
-
-    Returns:
-        list[IdentificationRecord]: List of records ordered by their original indices.
-    """
-    result: list[IndentificationRecord | None] = [None] * expected_items
-    completed = items = 0
-
-    while completed < expected_sentinels:
-        item = await queue.get()
-        if item is None:
-            completed += 1
-            continue
-        index, record = item
-        result[index] = record
-        items += 1
-
-    if items != expected_items:
-        logger.error("Expected %d items, received %d", expected_items, items)
-
-    return list(result)
-
-
-async def _fetch_and_extract(batch: Sequence[RawEquity]) -> list[IndentificationRecord]:
-    """
-    Executes a blocking OpenFigiClient.map call in a thread to avoid event loop
-    starvation. Converts the batch of RawEquity objects into a DataFrame, sends
-    the mapping request, and extracts (name, symbol, shareClassFIGI) identification
-    records for each input, preserving order.
-
-    Args:
-        batch (Sequence[RawEquity]): A batch of RawEquity objects to resolve.
-
-    Returns:
-        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI)
-            identification records, aligned 1-for-1 with the input batch.
-    """
-    df = _build_query_dataframe(batch)
-    raw: pd.DataFrame = await asyncio.to_thread(_blocking_map_call, df)
-    return _extract_identification_records(raw, batch_size=len(batch))
-
-
-def _blocking_map_call(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Maps a DataFrame of identifiers to OpenFIGI results using a blocking API call.
-
-    This function initialises an OpenFigiClient with the API key from the environment,
-    establishes a connection, and submits the provided DataFrame for mapping.
-
-    Args:
-        df (pd.DataFrame): DataFrame with identifier data to be mapped via OpenFIGI.
-
-    Returns:
-        pd.DataFrame: DataFrame containing the mapping results from the OpenFIGI API.
-    """
-    api_key = os.getenv("OPENFIGI_API_KEY")
+    api_key = getenv("OPENFIGI_API_KEY")
 
     if not api_key:
         logger.error(
-            "OPENFIGI_API_KEY is not set; skipping OpenFIGI lookup.",
+            "OPENFIGI_API_KEY is not set; returning no identifications.",
             exc_info=False,
         )
         return None
 
-    client = OpenFigiClient(api_key=api_key)
-    client.connect()
-    return client.map(df)
+    return api_key
 
 
-def _extract_identification_records(
+def _make_openfigi_client(
+    *,
+    api_key_provider: Callable[[], str | None] = _get_api_key,
+    incoming_client: Callable[[str], _OpenFigiClient] = OpenFigiClient,
+) -> _OpenFigiClient | None:
+    """
+    Creates and connects an OpenFIGI client using the provided API key provider and
+    client factory. If the API key is missing or the connection fails, returns None.
+
+    Args:
+        api_key_provider (Callable[[], str | None], optional): Function to retrieve
+            the OpenFIGI API key. Defaults to _get_api_key.
+        incoming_client (Callable[[str], _OpenFigiClient], optional): Factory function
+            to instantiate OpenFIGI client with the API key. Defaults to OpenFigiClient.
+
+    Returns:
+        _OpenFigiClient | None: Connected OpenFIGI client instance, or None if the
+            API key is missing or connection fails.
+    """
+    api_key = api_key_provider()
+
+    if api_key is None:
+        return None
+
+    open_figi_client = incoming_client(api_key)
+
+    try:
+        open_figi_client.connect()
+    except Exception as exc:
+        logger.error("Failed to connect OpenFIGI client: %s", exc, exc_info=False)
+        return None
+
+    return open_figi_client
+
+
+async def _identify_with_fallback(
+    raw_equities: Sequence[RawEquity],
+    client: _OpenFigiClient,
+) -> list[IdentificationRecord]:
+    """
+    Attempts to identify a sequence of raw equities using the provided OpenFIGI client.
+    Falls back to returning a list of (None, None, None) tuples if mapping fails.
+
+    Args:
+        raw_equities (Sequence[RawEquity]): Sequence of raw equity objects to identify.
+        client (_OpenFigiClient): The OpenFIGI client instance.
+
+    Returns:
+        list[IdentificationRecord]: List of identification records for each equity.
+            If mapping fails, returns list of (None, None, None) tuples of same length
+            as raw_equities.
+    """
+    mapped_df = await _map_or_none(raw_equities, client)
+
+    if mapped_df is None:
+        return [(None, None, None)] * len(raw_equities)
+
+    return extract_identified_records(mapped_df, expected=len(raw_equities))
+
+
+async def _map_or_none(
+    data: Sequence[RawEquity] | pd.DataFrame,
+    client: _OpenFigiClient,
+) -> pd.DataFrame | None:
+    """
+    Maps a sequence of RawEquity objects or a query DataFrame using OpenFIGI client.
+
+    If data is a sequence of RawEquity, it will be converted to a DataFrame first.
+
+    Args:
+        data (Sequence[RawEquity] | pd.DataFrame): Raw equities or pre-constructed query
+            DataFrame.
+        client (_OpenFigiClient): The OpenFIGI client to use for mapping.
+
+    Returns:
+        pd.DataFrame | None: Mapped results or None on failure.
+    """
+
+    try:
+        query_df = _build_query_dataframe(data) if isinstance(data, Sequence) else data
+        return await asyncio.to_thread(client.map, query_df)
+    except Exception as exc:
+        logger.error("OpenFIGI mapping failed: %s", exc, exc_info=False)
+        return None
+
+
+def extract_identified_records(
     response: pd.DataFrame,
     *,
-    batch_size: int,
-) -> list[IndentificationRecord]:
+    expected: int,
+) -> list[IdentificationRecord]:
     """
-    Extracts (name, symbol, shareClassFIGI) identification records from an OpenFIGI
-    response DataFrame, preserving the input batch order.
+    Extract identification records from an OpenFIGI response DataFrame.
+
+    Ensures a 1:1 mapping between input queries and output records. For each query
+    index, selects the last valid match (last-wins) from the response. If no valid
+    entry exists for an index, (None, None, None) is used.
 
     Args:
-        response (pd.DataFrame): DataFrame returned by the OpenFIGI API, containing
-            mapping results for a batch of queries.
-        batch_size (int): The number of input records in the original batch,
-            used to ensure output alignment and fill missing results.
+        response (pd.DataFrame): DataFrame containing OpenFIGI API response records.
+        expected (int): Number of input queries; output list will match this length.
 
     Returns:
-        list[IndentificationRecord]: List of (name, symbol, shareClassFIGI)
-            identification records, ordered to match the input batch. If a mapping is
-            missing, (None, None, None) is returned for that position.
+        list[IdentificationRecord]: List of identification records in input order.
+            Each record is a tuple (name, symbol, figi), or (None, None, None) if
+            missing.
     """
+    response_entries = list(reversed(response.to_dict(orient="records")))
 
-    def _identification_records(row: dict) -> IndentificationRecord:
-        figi = row.get("shareClassFIGI")
-        figi = figi if isinstance(figi, str) and _VALID_FIGI(figi) else None
+    # Filter only valid entries and extract (index, record) pairs
+    valid_entries = filter(
+        lambda entry: _is_valid_response_entry(entry, expected),
+        response_entries,
+    )
 
-        name = row.get("name") or row.get("securityName")
-        name = name if isinstance(name, str) else None
+    indexed_records = map(_extract_indexed_record, valid_entries)
 
-        symbol = row.get("ticker")
-        symbol = symbol if isinstance(symbol, str) else None
+    records_by_query_index: dict[int, IdentificationRecord] = {}
+    for index, record in indexed_records:
+        records_by_query_index.setdefault(index, record)
 
-        return (name, symbol, figi)
-
-    mapping: dict[int, IndentificationRecord] = {
-        int(row["query_number"]): _identification_records(row)
-        for row in reversed(response.to_dict(orient="records"))
-    }
-
-    placeholder: IndentificationRecord = (None, None, None)
-    return [mapping.get(index, placeholder) for index in range(batch_size)]
+    return [records_by_query_index.get(i, (None, None, None)) for i in range(expected)]
 
 
-def _enumerate_chunks(
-    equities: Sequence[RawEquity],
-    chunk_size: int,
-) -> list[tuple[int, Sequence[RawEquity]]]:
+def _is_valid_response_entry(
+    entry: dict,
+    expected: int,
+) -> bool:
     """
-    Splits the input sequence of equities into consecutive chunks of the given size,
-    returning a list of (start_index, chunk) tuples for stable positional bookkeeping.
+    Determine if a entry from the OpenFIGI response is valid.
+
+    A valid entry must have a query index within the expected range, a valid FIGI,
+    and a non-None identification record.
 
     Args:
-        equities (Sequence[RawEquity]): The sequence of RawEquity objects to split.
-        chunk_size (int): The maximum size of each chunk.
+        entry (dict): A single record from the OpenFIGI API response.
+        expected (int): The total number of expected records.
 
     Returns:
-        list[tuple[int, Sequence[RawEquity]]]: List of (start_index, chunk) tuples,
-            where start_index is the index of the first item in the chunk.
+        bool: True if the entry is valid and its index is within range, else False.
     """
-    return [
-        (index, equities[index : index + chunk_size])
-        for index in range(0, len(equities), chunk_size)
-    ]
+    index = _get_query_index(entry)
+
+    figi = entry.get("shareClassFIGI")
+
+    return (
+        index is not None
+        and 0 <= index < expected
+        and _is_valid_figi(figi)
+        and _to_identification_record(entry) is not None
+    )
+
+
+def _extract_indexed_record(entry: dict) -> tuple[int, IdentificationRecord]:
+    """
+    Extracts the query index and associated identification record from a response entry.
+
+    Args:
+        entry (dict): A validated OpenFIGI response entry.
+
+    Returns:
+        tuple[int, IdentificationRecord]: The index and corresponding record.
+
+    Raises:
+        ValueError: If index or record is unexpectedly missing.
+    """
+    index = _get_query_index(entry)
+    record = _to_identification_record(entry)
+
+    if index is None or record is None:
+        raise ValueError("Invalid response entry: missing index or record.")
+
+    return index, record
+
+
+def _to_identification_record(entry: dict) -> IdentificationRecord | None:
+    """
+    Extracts a structured identification record from a single OpenFIGI response entry.
+
+    Attempts to construct a (name, symbol, figi) tuple from the given response dict.
+    Returns None if the FIGI is missing or invalid.
+
+    Args:
+        entry (dict): A single response item from the OpenFIGI API. Expected to contain
+            keys such as 'shareClassFIGI', 'ticker', 'name', or 'securityName'.
+
+    Returns:
+        IdentificationRecord | None: A (name, symbol, figi) tuple if valid, else None.
+    """
+    figi = entry.get("shareClassFIGI")
+
+    if not isinstance(figi, str):
+        return None
+
+    # Extract ticker symbol only if it's a valid string
+    symbol = entry.get("ticker") if isinstance(entry.get("ticker"), str) else None
+
+    # Prefer 'name' field, fallback to 'securityName' if not present
+    preferred_name_field = entry.get("name") or entry.get("securityName")
+
+    # Use the preferred name if valid, else fallback to symbol
+    name = (
+        preferred_name_field
+        if isinstance(preferred_name_field, str) and preferred_name_field
+        else symbol
+    )
+
+    return (name, symbol, figi)
+
+
+def _get_query_index(entry: dict) -> int | None:
+    """
+    Extracts the query index from an OpenFIGI response entry.
+
+    Searches for known index keys ("query_number", "queryId", "request_index") in
+    the entry and returns the first valid integer value found. Returns None if no
+    valid index is present.
+
+    Args:
+        entry (dict): A single OpenFIGI API response record.
+
+    Returns:
+        int | None: The extracted query index, or None if not found or invalid.
+    """
+    return next(
+        (
+            int(value)
+            for key in ("query_number", "queryId", "request_index")
+            if isinstance((value := entry.get(key)), int | float)
+        ),
+        None,
+    )
+
+
+def _is_valid_figi(value: object) -> bool:
+    """
+    Validates if a value is a valid FIGI string.
+
+    Args:
+        value (object): Any input value.
+
+    Returns:
+        bool: True if value is a 12-character uppercase alphanumeric string.
+    """
+    return isinstance(value, str) and re.fullmatch(r"[A-Z0-9]{12}", value) is not None
 
 
 def _build_query_dataframe(equities: Sequence[RawEquity]) -> pd.DataFrame:
     """
-    Builds a DataFrame containing query records for a sequence of RawEquity objects.
+    Converts a list of RawEquity objects into an OpenFIGI query DataFrame.
 
     Args:
-        equities (Sequence[RawEquity]): Sequence of RawEquity instances to be converted
-            into query records.
+        equities (Sequence[RawEquity]): Input equity objects.
 
     Returns:
-        pd.DataFrame: A DataFrame where each row corresponds to a query record generated
-            from a RawEquity object.
+        pd.DataFrame: A DataFrame containing OpenFIGI-compatible queries.
     """
     return pd.DataFrame([_to_query_record(equity) for equity in equities])
 
 
 def _to_query_record(equity: RawEquity) -> dict[str, str]:
     """
-    Builds a query record dictionary for a RawEquity object, selecting the best
-    available identifier (ISIN, CUSIP, or symbol) for OpenFIGI lookup.
+    Converts a RawEquity object into a dictionary for querying OpenFIGI.
 
     Args:
-        equity (RawEquity): The RawEquity instance to convert into a query record.
+        equity (RawEquity): The equity containing ISIN, CUSIP, or symbol.
 
     Returns:
-        dict[str, str]: Dictionary with keys 'idType', 'idValue', and
-            'marketSecDes' for OpenFIGI API queries.
+        dict[str, str]: A dict with idType, idValue, and marketSecDes.
     """
     if equity.isin:
-        id_type, id_value = "ID_ISIN", equity.isin
-    elif equity.cusip:
-        id_type, id_value = "ID_CUSIP", equity.cusip
-    else:
-        id_type, id_value = "TICKER", equity.symbol
-    return {"idType": id_type, "idValue": id_value, "marketSecDes": "Equity"}
+        return {"idType": "ID_ISIN", "idValue": equity.isin, "marketSecDes": "Equity"}
+
+    if equity.cusip:
+        return {"idType": "ID_CUSIP", "idValue": equity.cusip, "marketSecDes": "Equity"}
+
+    return {"idType": "TICKER", "idValue": equity.symbol, "marketSecDes": "Equity"}

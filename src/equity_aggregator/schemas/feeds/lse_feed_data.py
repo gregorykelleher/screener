@@ -145,14 +145,13 @@ def convert_gbx_to_gbp(raw: dict) -> dict:
 
     pence = raw.get("lastprice")
     amount = _gbx_to_decimal(pence)
-    if amount is None:
-        raise ValueError(f"Invalid GBX lastprice: {pence!r}")
 
-    # convert pence to pounds
-    updates = {
-        "lastprice": amount / Decimal("100"),
-        "currency": "GBP",
-    }
+    updates = {"currency": "GBP"}
+    if amount is None:
+        updates["lastprice"] = None
+    else:
+        # convert pence to pounds
+        updates["lastprice"] = amount / Decimal("100")
 
     # return a new dict rather than mutating in place
     return {**raw, **updates}

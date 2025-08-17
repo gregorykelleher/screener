@@ -283,8 +283,9 @@ def test_gbx_currency_handles_invalid_lastprice() -> None:
         "mics": ["XLON"],
     }
 
-    with pytest.raises(ValidationError):
-        LseFeedData(**payload)
+    actual = LseFeedData(**payload)
+
+    assert actual.last_price is None and actual.currency == "GBP"
 
 
 def test_gbx_currency_with_none_lastprice() -> None:
@@ -302,8 +303,9 @@ def test_gbx_currency_with_none_lastprice() -> None:
         "mics": ["XLON"],
     }
 
-    with pytest.raises(ValidationError):
-        LseFeedData(**payload)
+    actual = LseFeedData(**payload)
+
+    assert actual.last_price is None and actual.currency == "GBP"
 
 
 def test_extra_field_is_ignored() -> None:

@@ -217,8 +217,7 @@ def test_parse_skips_invalid_records_across_feeds() -> None:
         "currency": "USD",
         "last_price": Decimal("5"),
     }
-    bad_gbx = {
-        "issuername": "BAD2",
+    missing_name_gbx = {
         "tidm": "B2",
         "isin": None,
         "mics": [],
@@ -239,7 +238,7 @@ def test_parse_skips_invalid_records_across_feeds() -> None:
     records = [
         FeedRecord(EuronextFeedData, valid),
         FeedRecord(EuronextFeedData, missing_symbol),
-        FeedRecord(LseFeedData, bad_gbx),
+        FeedRecord(LseFeedData, missing_name_gbx),
         FeedRecord(XetraFeedData, missing_overview),
     ]
 
@@ -293,7 +292,17 @@ def test_parse_lse_gbx_with_none_lastprice() -> None:
 
     actual = _run_parse([record])
 
-    assert actual == []
+    assert [
+        (
+            equity.name,
+            equity.symbol,
+            equity.currency,
+            equity.last_price,
+            equity.market_cap,
+            equity.mics,
+        )
+        for equity in actual
+    ] == [("XYZ PLC", "XYZ", "GBP", None, Decimal("1000"), ["XLON"])]
 
 
 def test_parse_xetra_only_key_data() -> None:

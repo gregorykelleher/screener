@@ -142,3 +142,26 @@ def test_save_equities_raises_for_missing_figi() -> None:
     """
     with pytest.raises(ValueError, match="share_class_figi"):
         save_canonical_equities([DummyEquity("")])
+
+
+def test_save_cache_entry_noop_when_cache_name_none() -> None:
+    """
+    ARRANGE: ensure cache table exists and capture row count
+    ACT:     save_cache_entry with cache_name=None
+    ASSERT:  row count unchanged
+    """
+    save_cache("warmup", value=True)
+    before = _count_rows(_CACHE_TABLE)
+
+    save_cache_entry(None, "ignored", {"x": 1})
+
+    assert _count_rows(_CACHE_TABLE) == before
+
+
+def test_load_cache_returns_none_when_cache_name_none() -> None:
+    """
+    ARRANGE: none
+    ACT:     load_cache with cache_name=None
+    ASSERT:  returns None
+    """
+    assert load_cache(None) is None

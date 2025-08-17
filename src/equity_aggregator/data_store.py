@@ -275,33 +275,48 @@ def save_cache(cache_name: str, value: object) -> None:
 
 def load_cache(cache_name: str) -> object | None:
     """
-    Load a cached object from the cache store by its name.
+    Retrieve a cached object from the cache store using its cache name.
+
+    Opens a database connection, purges expired entries, and fetches the cached
+    value associated with the given cache name. Returns None if no entry is found
+    or if cache_name is None.
 
     Args:
-        cache_name (str): The unique name identifying the cached object.
+        cache_name (str): Unique identifier for the cached object.
 
     Returns:
-        object | None: The cached object if found, otherwise None.
+        object | None: The cached object if present, otherwise None.
     """
+    if cache_name is None:
+        return None
+
     with _connect() as conn:
         return _cache_get(conn, cache_name, "_")
 
 
-def save_cache_entry(cache_name: str, key: str, value: object) -> None:
+def save_cache_entry(
+    cache_name: str,
+    key: str,
+    value: object,
+) -> None:
     """
-    Saves a value in the cache under the specified cache name and key.
+    Save a value in the cache under the given cache name and key.
 
-    This function establishes a connection to the cache storage and stores the given
-    value associated with the provided cache name and key.
+    Opens a connection to the cache store and persists the value using the
+    specified cache name and key. If cache_name is None, the function does
+    nothing.
 
     Args:
-        cache_name (str): The name of the cache to store the entry in.
-        key (str): The key under which the value will be stored.
-        value (object): The value to be cached.
+        cache_name (str): Name of the cache to store the entry in.
+        key (str): Key under which the value will be stored.
+        value (object): The value to cache; must be pickle-serialisable.
 
     Returns:
         None
     """
+    if cache_name is None:
+        return
+
     with _connect() as conn:
         _cache_put(conn, cache_name, key, value)
 

@@ -24,3 +24,4 @@ requirements.lock
 # equity-aggregator
 .env
 data/
+chain.pem

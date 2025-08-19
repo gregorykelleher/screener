@@ -1,0 +1,56 @@
+name: publish-aggregated-canonical-equities
+on:
+  schedule:
+    - cron: "0 01 * * *"   # daily 01:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-aggregated-canonical-equities
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    environment: env
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Equity Aggregator Docker Image
+        run: docker build -f Dockerfile -t equity-aggregator:latest .
+
+      - name: Create .env file (preserve newlines)
+        run: |
+          printf '%b' "${{ secrets.EQUITY_AGGREGATOR_SECRETS }}" > .env
+          chmod 600 .env
+
+      - name: Fail early if .env is empty
+        run: |
+          if ! [ -s .env ]; then
+            echo "::error file=.github/workflows/publish.yml::EQUITY_AGGREGATOR_SECRETS is missing or empty"
+            exit 1
+          fi
+          echo "Wrote $(wc -c < .env) bytes to .env"
+
+      - name: Run Equity Aggregator (inject envs)
+        run: |
+          mkdir -p dist
+          docker run --rm \
+            --env-file ./.env \
+            -v "$PWD/dist:/app/data" \
+            equity-aggregator:latest
+          ls -lh dist
+
+      # - name: Publish/Update Latest Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: aggregated-canonical-equities-latest
+      #     name: aggregated-canonical-equities-latest
+      #     make_latest: true
+      #     overwrite_files: true
+      #     fail_on_unmatched_files: true
+      #     generate_release_notes: false
+      #     files: |
+      #       dist/data_store.db

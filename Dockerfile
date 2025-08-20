@@ -12,7 +12,7 @@ RUN uv sync --locked
 ENV UV_SYSTEM_PYTHON=1
 
 # Set the environment file for equity-aggregator
-# ENV UV_ENV_FILE=".env"
+ENV UV_ENV_FILE=".env"
 
 # Run equity-aggregator
 CMD ["uv", "run", "equity-aggregator"]

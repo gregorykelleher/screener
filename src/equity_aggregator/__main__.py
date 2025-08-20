@@ -32,9 +32,9 @@ def main() -> None:
     profiles = asyncio.run(aggregate_equity_profiles())
 
     if not profiles:
-        logger.error("No equity profiles found.")
+        logger.error("No canonical equities found.")
         return
-    logger.info(f"Found {len(profiles)} equity profiles.")
+    logger.info(f"Found {len(profiles)} canonical equities.")
     for p in profiles:
         fields = p.model_dump()
 

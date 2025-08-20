@@ -3,7 +3,9 @@
 
 # Ignore Python cache
 __pycache__/
+.pytest_cache/
 *.pyc
+*.pyo
 
 # Ignore version control
 .git/

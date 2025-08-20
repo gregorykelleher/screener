@@ -21,36 +21,30 @@ jobs:
       - name: Build Equity Aggregator Docker Image
         run: docker build -f Dockerfile -t equity-aggregator:latest .
 
-      - name: Create .env file (preserve newlines)
+      - name: Create .env file
         run: |
           printf '%b' "${{ secrets.EQUITY_AGGREGATOR_SECRETS }}" > .env
           chmod 600 .env
+          test -s .env || { echo "::error ::empty .env"; exit 1; }
 
-      - name: Fail early if .env is empty
-        run: |
-          if ! [ -s .env ]; then
-            echo "::error file=.github/workflows/publish.yml::EQUITY_AGGREGATOR_SECRETS is missing or empty"
-            exit 1
-          fi
-          echo "Wrote $(wc -c < .env) bytes to .env"
-
-      - name: Run Equity Aggregator (inject envs)
+      - name: Run Equity Aggregator
         run: |
           mkdir -p dist
           docker run --rm \
-            --env-file ./.env \
+            -v "$PWD/.env:/app/.env:ro" \
             -v "$PWD/dist:/app/data" \
             equity-aggregator:latest
-          ls -lh dist
-
-      # - name: Publish/Update Latest Release
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     tag_name: aggregated-canonical-equities-latest
-      #     name: aggregated-canonical-equities-latest
-      #     make_latest: true
-      #     overwrite_files: true
-      #     fail_on_unmatched_files: true
-      #     generate_release_notes: false
-      #     files: |
-      #       dist/data_store.db
+          ls -Rlh dist
+          
+      - name: Publish/Update Latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: aggregated-canonical-equities-latest
+          name: aggregated-canonical-equities-latest
+          make_latest: true
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+          files: |
+            dist/data_store/data_store.db
+            dist/logs/*.log

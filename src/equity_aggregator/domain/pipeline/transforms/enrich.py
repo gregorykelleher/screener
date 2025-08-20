@@ -261,8 +261,8 @@ def _make_validator(
     Returns:
         ValidatorFunc: A function that takes a record dictionary and a RawEquity
             source, validates and coerces the record using the feed model, and
-            returns a RawEquity instance if successful. If validation fails, logs
-            a warning and returns the original source.
+            returns a RawEquity instance if successful. If validation fails, log
+            and returns the original source.
     """
     feed_name = feed_model.__name__.removesuffix("FeedData")
 
@@ -356,7 +356,7 @@ async def _convert_to_usd_or_fallback(
 ) -> RawEquity:
     """
     Attempt to convert a validated RawEquity instance to USD. If conversion fails
-    due to a missing FX rate (ValueError), log a warning and return the original
+    due to a missing FX rate (ValueError), log and return the original
     source RawEquity.
 
     Args:
@@ -391,18 +391,19 @@ def _log_no_feed_data(
     source: RawEquity,
     error: object,
     *,
-    level: int = logging.WARNING,
+    level: int = logging.DEBUG,
 ) -> None:
     """
-    Logs a standardised warning or error message indicating missing feed data for a
-        given equity symbol.
+    Log a standardised message for missing or failed enrichment feed data.
+
+    This logs details about the equity and the error context when no data is
+    available from a feed, or when enrichment fails.
 
     Args:
-        feed_name (str): The name of the feed for which data is missing.
-        source (RawEquity): Equity object containing symbol and identifier information.
-        error (object): Additional error information or context to include in the log.
-        level (int, optional): Logging level (e.g., logging.WARNING). Defaults to
-            logging.WARNING.
+        feed_name (str): Name of the enrichment feed.
+        source (RawEquity): Equity instance with identifying fields.
+        error (object): Error or context for the missing data.
+        level (int, optional): Logging level (default: logging.DEBUG).
 
     Returns:
         None

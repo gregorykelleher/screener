@@ -34,9 +34,9 @@ class FeedRecord(NamedTuple):
 # List of authoritative feed fetchers and their corresponding data models
 _AUTH_FEEDS: tuple[FeedPair] = [
     (fetch_equity_records_euronext, EuronextFeedData),
-    # (fetch_equity_records_xetra, XetraFeedData),
-    # (fetch_equity_records_lse, LseFeedData),
-    # (fetch_equity_records_sec, SecFeedData),
+    (fetch_equity_records_xetra, XetraFeedData),
+    (fetch_equity_records_lse, LseFeedData),
+    (fetch_equity_records_sec, SecFeedData),
 ]
 
 

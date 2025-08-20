@@ -1,4 +1,4 @@
-name: publish-aggregated-canonical-equities
+name: publish-build-release
 on:
   schedule:
     - cron: "0 01 * * *"   # daily 01:00 UTC
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-aggregated-canonical-equities
+  group: publish-build-release
   cancel-in-progress: true
 
 jobs:
@@ -34,15 +34,13 @@ jobs:
             -v "$PWD/.env:/app/.env:ro" \
             -v "$PWD/dist:/app/data" \
             equity-aggregator:latest
-          ls -Rlh dist
-          
-      - name: Publish/Update Latest Release
+
+      - name: Publish Latest Canonical Equities Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aggregated-canonical-equities-latest
-          name: aggregated-canonical-equities-latest
+          tag_name: latest-build-release
+          name: latest-build-release
           make_latest: true
-          overwrite_files: true
           fail_on_unmatched_files: true
           generate_release_notes: false
           files: |

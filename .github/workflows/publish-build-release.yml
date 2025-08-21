@@ -40,6 +40,7 @@ jobs:
         with:
           tag_name: latest-build-release
           name: latest-build-release
+          overwrite_files: true
           make_latest: true
           fail_on_unmatched_files: true
           generate_release_notes: false

@@ -15,11 +15,27 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     environment: env
+    env:
+      UV_SYSTEM_PYTHON: 1
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Equity Aggregator Docker Image
-        run: docker build -f Dockerfile -t equity-aggregator:latest .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
+
+      - name: Sync environment
+        run: uv sync --locked
 
       - name: Create .env file
         run: |
@@ -28,12 +44,12 @@ jobs:
           test -s .env || { echo "::error ::empty .env"; exit 1; }
 
       - name: Run Equity Aggregator
+        env:
+          UV_ENV_FILE: ".env"
         run: |
-          mkdir -p dist
-          docker run --rm \
-            -v "$PWD/.env:/app/.env:ro" \
-            -v "$PWD/dist:/app/data" \
-            equity-aggregator:latest
+          mkdir -p data
+          uv run equity-aggregator
+          test -f data/data_store/data_store.db || { echo "::error ::missing data_store.db"; exit 1; }
 
       - name: Publish Latest Canonical Equities Release
         uses: softprops/action-gh-release@v2
@@ -45,5 +61,5 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: false
           files: |
-            dist/data_store/data_store.db
-            dist/logs/*.log
+            data/data_store/data_store.db
+            data/logs/*.log

@@ -198,7 +198,7 @@ docker-compose up streamlit-app
 To run the `equity-aggregator` service in the background:
 
 ```sh
-docker-compose up -d equity-aggregator
+docker-compose up -d
 ```
 
 ## Miscellaneous

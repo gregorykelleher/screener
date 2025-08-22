@@ -14,9 +14,5 @@ __pycache__/
 # Ignore tests
 tests/
 
-# Ignore local secrets
-.env
-*.pem
-
 # Ignore local data (logs, databases, coverage reports)
 data/

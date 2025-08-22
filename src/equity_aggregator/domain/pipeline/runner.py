@@ -1,9 +1,7 @@
 # pipeline/runner.py
 
 import logging
-from typing import TypeVar
 
-from equity_aggregator import save_canonical_equities
 from equity_aggregator.domain.pipeline.resolve import resolve
 from equity_aggregator.schemas import RawEquity
 
@@ -12,10 +10,7 @@ from .transforms import canonicalise, convert, deduplicate, enrich, identify, pa
 logger = logging.getLogger(__name__)
 
 
-T = TypeVar("T")
-
-
-async def aggregate_equity_profiles() -> list[RawEquity]:
+async def aggregate_canonical_equities() -> list[RawEquity]:
     """
     Fetch and process raw equity data from authoritative feeds, returning unique
         canonical equities.
@@ -50,9 +45,5 @@ async def aggregate_equity_profiles() -> list[RawEquity]:
     for stage in transforms:
         stream = stage(stream)
 
-    # materialise the stream
-    equities = [equity async for equity in stream]
-
-    save_canonical_equities(equities)
-
-    return equities
+    # materialise and return the stream
+    return [equity async for equity in stream]

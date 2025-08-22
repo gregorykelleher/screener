@@ -19,8 +19,8 @@ from equity_aggregator.adapters.data_sources.reference_lookup.openfigi import (
     extract_identified_records,
     fetch_equity_identification,
 )
-from equity_aggregator.data_store import load_cache, save_cache
 from equity_aggregator.schemas import RawEquity
+from equity_aggregator.storage import load_cache, save_cache
 
 pytestmark = pytest.mark.unit
 

@@ -127,7 +127,7 @@ class EquityFinancials(BaseModel):
 # ────────────────────────────── Composite model ─────────────────────────────
 class CanonicalEquity(BaseModel):
     """
-    Immutable, unified profile aggregating identity and financial data for an equity.
+    Immutable, unified model aggregating identity and financial data for an equity.
 
     Combines globally unique identity metadata (name, symbol, share_class_figi, etc.)
     with supplementary financial attributes (market data, ratios, industry, etc.)

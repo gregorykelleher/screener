@@ -1,11 +1,11 @@
-# test_data_store.py
+# test_data_sql_store.py
 
 import os
 from dataclasses import dataclass
 
 import pytest
 
-from equity_aggregator.data_store import (
+from equity_aggregator.storage.data_sql_store import (
     _CACHE_TABLE,
     _EQUITY_TABLE,
     _connect,

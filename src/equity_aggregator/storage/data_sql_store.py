@@ -1,6 +1,5 @@
-# equity_aggregator/data_store.py
+# equity_aggregator/data_sql_store.py
 
-import logging
 import os
 import pickle
 import sqlite3
@@ -11,12 +10,12 @@ from pathlib import Path
 
 from equity_aggregator.schemas import CanonicalEquity
 
-logger = logging.getLogger(__name__)
+_DATA_SQL_STORE_PATH: Path = (
+    Path(os.getenv("_DATA_SQL_STORE_DIR", "data")) / "data_sql_store.db"
+)
+_DATA_SQL_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-_DB_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data/data_store")) / "data_store.db"
-_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-_EQUITY_TABLE = "equity_profiles"
+_EQUITY_TABLE = "canonical_equities"
 _CACHE_TABLE = "object_cache"
 
 
@@ -35,7 +34,9 @@ def _connect() -> Iterator[sqlite3.Connection]:
     Returns:
         Iterator[sqlite3.Connection]: An iterator yielding the database connection.
     """
-    conn = sqlite3.connect(_DB_PATH, isolation_level=None, check_same_thread=False)
+    conn = sqlite3.connect(
+        _DATA_SQL_STORE_PATH, isolation_level=None, check_same_thread=False
+    )
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn

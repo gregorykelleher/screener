@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import time
 from collections.abc import AsyncIterator, Callable
 from typing import NamedTuple
 
@@ -59,8 +58,6 @@ async def resolve(
     """
     logger.info("Resolving raw equities from authoritative feeds...")
 
-    # TODO: temp time logging, remove later
-    start_ts = time.perf_counter()
     feeds = feeds or _AUTH_FEEDS
     queue: asyncio.Queue[FeedRecord | None] = asyncio.Queue()
 
@@ -71,10 +68,6 @@ async def resolve(
         # consume the queue until all producers are exhausted
         async for record in _consume(queue, len(feeds)):
             yield record
-
-    # TODO: temp logging, remove later
-    elapsed = time.perf_counter() - start_ts
-    logger.debug(f"Authoritative feeds completed in {elapsed:.2f}s")
 
 
 async def _produce(

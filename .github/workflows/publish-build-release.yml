@@ -52,7 +52,6 @@ jobs:
         run: |
           mkdir -p data
           uv run equity-aggregator
-          test -f data/data_store/data_store.db || { echo "::error ::missing data_store.db"; exit 1; }
 
       - name: Publish Latest Canonical Equities Release
         uses: softprops/action-gh-release@v2
@@ -63,5 +62,5 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: false
           files: |
-            data/data_store/data_store.db
+            data/data_*_store.*
             data/logs/*.log

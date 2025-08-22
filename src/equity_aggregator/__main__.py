@@ -5,7 +5,12 @@ import logging
 import time
 from itertools import starmap
 
-from equity_aggregator import aggregate_equity_profiles, configure_logging
+from equity_aggregator.domain.pipeline import aggregate_canonical_equities
+from equity_aggregator.logging_config import configure_logging
+from equity_aggregator.storage import (
+    save_canonical_equities_json,
+    save_canonical_equities_sql,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +34,16 @@ def main() -> None:
     # print(json.dumps(flat, indent=2))
 
     start = time.monotonic()
-    profiles = asyncio.run(aggregate_equity_profiles())
+    canonical_equities = asyncio.run(aggregate_canonical_equities())
 
-    if not profiles:
+    save_canonical_equities_json(canonical_equities)
+    save_canonical_equities_sql(canonical_equities)
+
+    if not canonical_equities:
         logger.error("No canonical equities found.")
         return
-    logger.info(f"Found {len(profiles)} canonical equities.")
-    for p in profiles:
+    logger.info(f"Found {len(canonical_equities)} canonical equities.")
+    for p in canonical_equities:
         fields = p.model_dump()
 
         def normalise(value: object) -> str:

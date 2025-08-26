@@ -12,38 +12,44 @@ logger = logging.getLogger(__name__)
 
 async def aggregate_canonical_equities() -> list[RawEquity]:
     """
-    Fetch and process raw equity data from authoritative feeds, returning unique
-        canonical equities.
+    Aggregates and processes raw equity data from authoritative feeds, returning
+    a list of unique, canonical equities.
 
-    This function streams raw equities through a pipeline of transforms:
+    The pipeline applies the following transforms in order:
+      - parse: Parse raw equity data.
       - convert: Convert prices to reference currency (USD).
-      - identify: Attach identification metadata to each raw equity.
-      - deduplicate: Merge duplicate raw equities.
-      - enrich: Add additional data to each raw equity.
-      - canonicalise: Convert raw equities to canonical form.
+      - identify: Attach identification metadata.
+      - deduplicate: Merge duplicate equities.
+      - enrich: Add supplementary data.
+      - canonicalise: Convert to canonical equity format.
 
     Args:
         None
 
     Returns:
-        list[RawEquity]: A list of unique, fully enriched canonical equities.
+        list[RawEquity]: Unique, fully enriched canonical equities.
     """
-    # resolve the stream of raw equities
-    stream = resolve()
+    try:
+        # resolve the stream of raw equities
+        stream = resolve()
 
-    # arrange the pipeline stages
-    transforms = (
-        parse,
-        convert,
-        identify,
-        deduplicate,
-        enrich,
-        canonicalise,
-    )
+        # arrange the pipeline stages
+        transforms = (
+            parse,
+            convert,
+            identify,
+            deduplicate,
+            enrich,
+            canonicalise,
+        )
 
-    # pipe stream through each transform sequentially
-    for stage in transforms:
-        stream = stage(stream)
+        # pipe stream through each transform sequentially
+        for stage in transforms:
+            stream = stage(stream)
 
-    # materialise and return the stream
-    return [equity async for equity in stream]
+        # materialise and return the stream
+        return [equity async for equity in stream]
+
+    except SystemExit as exc:
+        logger.warning("Pipeline aborted: %s", exc)
+        return []

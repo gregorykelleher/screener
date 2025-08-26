@@ -8,8 +8,8 @@ from itertools import starmap
 from equity_aggregator.domain.pipeline import aggregate_canonical_equities
 from equity_aggregator.logging_config import configure_logging
 from equity_aggregator.storage import (
-    save_canonical_equities_json,
-    save_canonical_equities_sql,
+    export_canonical_equities_to_json_file,
+    save_canonical_equities,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,8 +36,9 @@ def main() -> None:
     start = time.monotonic()
     canonical_equities = asyncio.run(aggregate_canonical_equities())
 
-    save_canonical_equities_json(canonical_equities)
-    save_canonical_equities_sql(canonical_equities)
+    # save_canonical_equities_json(canonical_equities)
+    save_canonical_equities(canonical_equities)
+    export_canonical_equities_to_json_file(canonical_equities)
 
     if not canonical_equities:
         logger.error("No canonical equities found.")

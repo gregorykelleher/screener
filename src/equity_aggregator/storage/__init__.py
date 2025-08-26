@@ -1,14 +1,12 @@
 # storage/__init__.py
 
-from .data_json_store import save_canonical_equities as save_canonical_equities_json
-from .data_sql_store import (
+from .data_store import (
+    export_canonical_equities_to_json_file,
     load_cache,
     load_cache_entry,
     save_cache,
     save_cache_entry,
-)
-from .data_sql_store import (
-    save_canonical_equities as save_canonical_equities_sql,
+    save_canonical_equities,
 )
 
 __all__ = [
@@ -17,7 +15,6 @@ __all__ = [
     "load_cache_entry",
     "save_cache",
     "save_cache_entry",
-    "save_canonical_equities_sql",
-    # JSON store
-    "save_canonical_equities_json",
+    "save_canonical_equities",
+    "export_canonical_equities_to_json_file",
 ]

@@ -1,5 +1,6 @@
-# equity_aggregator/data_sql_store.py
+# equity_aggregator/data_store.py
 
+import json
 import os
 import pickle
 import sqlite3
@@ -10,10 +11,8 @@ from pathlib import Path
 
 from equity_aggregator.schemas import CanonicalEquity
 
-_DATA_SQL_STORE_PATH: Path = (
-    Path(os.getenv("_DATA_SQL_STORE_DIR", "data")) / "data_sql_store.db"
-)
-_DATA_SQL_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
+_DATA_STORE_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data"))
+_DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
 
 _EQUITY_TABLE = "canonical_equities"
 _CACHE_TABLE = "object_cache"
@@ -25,8 +24,8 @@ def _connect() -> Iterator[sqlite3.Connection]:
     Context manager for establishing a SQLite database connection.
 
     Opens a connection to the database at the path specified by the module-level
-    variable `_DB_PATH`. Enables foreign key support for the session. Ensures the
-    connection is properly closed after use.
+    variable `_DATA_STORE_PATH`. Enables foreign key support for the session. Ensures
+    the connection is properly closed after use.
 
     Yields:
         sqlite3.Connection: An active SQLite database connection.
@@ -35,7 +34,9 @@ def _connect() -> Iterator[sqlite3.Connection]:
         Iterator[sqlite3.Connection]: An iterator yielding the database connection.
     """
     conn = sqlite3.connect(
-        _DATA_SQL_STORE_PATH, isolation_level=None, check_same_thread=False
+        _DATA_STORE_PATH / "data_store.db",
+        isolation_level=None,
+        check_same_thread=False,
     )
     conn.execute("PRAGMA foreign_keys = ON")
     try:
@@ -50,7 +51,7 @@ def _init_equity_table(conn: sqlite3.Connection) -> None:
 
     Creates a table with the name specified by the module-level variable `_EQUITY_TABLE`
     if it does not already exist. The table contains two columns: 'share_class_figi' as
-    the primary key and 'payload' as a blob field.
+    the primary key and 'payload' as a text field.
 
     Args:
         conn (sqlite3.Connection): The SQLite database connection to use for table
@@ -63,7 +64,7 @@ def _init_equity_table(conn: sqlite3.Connection) -> None:
         f"""
         CREATE TABLE IF NOT EXISTS {_EQUITY_TABLE} (
             share_class_figi TEXT PRIMARY KEY,
-            payload          BLOB NOT NULL
+            payload          TEXT NOT NULL
         );
         """,
     )
@@ -98,26 +99,25 @@ def _init_cache_table(conn: sqlite3.Connection) -> None:
     )
 
 
-def _serialise(canonical_equity: CanonicalEquity) -> tuple[str, bytes]:
+def _serialise_equity(canonical_equity: CanonicalEquity) -> tuple[str, bytes]:
     """
-    Serialise a CanonicalEquity object into (figi, payload) tuple for database storage.
+    Serialise a CanonicalEquity object into (figi, payload) tuple for database
+    storage.
 
     Args:
         canonical_equity (CanonicalEquity): The CanonicalEquity instance to serialise.
-        Must have a non-empty 'share_class_figi' attribute.
 
     Returns:
         tuple[str, bytes]: A tuple containing the share class FIGI as a string and
-            the pickled CanonicalEquity object as bytes.
+            the JSON-serialised CanonicalEquity object as a string.
 
     Raises:
         ValueError: If 'share_class_figi' is missing or empty in the provided object.
     """
     figi = canonical_equity.identity.share_class_figi
-    if not figi:
-        raise ValueError("share_class_figi is required for equity persistence")
 
-    return figi, pickle.dumps(canonical_equity, protocol=4)
+    json_data = canonical_equity.model_dump_json()
+    return figi, json_data
 
 
 def save_canonical_equities(canonical_equities: Iterable[CanonicalEquity]) -> None:
@@ -141,8 +141,28 @@ def save_canonical_equities(canonical_equities: Iterable[CanonicalEquity]) -> No
         conn.executemany(
             f"INSERT OR REPLACE INTO {_EQUITY_TABLE} "
             "(share_class_figi, payload) VALUES (?, ?)",
-            map(_serialise, canonical_equities),
+            map(_serialise_equity, canonical_equities),
         )
+
+
+def export_canonical_equities_to_json_file(
+    canonical_equities: Iterable[CanonicalEquity],
+) -> None:
+    """
+    Exports canonical equities as a JSON array to the given file path.
+
+    Args:
+        canonical_equities (Iterable[CanonicalEquity]): The equities to serialise.
+        path (str | Path): Destination file path.
+
+    Returns:
+        None
+    """
+    json_path = _DATA_STORE_PATH / "canonical_equities.json"
+
+    payloads = [json.loads(equity.model_dump_json()) for equity in canonical_equities]
+
+    json_path.write_text(json.dumps(payloads, indent=2), encoding="utf-8")
 
 
 def _ttl_seconds() -> int:

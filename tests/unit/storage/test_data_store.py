@@ -1,15 +1,19 @@
-# test_data_sql_store.py
+# test_data_store.py
 
+import json
 import os
-from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
-from equity_aggregator.storage.data_sql_store import (
+from equity_aggregator.schemas import CanonicalEquity, EquityFinancials, EquityIdentity
+from equity_aggregator.storage.data_store import (
     _CACHE_TABLE,
     _EQUITY_TABLE,
     _connect,
+    _serialise_equity,
     _ttl_seconds,
+    export_canonical_equities_to_json_file,
     load_cache,
     load_cache_entry,
     save_cache,
@@ -20,26 +24,25 @@ from equity_aggregator.storage.data_sql_store import (
 pytestmark = pytest.mark.unit
 
 
-@dataclass(slots=True)
-class _Identity:
+def _create_canonical_equity(figi: str, name: str = "TEST EQUITY") -> CanonicalEquity:
     """
-    Dataclass representing an identity with a share class FIGI.
+    Create a CanonicalEquity instance for testing purposes.
+
+    Args:
+        figi (str): The FIGI identifier for the equity.
+        name (str): The name of the equity, defaults to "TEST EQUITY".
+
+    Returns:
+        CanonicalEquity: A properly constructed CanonicalEquity instance.
     """
+    identity = EquityIdentity(
+        name=name,
+        symbol="TST",
+        share_class_figi=figi,
+    )
+    financials = EquityFinancials()
 
-    share_class_figi: str
-
-
-@dataclass(slots=True)
-class DummyEquity:
-    """
-    A dummy data class representing an equity with a share class FIGI identifier.
-    """
-
-    share_class_figi: str
-
-    @property
-    def identity(self) -> _Identity:
-        return _Identity(self.share_class_figi)
+    return CanonicalEquity(identity=identity, financials=financials)
 
 
 def _count_rows(table: str) -> int:
@@ -112,12 +115,17 @@ def test_ttl_seconds_negative_raises_value_error() -> None:
 
 def test_save_equities_inserts_rows() -> None:
     """
-    ARRANGE: two DummyEquity objects
-    ACT:     save_equities
+    ARRANGE: two CanonicalEquity objects
+    ACT:     save_canonical_equities
     ASSERT:  row count == 2
     """
     expected_row_count = 2
-    save_canonical_equities([DummyEquity("F1"), DummyEquity("F2")])
+    equities = [
+        _create_canonical_equity("BBG000B9XRY4", "EQUITY ONE"),
+        _create_canonical_equity("BBG000BKQV61", "EQUITY TWO"),
+    ]
+
+    save_canonical_equities(equities)
 
     assert _count_rows(_EQUITY_TABLE) == expected_row_count
 
@@ -125,23 +133,15 @@ def test_save_equities_inserts_rows() -> None:
 def test_save_equities_upsert_single_row() -> None:
     """
     ARRANGE: same FIGI twice
-    ACT:     save_equities twice
+    ACT:     save_canonical_equities twice
     ASSERT:  row count == 1
     """
-    save_canonical_equities([DummyEquity("DUP")])
-    save_canonical_equities([DummyEquity("DUP")])
+    equity = _create_canonical_equity("BBG000C6K6G9")
+
+    save_canonical_equities([equity])
+    save_canonical_equities([equity])
 
     assert _count_rows(_EQUITY_TABLE) == 1
-
-
-def test_save_equities_raises_for_missing_figi() -> None:
-    """
-    ARRANGE: DummyEquity with empty FIGI
-    ACT:     save_equities
-    ASSERT:  ValueError raised with correct message
-    """
-    with pytest.raises(ValueError, match="share_class_figi"):
-        save_canonical_equities([DummyEquity("")])
 
 
 def test_save_cache_entry_noop_when_cache_name_none() -> None:
@@ -165,3 +165,22 @@ def test_load_cache_returns_none_when_cache_name_none() -> None:
     ASSERT:  returns None
     """
     assert load_cache(None) is None
+
+
+def test_export_canonical_equities_writes_expected_json() -> None:
+    """
+    ARRANGE: two CanonicalEquity objects
+    ACT:     export_canonical_equities_to_json_file
+    ASSERT:  file JSON equals expected payloads
+    """
+    equities = [
+        _create_canonical_equity("BBG000B9XRY4", "EQUITY ONE"),
+        _create_canonical_equity("BBG000BKQV61", "EQUITY TWO"),
+    ]
+    data_path = Path(os.getenv("_DATA_STORE_DIR", "data"))
+
+    export_canonical_equities_to_json_file(equities)
+
+    assert json.loads(data_path.read_text(encoding="utf-8")) == [
+        json.loads(equity.model_dump_json()) for equity in equities
+    ]

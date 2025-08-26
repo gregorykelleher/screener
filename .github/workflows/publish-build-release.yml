@@ -43,15 +43,18 @@ jobs:
           chmod 600 .env
           test -s .env || { echo "::error ::empty .env"; exit 1; }
 
-      - name: Clean previous data
-        run: rm -rf data
-
       - name: Run Equity Aggregator
         env:
           UV_ENV_FILE: ".env"
         run: |
           mkdir -p data
           uv run equity-aggregator
+
+      - name: Delete Pre-existing Release
+        run: |
+            gh release delete latest-build-release --yes || true
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Publish Latest Canonical Equities Release
         uses: softprops/action-gh-release@v2

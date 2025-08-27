@@ -4,8 +4,8 @@ import logging
 
 from httpx import AsyncClient
 
-from equity_aggregator import load_cache, save_cache
 from equity_aggregator.adapters.data_sources._utils import make_client
+from equity_aggregator.storage import load_cache, save_cache
 
 from ._record_types import (
     EquityRecord,

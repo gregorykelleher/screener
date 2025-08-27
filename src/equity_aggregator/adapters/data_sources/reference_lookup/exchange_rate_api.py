@@ -8,8 +8,8 @@ from itertools import starmap
 
 import httpx
 
-from equity_aggregator import load_cache, save_cache
 from equity_aggregator.adapters.data_sources._utils import make_client
+from equity_aggregator.storage import load_cache, save_cache
 
 logger = logging.getLogger(__name__)
 

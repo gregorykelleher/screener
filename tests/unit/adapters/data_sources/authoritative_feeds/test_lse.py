@@ -8,7 +8,6 @@ import httpx
 import pytest
 from httpx import AsyncClient, MockTransport
 
-from equity_aggregator import save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.lse import (
     _build_payload,
     _deduplicate_records,
@@ -18,6 +17,7 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.lse import (
     _stream_all_pages,
     fetch_equity_records,
 )
+from equity_aggregator.storage import save_cache
 
 pytestmark = pytest.mark.unit
 

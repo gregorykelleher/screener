@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 import httpx
 import pytest
 
-from equity_aggregator import load_cache, save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import (
     _PAGE_SIZE,
     _build_payload,
@@ -18,6 +17,7 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.euronext import
     _stream_mic_records,
     fetch_equity_records,
 )
+from equity_aggregator.storage import load_cache, save_cache
 
 pytestmark = pytest.mark.unit
 

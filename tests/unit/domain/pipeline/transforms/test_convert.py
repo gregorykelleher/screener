@@ -6,9 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from equity_aggregator import save_cache
 from equity_aggregator.domain.pipeline.transforms import convert
 from equity_aggregator.schemas import RawEquity
+from equity_aggregator.storage import save_cache
 
 pytestmark = pytest.mark.unit
 

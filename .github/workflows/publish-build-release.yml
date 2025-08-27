@@ -65,5 +65,5 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: false
           files: |
-            data/data_store.db
+            data/canonical_equities.jsonl.gz
             data/logs/*.log

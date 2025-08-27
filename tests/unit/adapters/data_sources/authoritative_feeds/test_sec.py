@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 import httpx
 import pytest
 
-from equity_aggregator import save_cache
 from equity_aggregator.adapters.data_sources.authoritative_feeds.sec import (
     _deduplicate_records,
     _parse_row,
@@ -14,6 +13,7 @@ from equity_aggregator.adapters.data_sources.authoritative_feeds.sec import (
     _stream_sec,
     fetch_equity_records,
 )
+from equity_aggregator.storage import save_cache
 
 pytestmark = pytest.mark.unit
 

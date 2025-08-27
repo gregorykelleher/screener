@@ -6,16 +6,16 @@ import asyncio
 import httpx
 import pytest
 
-from equity_aggregator import (
-    load_cache_entry,
-    save_cache_entry,
-)
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.feed import (
     YFinanceFeed,
     _choose_symbol,
 )
 from equity_aggregator.adapters.data_sources.enrichment_feeds.yfinance.utils import (
     pick_best_symbol,
+)
+from equity_aggregator.storage import (
+    load_cache_entry,
+    save_cache_entry,
 )
 
 from ._helpers import close, handler_factory, make_session

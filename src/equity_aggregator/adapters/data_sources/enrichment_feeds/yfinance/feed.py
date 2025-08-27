@@ -5,11 +5,11 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from itertools import filterfalse
 
-from equity_aggregator import (
+from equity_aggregator.schemas import YFinanceFeedData
+from equity_aggregator.storage import (
     load_cache_entry,
     save_cache_entry,
 )
-from equity_aggregator.schemas import YFinanceFeedData
 
 from .api import (
     get_quote_summary,

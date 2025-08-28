@@ -12,7 +12,7 @@ from pathlib import Path
 
 from equity_aggregator.schemas import CanonicalEquity
 
-_DATA_STORE_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data"))
+_DATA_STORE_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data/data_store/"))
 _DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
 
 _CANONICAL_EQUITIES_TABLE = "canonical_equities"
@@ -102,7 +102,7 @@ def _init_cache_table(conn: sqlite3.Connection) -> None:
     )
 
 
-def _serialise_equity(canonical_equity: CanonicalEquity) -> tuple[str, bytes]:
+def _serialise_equity(canonical_equity: CanonicalEquity) -> tuple[str, str]:
     """
     Serialise a CanonicalEquity object into (figi, payload) tuple for database
     storage.
@@ -111,7 +111,7 @@ def _serialise_equity(canonical_equity: CanonicalEquity) -> tuple[str, bytes]:
         canonical_equity (CanonicalEquity): The CanonicalEquity instance to serialise.
 
     Returns:
-        tuple[str, bytes]: A tuple containing the share class FIGI as a string and
+        tuple[str, str]: A tuple containing the share class FIGI as a string and
             the JSON-serialised CanonicalEquity object as a string.
 
     Raises:
@@ -148,9 +148,7 @@ def save_canonical_equities(canonical_equities: Iterable[CanonicalEquity]) -> No
         )
 
 
-def export_canonical_equities_to_jsonl_gz(
-    path: str | Path | None = None,
-) -> Path:
+def export_canonical_equities() -> None:
     """
     Export canonical equities as newline-delimited JSON (NDJSON), compressed with gzip.
 
@@ -158,18 +156,11 @@ def export_canonical_equities_to_jsonl_gz(
     column. Output is ordered by share_class_figi for deterministic results.
 
     Args:
-        path (str | Path | None): Optional output file path. If None, defaults to
-            '<_DATA_STORE_DIR>/canonical_equities.jsonl.gz'.
+        None
 
     Returns:
-        Path: The path to the written gzip-compressed NDJSON file.
+        None
     """
-    dest_path = (
-        Path(path) if path is not None else (_DATA_STORE_PATH / _CANONICAL_JSONL_ASSET)
-    )
-
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
-
     with _connect() as conn:
         _init_canonical_equities_table(conn)
 
@@ -180,46 +171,38 @@ def export_canonical_equities_to_jsonl_gz(
             ),
         )
 
-        with gzip.open(dest_path, mode="wt", encoding="utf-8", compresslevel=9) as gz:
+        with gzip.open(
+            _DATA_STORE_PATH / _CANONICAL_JSONL_ASSET,
+            mode="wt",
+            encoding="utf-8",
+            compresslevel=9,
+        ) as gz:
             for (payload_str,) in cursor:
                 # payload is already JSON text; write as-is and terminate with newline
                 gz.write(payload_str)
                 gz.write("\n")
 
-    return dest_path
 
-
-def rebuild_canonical_equities_from_jsonl_gz(
-    src_gz: str | Path,
-    dest_db: str | Path | None = None,
-) -> Path:
+def rebuild_canonical_equities_from_jsonl_gz() -> None:
     """
-    Rebuilds a SQLite database containing only the canonical_equities table from a
-    gzip-compressed JSONL file. This operation is idempotent: it drops and recreates
-    the canonical_equities table, then populates it from the provided file.
+    Rebuilds the canonical_equities table in the SQLite database from a gzip-compressed
+    JSONL file. Drops and recreates the table, then populates it with canonical equity
+    records from the source file. This operation is idempotent and optimises the
+    database after completion.
 
     Args:
-        src_gz (str | Path): Path to the source JSONL.gz file containing canonical
-            equity records.
-        dest_db (str | Path | None): Optional path to the destination SQLite database.
-            If None, defaults to '<_DATA_STORE_DIR>/data_store.db'.
+        None
 
     Returns:
-        Path: The path to the rebuilt SQLite database file.
+        None
     """
-    src_path = Path(src_gz)
-    dest_path = (
-        Path(dest_db) if dest_db is not None else (_DATA_STORE_PATH / "data_store.db")
-    )
-
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    src_path = _DATA_STORE_PATH / _CANONICAL_JSONL_ASSET
+    dest_path = _DATA_STORE_PATH / "data_store.db"
 
     with sqlite3.connect(dest_path, isolation_level=None) as conn:
         _rebuild_canonical_equities_schema(conn)
         _rebuild_canonical_equities_table(conn, src_path)
         conn.execute("VACUUM")  # Optimise database
-
-    return dest_path
 
 
 def _rebuild_canonical_equities_schema(conn: sqlite3.Connection) -> None:
@@ -299,6 +282,71 @@ def _rebuild_canonical_equity_rows(
 
         figi = loads(json_line)["identity"]["share_class_figi"]
         yield figi, json_line
+
+
+def load_canonical_equity(share_class_figi: str) -> CanonicalEquity | None:
+    """
+    Retrieve a single CanonicalEquity by its exact share_class_figi value.
+
+    Args:
+        share_class_figi (str): The FIGI identifier of the equity to load.
+
+    Returns:
+        CanonicalEquity | None: The CanonicalEquity instance if found, else None.
+    """
+    with _connect() as conn:
+        _init_canonical_equities_table(conn)
+        row = conn.execute(
+            (
+                f"SELECT payload FROM {_CANONICAL_EQUITIES_TABLE} "
+                "WHERE share_class_figi = ? LIMIT 1"
+            ),
+            (share_class_figi,),
+        ).fetchone()
+        return CanonicalEquity.model_validate_json(row[0]) if row and row[0] else None
+
+
+def load_canonical_equities() -> list[CanonicalEquity]:
+    """
+    Loads and rehydrates all CanonicalEquity objects from the database.
+
+    Iterates over all JSON payloads stored in the canonical_equities table,
+    deserialises each payload using CanonicalEquity.model_validate_json, and
+    returns a list of CanonicalEquity instances.
+
+    Args:
+        None
+
+    Returns:
+        list[CanonicalEquity]: List of all rehydrated CanonicalEquity objects.
+    """
+    return [
+        CanonicalEquity.model_validate_json(payload)
+        for payload in _iter_canonical_equity_json_payloads()
+    ]
+
+
+def _iter_canonical_equity_json_payloads() -> Iterator[str]:
+    """
+    Yields JSON payload strings from canonical_equities table in deterministic order.
+
+    Args:
+        None
+
+    Returns:
+        Iterator[str]: Iterator over JSON payload strings, ordered by share_class_figi.
+    """
+    with _connect() as conn:
+        _init_canonical_equities_table(conn)
+        cursor = conn.execute(
+            (
+                f"SELECT payload FROM {_CANONICAL_EQUITIES_TABLE} "
+                "ORDER BY share_class_figi"
+            ),
+        )
+        for (payload_str,) in cursor:
+            if payload_str:
+                yield payload_str
 
 
 def _ttl_seconds() -> int:

@@ -3,14 +3,14 @@
 import logging
 
 from equity_aggregator.domain.pipeline.resolve import resolve
-from equity_aggregator.schemas import RawEquity
+from equity_aggregator.schemas import CanonicalEquity
 
 from .transforms import canonicalise, convert, deduplicate, enrich, identify, parse
 
 logger = logging.getLogger(__name__)
 
 
-async def aggregate_canonical_equities() -> list[RawEquity]:
+async def aggregate_canonical_equities() -> list[CanonicalEquity]:
     """
     Aggregates and processes raw equity data from authoritative feeds, returning
     a list of unique, canonical equities.

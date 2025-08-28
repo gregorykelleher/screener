@@ -1,18 +1,13 @@
-# src/equity_aggregator/__init__.py
+# equity_aggregator/__init__.py
 
-from .domain import aggregate_canonical_equities
-from .logging_config import configure_logging
-from .storage import (
-    export_canonical_equities_to_jsonl_gz,
-    save_canonical_equities,
+from .domain import (
+    retrieve_canonical_equities,
+    retrieve_canonical_equity,
 )
+from .schemas import CanonicalEquity
 
 __all__ = [
-    # logging_config
-    "configure_logging",
-    # storage
-    "save_canonical_equities",
-    "export_canonical_equities_to_jsonl_gz",
-    # domain
-    "aggregate_canonical_equities",
+    "retrieve_canonical_equities",
+    "retrieve_canonical_equity",
+    "CanonicalEquity",
 ]

@@ -46,7 +46,7 @@ async def resolve(
     Merge all authoritative feed streams into a single asynchronous output.
 
     Args:
-        None
+        feeds
 
     Returns:
         AsyncIterator[FeedRecord]: Yields FeedRecord objects as soon as they are

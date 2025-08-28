@@ -28,7 +28,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.scripts]
-equity-aggregator = "equity_aggregator.__main__:main"
+equity-aggregator = "equity_aggregator.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
@@ -52,6 +52,7 @@ source = ["src"]
 branch = true
 data_file = "data/.coverage"
 omit = [
+  "*/cli.py",
   "*/__init__.py",
   "*/__main__.py",
   "*/logging_config.py"

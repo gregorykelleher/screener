@@ -1,9 +1,8 @@
-# test_data_store.py
+# storage/test_data_store.py
 
 import gzip
 import json
 import os
-import sqlite3
 from pathlib import Path
 
 import pytest
@@ -12,14 +11,18 @@ from equity_aggregator.schemas import CanonicalEquity, EquityFinancials, EquityI
 from equity_aggregator.storage.data_store import (
     _CACHE_TABLE,
     _CANONICAL_EQUITIES_TABLE,
+    _CANONICAL_JSONL_ASSET,
+    _DATA_STORE_PATH,
     _connect,
-    _rebuild_canonical_equities_schema,
-    _rebuild_canonical_equities_table,
+    _init_canonical_equities_table,
+    _iter_canonical_equity_json_payloads,
     _rebuild_canonical_equity_rows,
     _ttl_seconds,
-    export_canonical_equities_to_jsonl_gz,
+    export_canonical_equities,
     load_cache,
     load_cache_entry,
+    load_canonical_equities,
+    load_canonical_equity,
     rebuild_canonical_equities_from_jsonl_gz,
     save_cache,
     save_cache_entry,
@@ -27,6 +30,49 @@ from equity_aggregator.storage.data_store import (
 )
 
 pytestmark = pytest.mark.unit
+
+
+def test_load_canonical_equity_returns_none_when_not_found() -> None:
+    """
+    ARRANGE: no row for the FIGI
+    ACT:     load_canonical_equity
+    ASSERT:  returns None
+    """
+    assert load_canonical_equity("BBG000NOTFOUND") is None
+
+
+def test_load_canonical_equity_returns_none_when_payload_empty() -> None:
+    """
+    ARRANGE: insert row with empty payload for a FIGI
+    ACT:     load_canonical_equity
+    ASSERT:  returns None
+    """
+    figi = "BBG000EMPTY1"
+
+    with _connect() as conn:
+        _init_canonical_equities_table(conn)
+        conn.execute(
+            f"INSERT OR REPLACE INTO {_CANONICAL_EQUITIES_TABLE} "
+            "(share_class_figi, payload) VALUES (?, ?)",
+            (figi, ""),
+        )
+
+    assert load_canonical_equity(figi) is None
+
+
+def test_load_canonical_equity_returns_object_when_found() -> None:
+    """
+    ARRANGE: save a CanonicalEquity for a FIGI
+    ACT:     load_canonical_equity
+    ASSERT:  returns a CanonicalEquity with matching FIGI
+    """
+    figi = "BBG000FOUND1"
+    equity = _create_canonical_equity(figi, "FOUND")
+
+    save_canonical_equities([equity])
+
+    loaded = load_canonical_equity(figi)
+    assert loaded.identity.share_class_figi == figi
 
 
 def _create_canonical_equity(figi: str, name: str = "TEST EQUITY") -> CanonicalEquity:
@@ -186,10 +232,10 @@ def test_load_cache_returns_none_when_cache_name_none() -> None:
     assert load_cache(None) is None
 
 
-def test_export_canonical_equities_to_jsonl_gz_sorted(tmp_path: Path) -> None:
+def test_export_canonical_equities_sorted() -> None:
     """
     ARRANGE: save two equities with out-of-order FIGIs
-    ACT:     export_canonical_equities_to_jsonl_gz to tmp_path
+    ACT:     export_canonical_equities
     ASSERT:  exported list is sorted by share_class_figi (deterministic)
     """
     equities = [
@@ -198,9 +244,10 @@ def test_export_canonical_equities_to_jsonl_gz_sorted(tmp_path: Path) -> None:
     ]
 
     save_canonical_equities(equities)
-    out_path = tmp_path / "canonical_equities.jsonl.gz"
 
-    export_canonical_equities_to_jsonl_gz(out_path)
+    export_canonical_equities()
+
+    out_path = _DATA_STORE_PATH / _CANONICAL_JSONL_ASSET
 
     exported = _read_ndjson_gz(out_path)
     assert [equity["identity"]["share_class_figi"] for equity in exported] == [
@@ -209,38 +256,31 @@ def test_export_canonical_equities_to_jsonl_gz_sorted(tmp_path: Path) -> None:
     ]
 
 
-def test__rebuild_canonical_equities_schema_drops_and_recreates(tmp_path: Path) -> None:
+def test_rebuild_canonical_equities_from_jsonl_gz_rebuilds_table() -> None:
     """
-    ARRANGE: make DB with table and 1 row
-    ACT:     _rebuild_canonical_equities_schema
-    ASSERT:  table exists and is empty after rebuild
+    ARRANGE: export three equities to the module's default JSONL.GZ path
+    ACT:     rebuild_canonical_equities_from_jsonl_gz
+    ASSERT:  row count equals number of exported equities
     """
-    db = tmp_path / "schema.db"
-    with sqlite3.connect(db) as conn:
-        conn.execute(
-            (
-                f"CREATE TABLE {_CANONICAL_EQUITIES_TABLE} ("
-                "share_class_figi TEXT PRIMARY KEY, payload TEXT)"
-            ),
-        )
-        conn.execute(
-            f"INSERT INTO {_CANONICAL_EQUITIES_TABLE} VALUES (?, ?)",
-            ("BBG000TEST", "{}"),
-        )
+    equities = [
+        _create_canonical_equity("BBG000B9XRY4", "ONE"),
+        _create_canonical_equity("BBG000BKQV61", "TWO"),
+        _create_canonical_equity("BBG000C6K6G9", "THREE"),
+    ]
 
-        _rebuild_canonical_equities_schema(conn)
+    save_canonical_equities(equities)
+    export_canonical_equities()
 
-        count = conn.execute(
-            f"SELECT COUNT(*) FROM {_CANONICAL_EQUITIES_TABLE}",
-        ).fetchone()[0]
-    assert count == 0
+    rebuild_canonical_equities_from_jsonl_gz()
+
+    assert _count_rows(_CANONICAL_EQUITIES_TABLE) == len(equities)
 
 
-def test__rebuild_canonical_equities_table_inserts_from_gz(tmp_path: Path) -> None:
+def test_load_canonical_equities_rehydrates_objects() -> None:
     """
-    ARRANGE: export two equities to gz and create empty schema
-    ACT:     _rebuild_canonical_equities_table
-    ASSERT:  row count equals number of exported lines
+    ARRANGE: save two CanonicalEquity objects
+    ACT:     load_canonical_equities
+    ASSERT:  loaded objects equal original identities
     """
     equities = [
         _create_canonical_equity("BBG000B9XRY4", "ONE"),
@@ -249,20 +289,29 @@ def test__rebuild_canonical_equities_table_inserts_from_gz(tmp_path: Path) -> No
 
     save_canonical_equities(equities)
 
-    gz_path = tmp_path / "export.jsonl.gz"
-    export_canonical_equities_to_jsonl_gz(gz_path)
+    loaded = load_canonical_equities()
 
-    db = tmp_path / "test_table.db"
+    assert [equity.identity.share_class_figi for equity in loaded] == [
+        "BBG000B9XRY4",
+        "BBG000BKQV61",
+    ]
 
-    with sqlite3.connect(db) as conn:
-        _rebuild_canonical_equities_schema(conn)
-        _rebuild_canonical_equities_table(conn, gz_path)
 
-        count = conn.execute(
-            f"SELECT COUNT(*) FROM {_CANONICAL_EQUITIES_TABLE}",
-        ).fetchone()[0]
+def test__iter_canonical_equity_json_payloads_skips_empty_payloads() -> None:
+    """
+    ARRANGE: insert one row with empty-string payload into the table
+    ACT:     iterate _iter_canonical_equity_json_payloads
+    ASSERT:  yields no results
+    """
+    with _connect() as conn:
+        _init_canonical_equities_table(conn)
+        conn.execute(
+            f"INSERT OR REPLACE INTO {_CANONICAL_EQUITIES_TABLE} "
+            "(share_class_figi, payload) VALUES (?, ?)",
+            ("BBG000EMPTY", ""),
+        )
 
-    assert count == len(equities)
+    assert list(_iter_canonical_equity_json_payloads()) == []
 
 
 def test__rebuild_canonical_equity_rows_skips_blank_lines() -> None:
@@ -284,10 +333,10 @@ def test__rebuild_canonical_equity_rows_skips_blank_lines() -> None:
     ]
 
 
-def test_export_then_read_back_jsonl_gz(tmp_path: Path) -> None:
+def test_export_then_read_back_jsonl_gz() -> None:
     """
     ARRANGE: two CanonicalEquity objects
-    ACT:     export_canonical_equities_to_jsonl_gz
+    ACT:     export_canonical_equities
     ASSERT:  parsed JSON objects equal original payloads
     """
     equities = [
@@ -296,33 +345,9 @@ def test_export_then_read_back_jsonl_gz(tmp_path: Path) -> None:
     ]
 
     save_canonical_equities(equities)
-    out_path = tmp_path / "out.jsonl.gz"
+    out_path = _DATA_STORE_PATH / _CANONICAL_JSONL_ASSET
 
-    export_canonical_equities_to_jsonl_gz(out_path)
+    export_canonical_equities()
 
     parsed = _read_ndjson_gz(out_path)
     assert parsed == [json.loads(equity.model_dump_json()) for equity in equities]
-
-
-def test_rebuild_canonical_equities_from_jsonl_gz_returns_path(tmp_path: Path) -> None:
-    """
-    ARRANGE: export three equities to gz
-    ACT:     rebuild into a fresh SQLite file
-    ASSERT:  function returns the dest path and rowcount matches
-    """
-    equities = [
-        _create_canonical_equity("BBG000B9XRY4", "ONE"),
-        _create_canonical_equity("BBG000BKQV61", "TWO"),
-        _create_canonical_equity("BBG000C6K6G9", "THREE"),
-    ]
-
-    save_canonical_equities(equities)
-
-    gz_path = tmp_path / "dump.jsonl.gz"
-    export_canonical_equities_to_jsonl_gz(gz_path)
-
-    dest_db = tmp_path / "rebuilt.db"
-
-    returned = rebuild_canonical_equities_from_jsonl_gz(gz_path, dest_db)
-
-    assert returned == dest_db

@@ -3,6 +3,8 @@ name = "equity-aggregator"
 version = "0.1.0"
 description = "equity aggregator"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 requires-python = ">=3.12.5"
 authors = [
     { name = "Gregory Kelleher", email = "gregory@gregorykelleher.com" }
@@ -22,6 +24,9 @@ dependencies = [
     "pytest-cov>=6.2.0",
     "attrs>=25.3.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/gregorykelleher/equity-aggregator"
 
 [build-system]
 requires = ["hatchling"]

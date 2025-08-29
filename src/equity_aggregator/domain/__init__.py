@@ -1,6 +1,6 @@
 # domain/__init__.py
 
-from .pipeline import aggregate_canonical_equities
+from .pipeline import seed_canonical_equities
 from .retrieval import (
     download_canonical_equities,
     retrieve_canonical_equities,
@@ -8,7 +8,7 @@ from .retrieval import (
 )
 
 __all__ = [
-    "aggregate_canonical_equities",
+    "seed_canonical_equities",
     "retrieve_canonical_equities",
     "retrieve_canonical_equity",
     "download_canonical_equities",

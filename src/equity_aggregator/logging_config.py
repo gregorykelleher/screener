@@ -4,13 +4,6 @@ import logging.config
 import os
 from datetime import date
 
-# get log directory or default
-LOG_DIR = os.getenv("LOG_DIR", "./data/logs")
-os.makedirs(LOG_DIR, exist_ok=True)
-
-# construct log file path
-LOG_FILE = os.path.join(LOG_DIR, f"equity_aggregator_{date.today():%Y-%m-%d}.log")
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -25,7 +18,7 @@ LOGGING = {
             "class": "logging.FileHandler",
             "level": "DEBUG",
             "formatter": "standard",
-            "filename": LOG_FILE,
+            "filename": None,  # set lazily at runtime using configure_logging()
             "encoding": "utf8",
         },
     },
@@ -70,8 +63,12 @@ def configure_logging() -> None:
     """
     config = LOGGING.copy()
 
+    # Resolve the log file path
+    config["handlers"]["file"]["filename"] = _resolve_log_file()
+
     # Determine the log configuration (default to 'development')
     env = os.getenv("LOG_CONFIG", "development").lower()
+
     console_level = {
         "production": "WARNING",
         "debug": "DEBUG",
@@ -87,3 +84,18 @@ def configure_logging() -> None:
     config["handlers"]["file"]["level"] = "DEBUG"
 
     logging.config.dictConfig(config)
+
+
+def _resolve_log_file() -> str:
+    """
+    Resolves the log file path for the current date and ensures log directory exists.
+
+    Args:
+        None
+
+    Returns:
+        str: Absolute path to the log file for today's date.
+    """
+    log_dir = os.getenv("LOG_DIR", "./data/logs")
+    os.makedirs(log_dir, exist_ok=True)
+    return os.path.join(log_dir, f"equity_aggregator_{date.today():%Y-%m-%d}.log")

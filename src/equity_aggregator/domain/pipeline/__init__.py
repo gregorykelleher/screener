@@ -1,7 +1,7 @@
 # pipeline/__init__.py
 
-from .runner import aggregate_canonical_equities
+from .seed import seed_canonical_equities
 
 __all__ = [
-    "aggregate_canonical_equities",
+    "seed_canonical_equities",
 ]

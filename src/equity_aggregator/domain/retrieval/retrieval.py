@@ -18,7 +18,6 @@ from equity_aggregator.storage import (
 )
 
 _DATA_STORE_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data/data_store/"))
-_DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
 
 _OWNER = "gregorykelleher"
 _REPO = "equity-aggregator"
@@ -50,6 +49,7 @@ def retrieve_canonical_equity(share_class_figi: str) -> CanonicalEquity:
     Raises:
         LookupError: If no equity is found for the specified share_class_figi.
     """
+    _DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
     db_path = _DATA_STORE_PATH / "data_store.db"
 
     if not db_path.exists():
@@ -99,6 +99,7 @@ async def download_canonical_equities(
     Returns:
         None
     """
+    _DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
     dest_path = _DATA_STORE_PATH / "canonical_equities.jsonl.gz"
 
     async with _open_client(client) as session:

@@ -13,7 +13,6 @@ from pathlib import Path
 from equity_aggregator.schemas import CanonicalEquity
 
 _DATA_STORE_PATH: Path = Path(os.getenv("_DATA_STORE_DIR", "data/data_store/"))
-_DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
 
 _CANONICAL_EQUITIES_TABLE = "canonical_equities"
 _CANONICAL_JSONL_ASSET = "canonical_equities.jsonl.gz"
@@ -36,6 +35,7 @@ def _connect() -> Iterator[sqlite3.Connection]:
     Returns:
         Iterator[sqlite3.Connection]: An iterator yielding the database connection.
     """
+    _DATA_STORE_PATH.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(
         _DATA_STORE_PATH / "data_store.db",
         isolation_level=None,
@@ -161,6 +161,7 @@ def export_canonical_equities() -> None:
     Returns:
         None
     """
+    # TODO: Add condition to only export equities if there's a pre-existing database
     with _connect() as conn:
         _init_canonical_equities_table(conn)
 

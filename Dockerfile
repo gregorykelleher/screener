@@ -14,5 +14,5 @@ ENV UV_SYSTEM_PYTHON=1
 # Set the environment file for equity-aggregator
 ENV UV_ENV_FILE=".env"
 
-# Aggregate canonical equities using equity-aggregator
-CMD ["uv", "run", "equity-aggregator", "aggregate"]
+# Aggregate and seed canonical equities database
+CMD ["uv", "run", "equity-aggregator", "seed"]

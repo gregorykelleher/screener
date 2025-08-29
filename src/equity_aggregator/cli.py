@@ -4,8 +4,8 @@ import argparse
 import asyncio
 import sys
 
-from .domain import aggregate_canonical_equities as aggregate
 from .domain import download_canonical_equities as download
+from .domain import seed_canonical_equities as seed
 from .logging_config import configure_logging
 from .storage import export_canonical_equities as export
 
@@ -34,8 +34,8 @@ def main() -> None:
     """
     Entry point for the equity-aggregator CLI application.
 
-    Configures logging, sets up command-line argument parsing, and dispatches
-    execution to the appropriate subcommand handler based on user input.
+    Sets up command-line argument parsing, configures logging only when a valid
+    command is provided, and dispatches execution to the appropriate subcommand handler.
 
     Args:
         None
@@ -43,27 +43,55 @@ def main() -> None:
     Returns:
         None
     """
-    configure_logging()
-
-    parser = argparse.ArgumentParser(prog="equity-aggregator")
+    parser = argparse.ArgumentParser(
+        prog="equity-aggregator",
+        description="Aggregate, download, and export canonical equity data",
+        epilog="Use 'equity-aggregator <command> --help' for command-specific options",
+    )
 
     # add required subcommands
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(
+        dest="cmd",
+        required=True,
+        title="commands",
+        description="Available operations",
+    )
 
-    # add aggregate subcommand
-    sub.add_parser("aggregate")
+    # add seed subcommand
+    sub.add_parser(
+        "seed",
+        help=(
+            "Aggregate equity data from authoritative sources and populate the database"
+        ),
+        description="Execute the full aggregation pipeline to collect equity data from "
+        "authoritative feeds (Euronext, LSE, SEC, XETRA), enrich it with supplementary "
+        "data, and store as canonical equities",
+    )
 
     # add export subcommand
-    sub.add_parser("export")
+    sub.add_parser(
+        "export",
+        help="Export canonical equity data to compressed JSONL format",
+        description="Export processed canonical equity data from the database as "
+        "gzip-compressed newline-delimited JSON (NDJSON) for distribution",
+    )
 
     # add download subcommand
-    sub.add_parser("download")
+    sub.add_parser(
+        "download",
+        help="Download latest canonical equity data from remote repository",
+        description="Retrieve the most recent canonical equity dataset from the "
+        "remote data repository",
+    )
 
     # read args from command line
     args = parser.parse_args()
 
-    if args.cmd == "aggregate":
-        run_command(aggregate)
+    # configure logging
+    configure_logging()
+
+    if args.cmd == "seed":
+        run_command(seed)
         return
 
     if args.cmd == "export":

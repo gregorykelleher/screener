@@ -48,7 +48,7 @@ jobs:
           UV_ENV_FILE: ".env"
         run: |
           mkdir -p data
-          uv run equity-aggregator aggregate
+          uv run equity-aggregator seed
           uv run equity-aggregator export
 
       - name: Publish Latest Canonical Equities Release
